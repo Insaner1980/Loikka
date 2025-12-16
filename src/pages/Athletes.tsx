@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Plus, Users } from "lucide-react";
+import { Plus } from "lucide-react";
 import { AthleteCard } from "../components/athletes/AthleteCard";
 import { AthleteForm } from "../components/athletes/AthleteForm";
-import { Dialog } from "../components/ui/Dialog";
+import { Dialog, EmptyState, SkeletonCard, toast } from "../components/ui";
 import { useAthleteStore } from "../stores/useAthleteStore";
+import { useKeyboardShortcuts } from "../hooks";
 import type { Athlete, NewAthlete } from "../types";
 
 export function Athletes() {
@@ -13,6 +14,13 @@ export function Athletes() {
   const [editingAthlete, setEditingAthlete] = useState<Athlete | undefined>(
     undefined
   );
+  const [saving, setSaving] = useState(false);
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts(() => {
+    setEditingAthlete(undefined);
+    setDialogOpen(true);
+  });
 
   useEffect(() => {
     fetchAthletes();
@@ -24,13 +32,22 @@ export function Athletes() {
   };
 
   const handleSave = async (data: NewAthlete) => {
-    if (editingAthlete) {
-      await updateAthlete(editingAthlete.id, data);
-    } else {
-      await addAthlete(data);
+    setSaving(true);
+    try {
+      if (editingAthlete) {
+        await updateAthlete(editingAthlete.id, data);
+        toast.success("Urheilija päivitetty");
+      } else {
+        await addAthlete(data);
+        toast.success("Urheilija lisätty");
+      }
+      setDialogOpen(false);
+      setEditingAthlete(undefined);
+    } catch (err) {
+      toast.error("Tallennus epäonnistui");
+    } finally {
+      setSaving(false);
     }
-    setDialogOpen(false);
-    setEditingAthlete(undefined);
   };
 
   const handleCancel = () => {
@@ -41,13 +58,13 @@ export function Athletes() {
   const dialogTitle = editingAthlete ? "Muokkaa urheilijaa" : "Lisää urheilija";
 
   return (
-    <div className="p-8">
+    <div className="p-8 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold">Urheilijat</h1>
         <button
           onClick={handleAddClick}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-secondary font-medium rounded-xl hover:bg-primary/90 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-secondary font-medium rounded-xl hover:bg-primary/90 transition-all btn-press"
         >
           <Plus size={20} />
           Lisää urheilija
@@ -56,36 +73,37 @@ export function Athletes() {
 
       {/* Loading state */}
       {loading && (
-        <div className="flex items-center justify-center py-12">
-          <div className="text-muted-foreground">Ladataan...</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <SkeletonCard key={i} />
+          ))}
         </div>
       )}
 
       {/* Empty state */}
       {!loading && athletes.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="w-16 h-16 mb-4 rounded-full bg-muted flex items-center justify-center">
-            <Users size={32} className="text-muted-foreground" />
-          </div>
-          <h2 className="text-lg font-semibold mb-2">Ei urheilijoita</h2>
-          <p className="text-muted-foreground mb-6">
-            Lisää ensimmäinen urheilija aloittaaksesi
-          </p>
-          <button
-            onClick={handleAddClick}
-            className="flex items-center gap-2 px-4 py-2 bg-primary text-secondary font-medium rounded-xl hover:bg-primary/90 transition-colors"
-          >
-            <Plus size={20} />
-            Lisää urheilija
-          </button>
-        </div>
+        <EmptyState
+          type="athletes"
+          title="Ei urheilijoita"
+          description="Lisää ensimmäinen urheilija aloittaaksesi tulosten seurannan."
+          action={{
+            label: "Lisää urheilija",
+            onClick: handleAddClick,
+          }}
+        />
       )}
 
       {/* Athletes grid */}
       {!loading && athletes.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {athletes.map(({ athlete, stats }) => (
-            <AthleteCard key={athlete.id} athlete={athlete} stats={stats} />
+          {athletes.map(({ athlete, stats }, index) => (
+            <div
+              key={athlete.id}
+              className="animate-fade-in"
+              style={{ animationDelay: `${index * 50}ms` }}
+            >
+              <AthleteCard athlete={athlete} stats={stats} />
+            </div>
           ))}
         </div>
       )}
@@ -96,6 +114,7 @@ export function Athletes() {
           athlete={editingAthlete}
           onSave={handleSave}
           onCancel={handleCancel}
+          disabled={saving}
         />
       </Dialog>
     </div>

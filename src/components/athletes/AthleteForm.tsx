@@ -6,6 +6,7 @@ interface AthleteFormProps {
   athlete?: Athlete;
   onSave: (data: NewAthlete) => void;
   onCancel: () => void;
+  disabled?: boolean;
 }
 
 interface FormErrors {
@@ -17,7 +18,7 @@ interface FormErrors {
 // Generate birth year options (2005-2022)
 const birthYearOptions = Array.from({ length: 18 }, (_, i) => 2022 - i);
 
-export function AthleteForm({ athlete, onSave, onCancel }: AthleteFormProps) {
+export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: AthleteFormProps) {
   const [firstName, setFirstName] = useState(athlete?.firstName || "");
   const [lastName, setLastName] = useState(athlete?.lastName || "");
   const [birthYear, setBirthYear] = useState<number | "">(
@@ -213,15 +214,17 @@ export function AthleteForm({ athlete, onSave, onCancel }: AthleteFormProps) {
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium rounded-lg border border-border hover:bg-muted transition-colors"
+          disabled={disabled}
+          className="px-4 py-2 text-sm font-medium rounded-lg border border-border hover:bg-muted transition-colors disabled:opacity-50"
         >
           Peruuta
         </button>
         <button
           type="submit"
-          className="px-4 py-2 text-sm font-medium rounded-lg bg-primary text-secondary hover:bg-primary/90 transition-colors"
+          disabled={disabled}
+          className="px-4 py-2 text-sm font-medium rounded-lg bg-primary text-secondary hover:bg-primary/90 transition-colors disabled:opacity-50 btn-press"
         >
-          Tallenna
+          {disabled ? "Tallennetaan..." : "Tallenna"}
         </button>
       </div>
     </form>

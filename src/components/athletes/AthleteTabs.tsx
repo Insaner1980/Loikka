@@ -20,16 +20,16 @@ const tabs: { id: AthleteTab; label: string }[] = [
 
 export function AthleteTabs({ activeTab, onTabChange }: AthleteTabsProps) {
   return (
-    <div className="border-b border-border">
+    <div className="border-b border-border-subtle">
       <nav className="flex gap-1 -mb-px" aria-label="Tabs">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+            className={`px-4 py-2.5 text-[13px] font-medium border-b transition-colors duration-150 ${
               activeTab === tab.id
-                ? "border-primary text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted"
+                ? "border-foreground text-foreground"
+                : "border-transparent text-[#666666] hover:text-[#888888]"
             }`}
           >
             {tab.label}

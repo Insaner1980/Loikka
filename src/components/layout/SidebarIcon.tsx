@@ -14,15 +14,22 @@ export function SidebarIcon({ icon: Icon, label, path }: SidebarIconProps) {
       <NavLink
         to={path}
         className={({ isActive }) =>
-          `flex items-center justify-center w-11 h-11 rounded-xl transition-colors
+          `relative flex items-center justify-center w-9 h-9 transition-colors duration-150
           ${
             isActive
-              ? "bg-primary text-secondary"
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              ? "text-foreground"
+              : "text-text-tertiary hover:text-text-secondary"
           }`
         }
       >
-        <Icon size={22} strokeWidth={2} />
+        {({ isActive }) => (
+          <>
+            {isActive && (
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-foreground rounded-r" />
+            )}
+            <Icon size={20} strokeWidth={1.75} />
+          </>
+        )}
       </NavLink>
     </Tooltip>
   );

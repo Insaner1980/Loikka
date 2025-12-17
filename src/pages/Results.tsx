@@ -37,20 +37,20 @@ export function Results() {
   const athleteList = athletes.map((a) => a.athlete);
 
   return (
-    <div className="p-8 h-full flex flex-col">
+    <div className="p-6 h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 pb-5 border-b border-border-subtle">
         <div>
-          <h1 className="text-2xl font-bold">Tulokset</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-base font-medium text-foreground">Tulokset</h1>
+          <p className="text-[13px] text-text-secondary mt-0.5">
             Kilpailu- ja harjoitustulokset
           </p>
         </div>
         <button
           onClick={() => setIsFormOpen(true)}
-          className="flex items-center gap-2 bg-primary text-black px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+          className="btn-primary btn-press"
         >
-          <Plus size={20} />
+          <Plus size={18} />
           Lisää tulos
         </button>
       </div>
@@ -67,10 +67,10 @@ export function Results() {
       {/* Results list */}
       <div className="flex-1 overflow-y-auto">
         {resultsByDate.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-            <FileText size={48} className="mb-4 opacity-50" />
-            <p className="text-lg font-medium">Ei tuloksia</p>
-            <p className="text-sm">
+          <div className="flex flex-col items-center justify-center h-64 text-[#666666]">
+            <FileText size={48} className="mb-4 text-[#444444]" />
+            <p className="text-sm font-medium">Ei tuloksia</p>
+            <p className="text-[13px] text-[#555555] mt-1">
               {filters.athleteId !== null ||
               filters.disciplineId !== null ||
               filters.type !== null ||
@@ -84,8 +84,8 @@ export function Results() {
             {resultsByDate.map(({ date, results }) => (
               <div key={date}>
                 {/* Date header */}
-                <div className="sticky top-0 bg-background py-2 mb-3 border-b border-border">
-                  <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                <div className="sticky top-0 bg-background py-2 mb-3 border-b border-white/[0.03]">
+                  <h2 className="text-[12px] font-medium text-text-tertiary">
                     {formatDate(date)}
                   </h2>
                 </div>

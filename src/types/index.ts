@@ -112,15 +112,14 @@ export interface Medal {
 // Photo
 export interface Photo {
   id: number;
-  fileName: string;
+  entityType: string;
+  entityId: number;
   filePath: string;
-  cloudId?: string;
-  cloudUrl?: string;
-  athleteId?: number;
-  resultId?: number;
-  competitionId?: number;
-  caption?: string;
-  takenAt: string;
+  thumbnailPath?: string;
+  originalName: string;
+  width?: number;
+  height?: number;
+  sizeBytes: number;
   createdAt: string;
 }
 
@@ -139,7 +138,7 @@ export type NewResult = Omit<Result, "id" | "createdAt">;
 export type NewCompetition = Omit<Competition, "id" | "createdAt">;
 export type NewGoal = Omit<Goal, "id" | "createdAt" | "achievedAt">;
 export type NewMedal = Omit<Medal, "id" | "createdAt">;
-export type NewPhoto = Omit<Photo, "id" | "createdAt">;
+export type NewPhoto = Omit<Photo, "id" | "createdAt" | "thumbnailPath" | "width" | "height">;
 
 // Types with related data populated
 export interface ResultWithDetails extends Result {

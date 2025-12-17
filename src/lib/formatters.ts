@@ -1,3 +1,5 @@
+import { convertFileSrc } from "@tauri-apps/api/core";
+
 /**
  * Format seconds to a human-readable time string.
  * < 60 seconds: "12.34"
@@ -125,4 +127,13 @@ export function toISODate(date: Date): string {
  */
 export function getTodayISO(): string {
   return toISODate(new Date());
+}
+
+/**
+ * Convert a local file path to a Tauri asset URL.
+ * This allows loading local files in the webview.
+ */
+export function toAssetUrl(filePath: string | undefined | null): string {
+  if (!filePath) return "";
+  return convertFileSrc(filePath);
 }

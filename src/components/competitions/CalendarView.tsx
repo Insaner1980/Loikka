@@ -77,23 +77,23 @@ export function CalendarView({
     monthYearLabel.charAt(0).toUpperCase() + monthYearLabel.slice(1);
 
   return (
-    <div className="bg-card rounded-xl border border-border p-4">
+    <div className="bg-[#141414] rounded-lg p-4">
       {/* Month navigation header */}
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={goToPreviousMonth}
-          className="p-2 rounded-lg hover:bg-muted transition-colors"
+          className="p-1.5 rounded-md text-[#555555] hover:text-foreground hover:bg-white/5 transition-colors duration-150"
           aria-label="Edellinen kuukausi"
         >
-          <ChevronLeft size={20} />
+          <ChevronLeft size={18} />
         </button>
-        <h2 className="text-lg font-semibold">{capitalizedLabel}</h2>
+        <h2 className="text-sm font-medium text-foreground">{capitalizedLabel}</h2>
         <button
           onClick={goToNextMonth}
-          className="p-2 rounded-lg hover:bg-muted transition-colors"
+          className="p-1.5 rounded-md text-[#555555] hover:text-foreground hover:bg-white/5 transition-colors duration-150"
           aria-label="Seuraava kuukausi"
         >
-          <ChevronRight size={20} />
+          <ChevronRight size={18} />
         </button>
       </div>
 
@@ -102,7 +102,7 @@ export function CalendarView({
         {weekDays.map((day) => (
           <div
             key={day}
-            className="text-center text-sm font-medium text-muted-foreground py-2"
+            className="text-center text-[11px] font-medium text-[#555555] py-2"
           >
             {day}
           </div>
@@ -124,18 +124,18 @@ export function CalendarView({
               onClick={() => onDayClick(day)}
               className={`
                 relative aspect-square flex flex-col items-center justify-center
-                rounded-lg text-sm transition-colors
-                ${isCurrentMonth ? "text-foreground" : "text-muted-foreground/50"}
-                ${isSelected ? "bg-primary text-black font-semibold" : "hover:bg-muted"}
-                ${isTodayDate && !isSelected ? "ring-2 ring-primary ring-inset" : ""}
+                rounded-md text-[13px] transition-colors duration-150
+                ${isCurrentMonth ? "text-foreground" : "text-[#444444]"}
+                ${isSelected ? "bg-white/10 text-white font-medium" : "hover:bg-white/5"}
+                ${isTodayDate && !isSelected ? "ring-1 ring-white/20 ring-inset" : ""}
               `}
             >
               <span>{format(day, "d")}</span>
               {/* Competition indicator dot */}
               {hasCompetition && (
                 <span
-                  className={`absolute bottom-1 w-1.5 h-1.5 rounded-full ${
-                    isSelected ? "bg-black" : "bg-primary"
+                  className={`absolute bottom-1 w-1 h-1 rounded-full ${
+                    isSelected ? "bg-white" : "bg-[#666666]"
                   }`}
                 />
               )}

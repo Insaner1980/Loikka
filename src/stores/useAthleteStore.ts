@@ -61,15 +61,42 @@ export const useAthleteStore = create<AthleteStore>((set, get) => ({
   addAthlete: async (athleteData: NewAthlete) => {
     set({ loading: true, error: null });
     try {
+      // Create athlete first (without photo path)
       const newAthlete = await invoke<Athlete>("create_athlete", {
         athlete: {
           firstName: athleteData.firstName,
           lastName: athleteData.lastName,
           birthYear: athleteData.birthYear,
           clubName: athleteData.clubName || null,
-          photoPath: athleteData.photoPath || null,
+          photoPath: null,
         },
       });
+
+      // If there's a photo source path, save it and update the athlete
+      if (athleteData.photoPath) {
+        try {
+          // Use the new save_athlete_profile_photo command which returns just the path string
+          const savedPhotoPath = await invoke<string>("save_athlete_profile_photo", {
+            sourcePath: athleteData.photoPath,
+            athleteId: newAthlete.id,
+          });
+
+          // Update athlete with the saved photo path
+          await invoke<Athlete>("update_athlete", {
+            id: newAthlete.id,
+            athlete: {
+              firstName: athleteData.firstName,
+              lastName: athleteData.lastName,
+              birthYear: athleteData.birthYear,
+              clubName: athleteData.clubName || null,
+              photoPath: savedPhotoPath,
+            },
+          });
+        } catch (photoError) {
+          console.error("Failed to save athlete photo:", photoError);
+          // Continue even if photo save fails
+        }
+      }
 
       // Refetch to get updated stats
       const athletes = await invoke<AthleteWithStats[]>("get_all_athletes");

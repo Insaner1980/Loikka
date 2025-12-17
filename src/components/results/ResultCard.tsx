@@ -39,7 +39,7 @@ function PlacementBadge({ placement }: { placement: number }) {
 
   if (placement > 3) {
     return (
-      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold bg-muted text-muted-foreground">
+      <span className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold bg-white/5 text-[#666666]">
         {placement}.
       </span>
     );
@@ -78,8 +78,8 @@ export function ResultCard({ result, athlete, discipline }: ResultCardProps) {
 
   return (
     <div
-      className={`bg-card rounded-lg border border-border transition-all ${
-        hasDetails ? "cursor-pointer hover:border-primary/50" : ""
+      className={`rounded-lg bg-[#141414] transition-all ${
+        hasDetails ? "cursor-pointer hover:bg-[#191919]" : ""
       }`}
       onClick={() => hasDetails && setIsExpanded(!isExpanded)}
     >
@@ -141,8 +141,8 @@ export function ResultCard({ result, athlete, discipline }: ResultCardProps) {
 
       {/* Expanded details */}
       {isExpanded && hasDetails && (
-        <div className="px-4 pb-4 pt-0 border-t border-border mt-0">
-          <div className="pt-4 space-y-2 text-sm">
+        <div className="px-4 pb-4 pt-0 mt-0">
+          <div className="pt-4 space-y-2 text-sm border-t border-white/[0.03]">
             {result.location && (
               <div className="flex items-center gap-2 text-muted-foreground">
                 <MapPin size={14} />

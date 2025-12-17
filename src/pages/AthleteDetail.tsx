@@ -20,7 +20,7 @@ import { Dialog } from "../components/ui/Dialog";
 import { ResultBadge } from "../components/results/ResultBadge";
 import { ResultForm } from "../components/results/ResultForm";
 import { PhotoGallery } from "../components/shared/PhotoGallery";
-import { formatTime, formatDistance, formatDate } from "../lib/formatters";
+import { formatTime, formatDistance, formatDate, toAssetUrl } from "../lib/formatters";
 import type {
   NewAthlete,
   NewResult,
@@ -104,16 +104,16 @@ export function AthleteDetail() {
 
   if (!athleteData) {
     return (
-      <div className="p-8">
+      <div className="p-6">
         <button
           onClick={() => navigate("/athletes")}
-          className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6"
+          className="flex items-center gap-2 text-text-tertiary hover:text-foreground mb-6 transition-colors duration-150"
         >
-          <ArrowLeft size={20} />
-          Takaisin
+          <ArrowLeft size={18} />
+          <span className="text-[13px]">Takaisin</span>
         </button>
         <div className="text-center py-16">
-          <p className="text-muted-foreground">Urheilijaa ei löytynyt</p>
+          <p className="text-text-secondary text-[13px]">Urheilijaa ei löytynyt</p>
         </div>
       </div>
     );
@@ -152,29 +152,29 @@ export function AthleteDetail() {
     switch (activeTab) {
       case "records":
         return (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {personalBests.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
+              <p className="text-text-secondary text-[13px] text-center py-8">
                 Ei ennätyksiä vielä
               </p>
             ) : (
               personalBests.map((result) => (
                 <div
                   key={result.id}
-                  className="flex items-center justify-between p-4 bg-card rounded-xl border border-border"
+                  className="flex items-center justify-between p-4 bg-[#141414] rounded-lg"
                 >
                   <div>
-                    <div className="font-semibold">
+                    <div className="text-sm font-medium text-foreground">
                       {result.discipline.fullName}
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-[13px] text-[#666666] mt-0.5">
                       {formatDate(result.date)}
-                      {result.competitionName && ` • ${result.competitionName}`}
+                      {result.competitionName && ` · ${result.competitionName}`}
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <ResultBadge type="pb" />
-                    <span className="text-xl font-bold">
+                    <span className="text-lg font-semibold tabular-nums text-foreground">
                       {result.discipline.unit === "time"
                         ? formatTime(result.value)
                         : formatDistance(result.value)}
@@ -188,39 +188,39 @@ export function AthleteDetail() {
 
       case "results":
         return (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {results.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
+              <p className="text-text-secondary text-[13px] text-center py-8">
                 Ei tuloksia vielä
               </p>
             ) : (
               results.map((result) => (
                 <div
                   key={result.id}
-                  className="flex items-center justify-between p-4 bg-card rounded-xl border border-border"
+                  className="flex items-center justify-between p-4 bg-[#141414] rounded-lg"
                 >
                   <div>
-                    <div className="font-semibold flex items-center gap-2">
+                    <div className="text-sm font-medium text-foreground flex items-center gap-2">
                       {result.discipline.name}
                       {result.isPersonalBest && <ResultBadge type="pb" />}
                       {!result.isPersonalBest && result.isSeasonBest && (
                         <ResultBadge type="sb" />
                       )}
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-[13px] text-[#666666] mt-0.5">
                       {formatDate(result.date)}
-                      {result.competitionName && ` • ${result.competitionName}`}
-                      {result.location && ` • ${result.location}`}
+                      {result.competitionName && ` · ${result.competitionName}`}
+                      {result.location && ` · ${result.location}`}
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="text-lg font-semibold">
+                    <span className="text-sm font-semibold tabular-nums text-foreground">
                       {result.discipline.unit === "time"
                         ? formatTime(result.value)
                         : formatDistance(result.value)}
                     </span>
                     {result.placement && (
-                      <div className="text-sm text-muted-foreground">
+                      <div className="text-[13px] text-[#666666]">
                         Sija {result.placement}
                       </div>
                     )}
@@ -233,26 +233,26 @@ export function AthleteDetail() {
 
       case "medals":
         return (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {medals.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
+              <p className="text-text-secondary text-[13px] text-center py-8">
                 Ei mitaleja vielä
               </p>
             ) : (
               medals.map((medal) => (
                 <div
                   key={medal.id}
-                  className="flex items-center gap-4 p-4 bg-card rounded-xl border border-border"
+                  className="flex items-center gap-4 p-4 bg-[#141414] rounded-lg"
                 >
                   <div
-                    className={`w-10 h-10 rounded-full ${medalClasses[medal.type]} flex items-center justify-center`}
+                    className={`w-9 h-9 rounded-full ${medalClasses[medal.type]} flex items-center justify-center`}
                   >
-                    <Trophy size={20} className="text-black/70" />
+                    <Trophy size={18} className="text-black/70" />
                   </div>
                   <div className="flex-1">
-                    <div className="font-semibold">{medal.competitionName}</div>
-                    <div className="text-sm text-muted-foreground">
-                      {medal.disciplineName && `${medal.disciplineName} • `}
+                    <div className="text-sm font-medium text-foreground">{medal.competitionName}</div>
+                    <div className="text-[13px] text-[#666666] mt-0.5">
+                      {medal.disciplineName && `${medal.disciplineName} · `}
                       {formatDate(medal.date)}
                     </div>
                   </div>
@@ -265,11 +265,9 @@ export function AthleteDetail() {
       case "progress":
         return (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-16 h-16 mb-4 rounded-full bg-muted flex items-center justify-center">
-              <BarChart3 size={32} className="text-muted-foreground" />
-            </div>
-            <h2 className="text-lg font-semibold mb-2">Kehityskaaviot</h2>
-            <p className="text-muted-foreground">
+            <BarChart3 size={48} className="text-[#444444] mb-4" />
+            <h2 className="text-sm font-medium text-[#666666] mb-1.5">Kehityskaaviot</h2>
+            <p className="text-[13px] text-[#555555]">
               Tässä näkyvät pian tuloskehityskaaviot
             </p>
           </div>
@@ -277,14 +275,12 @@ export function AthleteDetail() {
 
       case "goals":
         return (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {goals.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="w-16 h-16 mb-4 rounded-full bg-muted flex items-center justify-center">
-                  <Target size={32} className="text-muted-foreground" />
-                </div>
-                <h2 className="text-lg font-semibold mb-2">Ei tavoitteita</h2>
-                <p className="text-muted-foreground">
+                <Target size={48} className="text-[#444444] mb-4" />
+                <h2 className="text-sm font-medium text-[#666666] mb-1.5">Ei tavoitteita</h2>
+                <p className="text-[13px] text-[#555555]">
                   Lisää ensimmäinen tavoite
                 </p>
               </div>
@@ -292,28 +288,28 @@ export function AthleteDetail() {
               goals.map((goal) => (
                 <div
                   key={goal.id}
-                  className={`flex items-center gap-4 p-4 rounded-xl border ${
+                  className={`flex items-center gap-4 p-4 rounded-lg ${
                     goal.status === "achieved"
-                      ? "bg-green-500/10 border-green-500/30"
-                      : "bg-card border-border"
+                      ? "bg-success/10"
+                      : "bg-[#141414]"
                   }`}
                 >
                   {goal.status === "achieved" ? (
-                    <CheckCircle size={24} className="text-green-500" />
+                    <CheckCircle size={20} className="text-success" />
                   ) : (
-                    <Target size={24} className="text-muted-foreground" />
+                    <Target size={20} className="text-[#555555]" />
                   )}
                   <div className="flex-1">
-                    <div className="font-semibold">
+                    <div className="text-sm font-medium text-foreground">
                       Tavoite: {goal.targetValue}
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-[13px] text-[#666666] mt-0.5">
                       {goal.targetDate &&
                         `Tavoitepäivä: ${formatDate(goal.targetDate)}`}
                       {goal.achievedAt && (
-                        <span className="text-green-600">
+                        <span className="text-success">
                           {" "}
-                          • Saavutettu {formatDate(goal.achievedAt)}
+                          · Saavutettu {formatDate(goal.achievedAt)}
                         </span>
                       )}
                     </div>
@@ -327,45 +323,45 @@ export function AthleteDetail() {
   };
 
   return (
-    <div className="p-8">
+    <div className="p-6">
       {/* Back button */}
       <button
         onClick={() => navigate("/athletes")}
-        className="flex items-center gap-2 text-muted-foreground hover:text-foreground mb-6 transition-colors"
+        className="flex items-center gap-2 text-text-tertiary hover:text-foreground mb-6 transition-colors duration-150"
       >
-        <ArrowLeft size={20} />
-        Takaisin
+        <ArrowLeft size={18} />
+        <span className="text-[13px]">Takaisin</span>
       </button>
 
       {/* Profile header */}
-      <div className="flex items-start justify-between mb-8">
-        <div className="flex items-center gap-6">
+      <div className="flex items-start justify-between mb-8 pb-6 border-b border-border-subtle">
+        <div className="flex items-center gap-4">
           {athlete.photoPath ? (
             <img
-              src={athlete.photoPath}
+              src={toAssetUrl(athlete.photoPath)}
               alt={`${athlete.firstName} ${athlete.lastName}`}
-              className="w-24 h-24 rounded-full object-cover"
+              className="w-16 h-16 rounded-full object-cover"
             />
           ) : (
-            <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-              <User size={40} />
+            <div className="w-16 h-16 rounded-full bg-[#191919] flex items-center justify-center text-[#666666]">
+              <User size={28} />
             </div>
           )}
           <div>
-            <h1 className="text-3xl font-bold">
+            <h1 className="text-xl font-semibold text-foreground">
               {athlete.firstName} {athlete.lastName}
             </h1>
-            <div className="text-muted-foreground mt-1">
+            <div className="text-[13px] text-text-secondary mt-0.5">
               {athlete.birthYear} ({age} v.)
-              {athlete.clubName && ` • ${athlete.clubName}`}
+              {athlete.clubName && ` · ${athlete.clubName}`}
             </div>
           </div>
         </div>
         <button
           onClick={() => setEditDialogOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 border border-border rounded-xl hover:bg-muted transition-colors"
+          className="btn-secondary btn-press"
         >
-          <Edit size={18} />
+          <Edit size={16} />
           Muokkaa
         </button>
       </div>
@@ -382,11 +378,11 @@ export function AthleteDetail() {
 
       {/* Photo Gallery */}
       <div className="mb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <Camera size={20} className="text-muted-foreground" />
-          <h2 className="font-semibold">Kuvat</h2>
+        <div className="flex items-center gap-2 mb-3">
+          <Camera size={16} className="text-[#555555]" />
+          <h2 className="text-[13px] font-medium text-[#888888]">Kuvat</h2>
         </div>
-        <div className="bg-card border border-border rounded-xl p-4">
+        <div className="bg-[#141414] rounded-lg p-4">
           <PhotoGallery
             entityType="athletes"
             entityId={athleteId}
@@ -406,9 +402,9 @@ export function AthleteDetail() {
       <div className="flex justify-end mb-4">
         <button
           onClick={() => setResultDialogOpen(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-secondary font-medium rounded-xl hover:bg-primary/90 transition-colors"
+          className="btn-primary btn-press"
         >
-          <Plus size={20} />
+          <Plus size={18} />
           Lisää tulos
         </button>
       </div>

@@ -81,18 +81,18 @@ export function Goals() {
   };
 
   return (
-    <div className="p-8 h-full flex flex-col">
+    <div className="p-6 h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 pb-5 border-b border-border-subtle">
         <div>
-          <h1 className="text-2xl font-bold">Tavoitteet</h1>
-          <p className="text-muted-foreground">Tavoitteiden seuranta</p>
+          <h1 className="text-base font-medium text-foreground">Tavoitteet</h1>
+          <p className="text-[13px] text-text-secondary mt-0.5">Tavoitteiden seuranta</p>
         </div>
         <button
           onClick={() => setIsFormOpen(true)}
-          className="flex items-center gap-2 bg-primary text-black px-4 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors"
+          className="btn-primary btn-press"
         >
-          <Plus size={20} />
+          <Plus size={18} />
           Lisää tavoite
         </button>
       </div>
@@ -101,7 +101,7 @@ export function Goals() {
       <div className="flex flex-wrap items-center gap-3 mb-6">
         {/* Athlete filter */}
         <select
-          className="bg-card border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+          className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
           value={athleteFilter ?? ""}
           onChange={(e) =>
             setAthleteFilter(e.target.value ? Number(e.target.value) : null)
@@ -117,7 +117,7 @@ export function Goals() {
 
         {/* Status filter */}
         <select
-          className="bg-card border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+          className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
         >
@@ -133,17 +133,17 @@ export function Goals() {
         {(statusFilter === "active" || statusFilter === "all") && (
           <div className="mb-8">
             {displayGoals.active.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
-                <Target size={48} className="mb-4 opacity-50" />
-                <p className="text-lg font-medium">Ei aktiivisia tavoitteita</p>
-                <p className="text-sm">
+              <div className="flex flex-col items-center justify-center h-48 text-[#666666]">
+                <Target size={48} className="mb-4 text-[#444444]" />
+                <p className="text-sm font-medium">Ei aktiivisia tavoitteita</p>
+                <p className="text-[13px] text-[#555555] mt-1">
                   {athleteFilter !== null
                     ? "Ei tavoitteita tälle urheilijalle"
                     : "Lisää ensimmäinen tavoite painamalla yllä olevaa nappia"}
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {displayGoals.active.map((goalWithProgress) => (
                   <GoalCard
                     key={goalWithProgress.id}
@@ -168,16 +168,15 @@ export function Goals() {
               {statusFilter === "all" && (
                 <button
                   onClick={() => setShowAchieved(!showAchieved)}
-                  className="flex items-center gap-2 mb-4 text-lg font-semibold hover:text-primary transition-colors"
+                  className="flex items-center gap-2 mb-4 text-sm font-medium text-text-secondary hover:text-foreground transition-colors duration-150"
                 >
                   {showAchieved ? (
-                    <ChevronDown size={20} />
+                    <ChevronDown size={16} />
                   ) : (
-                    <ChevronUp size={20} />
+                    <ChevronUp size={16} />
                   )}
                   <span>Saavutetut tavoitteet</span>
-                  <span className="text-2xl">🎉</span>
-                  <span className="text-sm font-normal text-muted-foreground">
+                  <span className="text-[13px] font-normal text-text-tertiary">
                     ({displayGoals.achieved.length})
                   </span>
                 </button>
@@ -186,21 +185,20 @@ export function Goals() {
               {(statusFilter !== "all" || showAchieved) && (
                 <>
                   {statusFilter === "achieved" && (
-                    <h2 className="flex items-center gap-2 mb-4 text-lg font-semibold">
-                      <Check size={20} className="text-success" />
+                    <h2 className="flex items-center gap-2 mb-4 text-sm font-medium text-foreground">
+                      <Check size={16} className="text-success" />
                       Saavutetut tavoitteet
-                      <span className="text-2xl">🎉</span>
                     </h2>
                   )}
 
                   {displayGoals.achieved.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-32 text-muted-foreground bg-card rounded-xl border border-border">
-                      <p className="text-sm">
+                    <div className="flex flex-col items-center justify-center h-32 text-[#666666] bg-[#141414] rounded-lg">
+                      <p className="text-[13px]">
                         Ei vielä saavutettuja tavoitteita
                       </p>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                       {displayGoals.achieved.map((goalWithProgress) => (
                         <GoalCard
                           key={goalWithProgress.id}
@@ -223,12 +221,12 @@ export function Goals() {
 
         {/* Empty state for achieved filter */}
         {statusFilter === "achieved" && displayGoals.achieved.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
-            <Check size={48} className="mb-4 opacity-50" />
-            <p className="text-lg font-medium">
+          <div className="flex flex-col items-center justify-center h-48 text-[#666666]">
+            <Check size={48} className="mb-4 text-[#444444]" />
+            <p className="text-sm font-medium">
               Ei saavutettuja tavoitteita
             </p>
-            <p className="text-sm">
+            <p className="text-[13px] text-[#555555] mt-1">
               Saavutetut tavoitteet näkyvät täällä
             </p>
           </div>

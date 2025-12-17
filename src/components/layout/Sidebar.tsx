@@ -5,6 +5,7 @@ import {
   Calendar,
   TrendingUp,
   Target,
+  Image,
   Settings,
 } from "lucide-react";
 import { SidebarIcon } from "./SidebarIcon";
@@ -17,13 +18,14 @@ const navigationItems = [
   { icon: Calendar, label: "Kalenteri", path: "/calendar" },
   { icon: TrendingUp, label: "Tilastot", path: "/statistics" },
   { icon: Target, label: "Tavoitteet", path: "/goals" },
+  { icon: Image, label: "Kuvat", path: "/photos" },
 ];
 
 export function Sidebar() {
   return (
-    <aside className="w-16 h-screen bg-sidebar border-r border-border flex flex-col">
+    <aside className="w-12 h-screen flex flex-col py-4">
       {/* Navigation items */}
-      <nav className="flex-1 flex flex-col items-center gap-2 pt-4 px-2">
+      <nav className="flex-1 flex flex-col items-center gap-1 px-1.5">
         {navigationItems.map((item) => (
           <SidebarIcon
             key={item.path}
@@ -35,7 +37,7 @@ export function Sidebar() {
       </nav>
 
       {/* Sync indicator and Settings at bottom */}
-      <div className="flex flex-col items-center gap-2 pb-4 px-2">
+      <div className="flex flex-col items-center gap-1 px-1.5">
         <SyncIndicator />
         <SidebarIcon
           icon={Settings}

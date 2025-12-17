@@ -53,34 +53,34 @@ export function Dialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50"
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Dialog */}
       <div
-        className={`relative w-full ${maxWidthClasses[maxWidth]} mx-4 bg-card border border-border rounded-xl shadow-xl`}
+        className={`relative w-full ${maxWidthClasses[maxWidth]} mx-4 bg-[#141414] rounded-xl animate-scale-in`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="dialog-title"
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border">
-          <h2 id="dialog-title" className="text-lg font-semibold">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.04]">
+          <h2 id="dialog-title" className="text-sm font-medium text-foreground">
             {title}
           </h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            className="p-1.5 rounded-md text-[#555555] hover:text-foreground hover:bg-white/5 transition-colors duration-150"
             aria-label="Sulje"
           >
-            <X size={20} />
+            <X size={18} />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-4">{children}</div>
+        <div className="p-5">{children}</div>
       </div>
     </div>
   );

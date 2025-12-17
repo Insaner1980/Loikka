@@ -15,25 +15,24 @@ export function AthleteStats({
   goalsProgress,
 }: AthleteStatsProps) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       <StatCard
-        icon={<TrendingUp size={24} />}
+        icon={<TrendingUp size={20} />}
         value={resultsCount}
         label="Tuloksia"
       />
       <StatCard
-        icon={<Trophy size={24} />}
+        icon={<Trophy size={20} />}
         value={personalBestsCount}
         label="Ennätyksiä"
-        highlight
       />
       <StatCard
-        icon={<Medal size={24} />}
+        icon={<Medal size={20} />}
         value={medalsCount}
         label="Mitaleita"
       />
       <StatCard
-        icon={<Target size={24} />}
+        icon={<Target size={20} />}
         value={`${goalsProgress.achieved}/${goalsProgress.total}`}
         label="Tavoitteita"
       />

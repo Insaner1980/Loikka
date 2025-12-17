@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
-import { Camera, User } from "lucide-react";
+import { Camera, User, X } from "lucide-react";
+import { open } from "@tauri-apps/plugin-dialog";
+import { invoke } from "@tauri-apps/api/core";
 import type { Athlete, NewAthlete } from "../../types";
+import { toAssetUrl } from "../../lib/formatters";
 
 interface AthleteFormProps {
   athlete?: Athlete;
@@ -26,6 +29,8 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
   );
   const [clubName, setClubName] = useState(athlete?.clubName || "");
   const [photoPath, setPhotoPath] = useState(athlete?.photoPath || "");
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string>("");
+  const [pendingPhotoSource, setPendingPhotoSource] = useState<string>("");
   const [errors, setErrors] = useState<FormErrors>({});
 
   // Reset form when athlete prop changes
@@ -36,15 +41,30 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
       setBirthYear(athlete.birthYear);
       setClubName(athlete.clubName || "");
       setPhotoPath(athlete.photoPath || "");
+      setPendingPhotoSource("");
+      // Set preview URL immediately when loading existing athlete
+      setPhotoPreviewUrl(athlete.photoPath ? toAssetUrl(athlete.photoPath) : "");
     } else {
       setFirstName("");
       setLastName("");
       setBirthYear("");
       setClubName("");
       setPhotoPath("");
+      setPendingPhotoSource("");
+      setPhotoPreviewUrl("");
     }
     setErrors({});
   }, [athlete]);
+
+  // Update photo preview URL when photoPath changes (for new photo selections)
+  useEffect(() => {
+    // Only update if we have a photoPath and no preview yet (e.g., after saving a new photo)
+    if (photoPath && !photoPreviewUrl) {
+      setPhotoPreviewUrl(toAssetUrl(photoPath));
+    } else if (!photoPath) {
+      setPhotoPreviewUrl("");
+    }
+  }, [photoPath, photoPreviewUrl]);
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
@@ -77,19 +97,49 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
       lastName: lastName.trim(),
       birthYear: birthYear as number,
       clubName: clubName.trim() || undefined,
-      photoPath: photoPath || undefined,
+      // For new athletes, pass the pending source path; for existing, pass the saved path
+      photoPath: pendingPhotoSource || photoPath || undefined,
     });
   };
 
   const handlePhotoSelect = async () => {
-    // TODO: Implement file picker using Tauri dialog
-    // const { open } = await import('@tauri-apps/plugin-dialog');
-    // const selected = await open({
-    //   multiple: false,
-    //   filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp'] }]
-    // });
-    // if (selected) setPhotoPath(selected as string);
-    console.log("Photo picker not yet implemented");
+    try {
+      const selected = await open({
+        multiple: false,
+        filters: [
+          {
+            name: "Kuvat",
+            extensions: ["png", "jpg", "jpeg", "webp", "gif"],
+          },
+        ],
+      });
+
+      if (selected && typeof selected === "string") {
+        // For editing existing athlete, save photo immediately
+        if (athlete?.id) {
+          const savedPath = await invoke<string>("save_athlete_profile_photo", {
+            sourcePath: selected,
+            athleteId: athlete.id,
+          });
+          setPhotoPath(savedPath);
+          setPhotoPreviewUrl(toAssetUrl(savedPath));
+          setPendingPhotoSource("");
+        } else {
+          // For new athlete, store the source path to save after creation
+          setPendingPhotoSource(selected);
+          // Use the local file path directly for preview
+          setPhotoPreviewUrl(toAssetUrl(selected));
+        }
+      }
+    } catch (e) {
+      console.error("Failed to select photo:", e);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setPhotoPath("");
+    setPhotoPreviewUrl("");
+    setPendingPhotoSource("");
   };
 
   const getInitials = () => {
@@ -99,78 +149,90 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-5">
       {/* Photo picker */}
       <div className="flex justify-center">
-        <button
-          type="button"
-          onClick={handlePhotoSelect}
-          className="relative group"
-        >
-          {photoPath ? (
-            <img
-              src={photoPath}
-              alt="Urheilijan kuva"
-              className="w-24 h-24 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-medium text-2xl">
-              {firstName || lastName ? getInitials() : <User size={32} />}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={handlePhotoSelect}
+            className="relative group"
+          >
+            {photoPreviewUrl ? (
+              <img
+                src={photoPreviewUrl}
+                alt="Urheilijan kuva"
+                className="w-20 h-20 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-20 h-20 rounded-full bg-[#191919] flex items-center justify-center text-[#666666] font-medium text-xl">
+                {firstName || lastName ? getInitials() : <User size={28} />}
+              </div>
+            )}
+            <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity duration-150">
+              <Camera size={20} className="text-white" />
             </div>
+          </button>
+          {(photoPath || pendingPhotoSource) && (
+            <button
+              type="button"
+              onClick={handleRemovePhoto}
+              className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-[#333333] hover:bg-[#444444] flex items-center justify-center text-[#888888] hover:text-white transition-colors"
+              title="Poista kuva"
+            >
+              <X size={14} />
+            </button>
           )}
-          <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-            <Camera size={24} className="text-white" />
-          </div>
-        </button>
+        </div>
       </div>
 
       {/* First name */}
       <div>
         <label
           htmlFor="firstName"
-          className="block text-sm font-medium mb-1.5"
+          className="block text-[13px] font-medium text-[#888888] mb-1.5"
         >
-          Etunimi <span className="text-red-500">*</span>
+          Etunimi <span className="text-error">*</span>
         </label>
         <input
           type="text"
           id="firstName"
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
-          className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
-            errors.firstName ? "border-red-500" : "border-border"
+          className={`w-full px-3 py-2 text-sm bg-background border rounded-md input-focus ${
+            errors.firstName ? "border-error" : "border-border-subtle"
           }`}
           placeholder="Esim. Eemeli"
         />
         {errors.firstName && (
-          <p className="mt-1 text-sm text-red-500">{errors.firstName}</p>
+          <p className="mt-1.5 text-[12px] text-error">{errors.firstName}</p>
         )}
       </div>
 
       {/* Last name */}
       <div>
-        <label htmlFor="lastName" className="block text-sm font-medium mb-1.5">
-          Sukunimi <span className="text-red-500">*</span>
+        <label htmlFor="lastName" className="block text-[13px] font-medium text-[#888888] mb-1.5">
+          Sukunimi <span className="text-error">*</span>
         </label>
         <input
           type="text"
           id="lastName"
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
-          className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
-            errors.lastName ? "border-red-500" : "border-border"
+          className={`w-full px-3 py-2 text-sm bg-background border rounded-md input-focus ${
+            errors.lastName ? "border-error" : "border-border-subtle"
           }`}
           placeholder="Esim. Virtanen"
         />
         {errors.lastName && (
-          <p className="mt-1 text-sm text-red-500">{errors.lastName}</p>
+          <p className="mt-1.5 text-[12px] text-error">{errors.lastName}</p>
         )}
       </div>
 
       {/* Birth year */}
       <div>
-        <label htmlFor="birthYear" className="block text-sm font-medium mb-1.5">
-          Syntymävuosi <span className="text-red-500">*</span>
+        <label htmlFor="birthYear" className="block text-[13px] font-medium text-[#888888] mb-1.5">
+          Syntymävuosi <span className="text-error">*</span>
         </label>
         <select
           id="birthYear"
@@ -178,8 +240,8 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
           onChange={(e) =>
             setBirthYear(e.target.value ? parseInt(e.target.value) : "")
           }
-          className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
-            errors.birthYear ? "border-red-500" : "border-border"
+          className={`w-full px-3 py-2 text-sm bg-background border rounded-md input-focus ${
+            errors.birthYear ? "border-error" : "border-border-subtle"
           }`}
         >
           <option value="">Valitse vuosi</option>
@@ -190,13 +252,13 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
           ))}
         </select>
         {errors.birthYear && (
-          <p className="mt-1 text-sm text-red-500">{errors.birthYear}</p>
+          <p className="mt-1.5 text-[12px] text-error">{errors.birthYear}</p>
         )}
       </div>
 
       {/* Club name */}
       <div>
-        <label htmlFor="clubName" className="block text-sm font-medium mb-1.5">
+        <label htmlFor="clubName" className="block text-[13px] font-medium text-[#888888] mb-1.5">
           Seura
         </label>
         <input
@@ -204,7 +266,7 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
           id="clubName"
           value={clubName}
           onChange={(e) => setClubName(e.target.value)}
-          className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
+          className="w-full px-3 py-2 text-sm bg-background border border-border-subtle rounded-md input-focus"
           placeholder="Esim. Tampereen Pyrintö"
         />
       </div>
@@ -215,14 +277,14 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
           type="button"
           onClick={onCancel}
           disabled={disabled}
-          className="px-4 py-2 text-sm font-medium rounded-lg border border-border hover:bg-muted transition-colors disabled:opacity-50"
+          className="btn-secondary btn-press text-sm"
         >
           Peruuta
         </button>
         <button
           type="submit"
           disabled={disabled}
-          className="px-4 py-2 text-sm font-medium rounded-lg bg-primary text-secondary hover:bg-primary/90 transition-colors disabled:opacity-50 btn-press"
+          className="btn-primary btn-press text-sm"
         >
           {disabled ? "Tallennetaan..." : "Tallenna"}
         </button>

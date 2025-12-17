@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Download,
   Upload,
   Info,
   Sun,
   Moon,
+  Bell,
+  BellOff,
+  Check,
 } from "lucide-react";
 import { SettingsSection, SettingsToggle, GoogleDriveSettings } from "../components/settings";
-import { useTheme } from "../hooks";
+import { useTheme, checkNotificationPermission, requestNotificationPermission } from "../hooks";
 import { exportData, importData } from "../lib";
 
 export function Settings() {
@@ -16,6 +19,36 @@ export function Settings() {
   const [isImporting, setIsImporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  // Notification permission state
+  const [notificationSupported, setNotificationSupported] = useState(true);
+  const [notificationGranted, setNotificationGranted] = useState(false);
+  const [isRequestingPermission, setIsRequestingPermission] = useState(false);
+
+  // Check notification permission on mount
+  useEffect(() => {
+    checkNotificationPermission().then(({ supported, granted }) => {
+      setNotificationSupported(supported);
+      setNotificationGranted(granted);
+    });
+  }, []);
+
+  const handleRequestNotificationPermission = async () => {
+    setIsRequestingPermission(true);
+    try {
+      const granted = await requestNotificationPermission();
+      setNotificationGranted(granted);
+      if (granted) {
+        setSuccess("Ilmoitukset käytössä");
+      } else {
+        setError("Ilmoituslupa evätty");
+      }
+    } catch {
+      setError("Ilmoitusluvan pyytäminen epäonnistui");
+    } finally {
+      setIsRequestingPermission(false);
+    }
+  };
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -73,6 +106,50 @@ export function Settings() {
             />
           </div>
         </SettingsSection>
+
+        {/* Notifications section */}
+        {notificationSupported && (
+          <SettingsSection title="Ilmoitukset">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {notificationGranted ? (
+                  <Bell size={20} className="text-muted-foreground" />
+                ) : (
+                  <BellOff size={20} className="text-muted-foreground" />
+                )}
+                <div>
+                  <span className="font-medium">Kilpailumuistutukset</span>
+                  <p className="text-sm text-muted-foreground">
+                    {notificationGranted
+                      ? "Saat ilmoituksia tulevista kilpailuista"
+                      : "Salli ilmoitukset muistutusten saamiseksi"}
+                  </p>
+                </div>
+              </div>
+              {notificationGranted ? (
+                <div className="flex items-center gap-1.5 px-3 py-1.5 bg-success/10 text-success rounded-lg text-sm">
+                  <Check size={16} />
+                  <span>Käytössä</span>
+                </div>
+              ) : (
+                <button
+                  onClick={handleRequestNotificationPermission}
+                  disabled={isRequestingPermission}
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 text-sm font-medium"
+                >
+                  {isRequestingPermission ? "Odotetaan..." : "Salli ilmoitukset"}
+                </button>
+              )}
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
+              <Info size={18} className="text-muted-foreground mt-0.5" />
+              <p className="text-sm text-muted-foreground">
+                Muistutukset lähetetään kilpailulle asetetun päivämäärän mukaisesti.
+                Voit hallita yksittäisten kilpailujen muistutuksia kalenterinäkymässä.
+              </p>
+            </div>
+          </SettingsSection>
+        )}
 
         {/* Data section */}
         <SettingsSection title="Tiedot">

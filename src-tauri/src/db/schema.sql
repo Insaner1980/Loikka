@@ -134,13 +134,4 @@ CREATE INDEX IF NOT EXISTS idx_medals_athlete ON medals(athlete_id);
 CREATE INDEX IF NOT EXISTS idx_competitions_date ON competitions(date);
 
 CREATE INDEX IF NOT EXISTS idx_competition_participants_competition ON competition_participants(competition_id);
-CREATE INDEX IF NOT EXISTS idx_competition_participants_athlete ON competition_participants(athlete_id);
-
-CREATE INDEX IF NOT EXISTS idx_photos_entity ON photos(entity_type, entity_id);
-
--- Trigger to update updated_at on athletes
-CREATE TRIGGER IF NOT EXISTS update_athlete_timestamp
-AFTER UPDATE ON athletes
-BEGIN
-    UPDATE athletes SET updated_at = datetime('now') WHERE id = NEW.id;
-END
+CREATE INDEX IF NOT EXISTS idx_competition_participants_athlete ON competition_participants(athlete_id)

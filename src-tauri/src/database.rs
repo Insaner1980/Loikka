@@ -87,6 +87,18 @@ async fn run_migration_v1(pool: &DbPool) -> Result<(), String> {
         }
     }
 
+    // Create trigger separately (can't be split by semicolons)
+    sqlx::query(
+        r#"CREATE TRIGGER IF NOT EXISTS update_athlete_timestamp
+        AFTER UPDATE ON athletes
+        BEGIN
+            UPDATE athletes SET updated_at = datetime('now') WHERE id = NEW.id;
+        END"#
+    )
+    .execute(pool)
+    .await
+    .map_err(|e| format!("Migration v1 failed creating trigger: {}", e))?;
+
     sqlx::query("INSERT INTO _migrations (version, description) VALUES (1, 'create_initial_schema')")
         .execute(pool)
         .await
@@ -117,11 +129,45 @@ async fn run_migration_v2(pool: &DbPool) -> Result<(), String> {
 }
 
 async fn run_migration_v3(pool: &DbPool) -> Result<(), String> {
-    // Recreate photos table with new schema for entity-based photos
-    let statements = [
-        "DROP TABLE IF EXISTS photos_old",
-        "ALTER TABLE photos RENAME TO photos_old",
-        r#"CREATE TABLE photos (
+    // Check if photos table exists and has entity_type column
+    let has_entity_type: bool = sqlx::query_scalar(
+        "SELECT COUNT(*) > 0 FROM pragma_table_info('photos') WHERE name = 'entity_type'"
+    )
+    .fetch_one(pool)
+    .await
+    .unwrap_or(false);
+
+    // If photos table already has entity_type, just ensure index exists
+    if has_entity_type {
+        sqlx::query("CREATE INDEX IF NOT EXISTS idx_photos_entity ON photos(entity_type, entity_id)")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v3 failed creating index: {}", e))?;
+    } else {
+        // Check if photos table exists at all
+        let table_exists: bool = sqlx::query_scalar(
+            "SELECT COUNT(*) > 0 FROM sqlite_master WHERE type='table' AND name='photos'"
+        )
+        .fetch_one(pool)
+        .await
+        .unwrap_or(false);
+
+        if table_exists {
+            // Rename old table and create new one
+            let statements = [
+                "DROP TABLE IF EXISTS photos_old",
+                "ALTER TABLE photos RENAME TO photos_old",
+            ];
+            for stmt in statements {
+                sqlx::query(stmt)
+                    .execute(pool)
+                    .await
+                    .map_err(|e| format!("Migration v3 failed: {} - SQL: {}", e, stmt))?;
+            }
+        }
+
+        // Create new photos table
+        sqlx::query(r#"CREATE TABLE IF NOT EXISTS photos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             entity_type TEXT NOT NULL CHECK (entity_type IN ('athletes', 'results', 'competitions')),
             entity_id INTEGER NOT NULL,
@@ -132,16 +178,20 @@ async fn run_migration_v3(pool: &DbPool) -> Result<(), String> {
             height INTEGER,
             size_bytes INTEGER NOT NULL DEFAULT 0,
             created_at TEXT NOT NULL DEFAULT (datetime('now'))
-        )"#,
-        "CREATE INDEX IF NOT EXISTS idx_photos_entity ON photos(entity_type, entity_id)",
-        "DROP TABLE IF EXISTS photos_old",
-    ];
+        )"#)
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Migration v3 failed creating photos table: {}", e))?;
 
-    for stmt in statements {
-        sqlx::query(stmt)
+        sqlx::query("CREATE INDEX IF NOT EXISTS idx_photos_entity ON photos(entity_type, entity_id)")
             .execute(pool)
             .await
-            .map_err(|e| format!("Migration v3 failed: {} - SQL: {}", e, stmt))?;
+            .map_err(|e| format!("Migration v3 failed creating index: {}", e))?;
+
+        sqlx::query("DROP TABLE IF EXISTS photos_old")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v3 failed dropping old table: {}", e))?;
     }
 
     sqlx::query("INSERT INTO _migrations (version, description) VALUES (3, 'recreate_photos_table')")

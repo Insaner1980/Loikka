@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { Athlete } from "../../types";
+import { toAssetUrl } from "../../lib/formatters";
 
 interface AthleteStats {
   disciplineCount: number;
@@ -38,70 +39,67 @@ export function AthleteCard({ athlete, stats }: AthleteCardProps) {
   return (
     <Link
       to={`/athletes/${athlete.id}`}
-      className="block p-4 bg-card rounded-xl border border-border hover:border-primary transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+      className="block p-4 rounded-lg bg-[#141414] hover:bg-[#191919] transition-colors duration-150"
     >
       {/* Profile section */}
-      <div className="flex items-center gap-4 mb-4">
+      <div className="flex items-center gap-3 mb-4">
         {athlete.photoPath ? (
           <img
-            src={athlete.photoPath}
+            src={toAssetUrl(athlete.photoPath)}
             alt={`${athlete.firstName} ${athlete.lastName}`}
-            className="w-14 h-14 rounded-full object-cover"
+            className="w-9 h-9 rounded-full object-cover"
           />
         ) : (
-          <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center text-muted-foreground font-medium text-lg">
+          <div className="w-9 h-9 rounded-full bg-[#191919] flex items-center justify-center text-[#666666] font-medium text-sm">
             {getInitials(athlete.firstName, athlete.lastName)}
           </div>
         )}
         <div>
-          <div className="font-semibold text-lg">
+          <div className="font-medium text-sm text-foreground">
             {athlete.firstName} {athlete.lastName}
           </div>
-          <div className="text-sm text-muted-foreground">
+          <div className="text-[13px] text-[#666666]">
             {athlete.birthYear}
-            {athlete.clubName && ` • ${athlete.clubName}`}
+            {athlete.clubName && ` · ${athlete.clubName}`}
           </div>
         </div>
       </div>
 
-      {/* Divider */}
-      <div className="border-t border-border mb-4" />
-
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-2 text-center text-sm mb-4">
+      <div className="grid grid-cols-3 gap-2 text-center text-sm pt-4">
         <div>
-          <div className="font-semibold">{athleteStats.disciplineCount}</div>
-          <div className="text-muted-foreground text-xs">Lajeja</div>
+          <div className="font-medium text-foreground">{athleteStats.disciplineCount}</div>
+          <div className="text-[#555555] text-[11px]">Lajeja</div>
         </div>
         <div>
-          <div className="font-semibold">{athleteStats.resultCount}</div>
-          <div className="text-muted-foreground text-xs">Tuloksia</div>
+          <div className="font-medium text-foreground">{athleteStats.resultCount}</div>
+          <div className="text-[#555555] text-[11px]">Tuloksia</div>
         </div>
         <div>
-          <div className="font-semibold">{athleteStats.pbCount}</div>
-          <div className="text-muted-foreground text-xs">Ennätyksiä</div>
+          <div className="font-medium text-foreground">{athleteStats.pbCount}</div>
+          <div className="text-[#555555] text-[11px]">Ennätyksiä</div>
         </div>
       </div>
 
       {/* Medals */}
       {hasMedals && (
-        <div className="flex justify-center gap-4 text-sm">
+        <div className="flex justify-center gap-4 text-sm mt-4 pt-4">
           {athleteStats.goldMedals > 0 && (
-            <span className="flex items-center gap-1">
-              <span className="w-4 h-4 rounded-full bg-gold" />
-              <span>{athleteStats.goldMedals}</span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-gold" />
+              <span className="text-[#666666] text-[13px]">{athleteStats.goldMedals}</span>
             </span>
           )}
           {athleteStats.silverMedals > 0 && (
-            <span className="flex items-center gap-1">
-              <span className="w-4 h-4 rounded-full bg-silver" />
-              <span>{athleteStats.silverMedals}</span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-silver" />
+              <span className="text-[#666666] text-[13px]">{athleteStats.silverMedals}</span>
             </span>
           )}
           {athleteStats.bronzeMedals > 0 && (
-            <span className="flex items-center gap-1">
-              <span className="w-4 h-4 rounded-full bg-bronze" />
-              <span>{athleteStats.bronzeMedals}</span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-bronze" />
+              <span className="text-[#666666] text-[13px]">{athleteStats.bronzeMedals}</span>
             </span>
           )}
         </div>

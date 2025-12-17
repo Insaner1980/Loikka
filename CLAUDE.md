@@ -8,13 +8,23 @@ Tämä tiedosto sisältää ohjeistuksen Claude Code -avustajalle Loikka-projekt
 
 ### Teknologiapino
 
-- **Frontend:** React 18 + TypeScript + Vite
+- **Frontend:** React 19 + TypeScript + Vite 7
 - **Backend:** Tauri v2 (Rust)
-- **Tietokanta:** SQLite (tauri-plugin-sql)
+- **Tietokanta:** SQLite (sqlx)
 - **Tyylitys:** Tailwind CSS v4
-- **Tilanhallinta:** Zustand
-- **Reititys:** React Router v6
+- **Tilanhallinta:** Zustand 5
+- **Reititys:** React Router v7
 - **Ikonit:** Lucide React
+- **Kaaviot:** Recharts 3
+- **Päivämäärät:** date-fns 4
+
+### Tauri-pluginit
+
+- `tauri-plugin-dialog` - Tiedostovalitsin
+- `tauri-plugin-fs` - Tiedostojärjestelmä
+- `tauri-plugin-notification` - Ilmoitukset (kilpailumuistutukset)
+- `tauri-plugin-opener` - Linkkien avaus
+- `tauri-plugin-mcp-bridge` - MCP-integraatio (vain dev-buildissa)
 
 ## Kielivalinnat
 
@@ -32,6 +42,7 @@ Tämä tiedosto sisältää ohjeistuksen Claude Code -avustajalle Loikka-projekt
 | Calendar | Kalenteri |
 | Statistics | Tilastot |
 | Goals | Tavoitteet |
+| Photos | Kuvat |
 | Settings | Asetukset |
 | Personal Best (PB) | SE (Ennätys) |
 | Season Best (SB) | KE (Kauden ennätys) |
@@ -60,41 +71,76 @@ C:\dev\Loikka\
 ├── src/
 │   ├── components/
 │   │   ├── athletes/       # Urheilija-komponentit
-│   │   ├── layout/         # Layout-komponentit (Sidebar, Layout)
+│   │   ├── competitions/   # Kilpailukomponentit
+│   │   ├── goals/          # Tavoitekomponentit
+│   │   ├── layout/         # Layout-komponentit (Sidebar, Layout, TitleBar)
+│   │   ├── photos/         # Kuvagalleriakomponentit
 │   │   ├── results/        # Tulos-komponentit
-│   │   ├── shared/         # Jaetut komponentit (StatCard)
-│   │   └── ui/             # UI-primitiivit (Dialog, Tooltip)
+│   │   ├── settings/       # Asetuskomponentit
+│   │   ├── shared/         # Jaetut komponentit (StatCard, PhotoGallery)
+│   │   ├── statistics/     # Tilastokomponentit (kaaviot)
+│   │   └── ui/             # UI-primitiivit (Dialog, Toast, Spinner)
 │   ├── data/
 │   │   └── disciplines.ts  # Lajitiedot
+│   ├── hooks/              # Custom React hooks
 │   ├── lib/
-│   │   ├── database.ts     # Tietokanta-apufunktiot
-│   │   └── formatters.ts   # Muotoilufunktiot
+│   │   └── formatters.ts   # Muotoilufunktiot (aika, matka, päivämäärä, asset URL)
 │   ├── pages/              # Sivukomponentit
 │   ├── stores/             # Zustand-storet
 │   ├── types/              # TypeScript-tyypit
-│   ├── App.tsx
-│   ├── index.css           # Tailwind + teemat
+│   ├── App.tsx             # Reititys
+│   ├── index.css           # Tailwind v4 + teemat
 │   └── main.tsx
 ├── src-tauri/
 │   ├── src/
-│   │   ├── db/             # Tietokantamigraatiot (Rust)
+│   │   ├── commands/       # Tauri-komennot (athletes, results, photos, ym.)
+│   │   ├── db/             # Tietokantaskeema ja seed
+│   │   │   ├── schema.sql
+│   │   │   └── seed_disciplines.sql
+│   │   ├── types.rs        # Rust-tyypit
+│   │   ├── database.rs     # Tietokantayhteys
 │   │   └── lib.rs          # Tauri-sovellus
+│   ├── capabilities/
+│   │   └── default.json    # Tauri-oikeudet
 │   ├── Cargo.toml
 │   └── tauri.conf.json
 ├── package.json
-├── tailwind.config.js
 ├── tsconfig.json
 └── vite.config.ts
 ```
 
-## Väripaletti
+## Väripaletti (Premium Dark Theme)
 
 ```css
---color-primary: #FDF200;        /* Keltainen - pääväri */
---color-secondary: #2700FF;      /* Sininen - toissijainen */
---color-gold: #FFD700;           /* Kultamitali */
---color-silver: #C0C0C0;         /* Hopeamitali */
---color-bronze: #CD7F32;         /* Pronssimitali */
+/* Taustat */
+--bg-base: #0A0A0A;           /* Pääasiallinen tausta */
+--bg-surface: #111111;        /* Kortit ja pinnat */
+--bg-elevated: #191919;       /* Korotetut elementit */
+--bg-hover: #1a1a1a;          /* Hover-tila */
+
+/* Reunat - lähes näkymättömät */
+--border-subtle: rgba(255, 255, 255, 0.04);
+--border-default: rgba(255, 255, 255, 0.06);
+--border-hover: rgba(255, 255, 255, 0.1);
+
+/* Teksti */
+--text-primary: #E8E8E8;      /* Pääasiallinen teksti */
+--text-secondary: #888888;    /* Toissijainen teksti */
+--text-muted: #555555;        /* Himmennetty teksti */
+
+/* Aksentti - neutraali */
+--accent: #7C7C7C;
+--accent-hover: #999999;
+
+/* Tilat */
+--color-success: #4ADE80;     /* Vihreä - onnistuminen, SE */
+--color-warning: #FACC15;     /* Keltainen - varoitus, KE */
+--color-error: #EF4444;       /* Punainen - virhe */
+
+/* Mitalit */
+--color-gold: #FFD700;
+--color-silver: #C0C0C0;
+--color-bronze: #CD7F32;
 ```
 
 ## Tietokantarakenne
@@ -103,15 +149,41 @@ Tietokanta sijaitsee: `%APPDATA%/com.loikka.app/loikka.db`
 
 ### Taulut
 
-- `athletes` - Urheilijat
-- `disciplines` - Lajit (esitäytetty)
-- `results` - Tulokset
-- `competitions` - Kilpailut
-- `competition_participants` - Kilpailuosallistujat
-- `goals` - Tavoitteet
-- `medals` - Mitalit
-- `photos` - Kuvat
-- `sync_status` - Synkronointitila
+| Taulu | Kuvaus |
+|-------|--------|
+| `athletes` | Urheilijat (nimi, syntymävuosi, seura, profiilikuva) |
+| `disciplines` | Lajit (esitäytetty, nimi, kategoria, yksikkö) |
+| `results` | Tulokset (arvo, päivämäärä, SE/KE-status) |
+| `competitions` | Kilpailut (nimi, paikka, muistutukset) |
+| `competition_participants` | Kilpailuosallistujat |
+| `goals` | Tavoitteet (tavoitearvo, status) |
+| `medals` | Mitalit (kulta/hopea/pronssi) |
+| `photos` | Kuvat (entity-pohjainen: athletes/results/competitions) |
+| `sync_status` | Google Drive -synkronointitila |
+
+### Lajikategoriat
+
+- `sprints` - Pikajuoksut (60m, 100m, 200m, 400m)
+- `middleDistance` - Keskimatkat (800m, 1000m, 1500m)
+- `longDistance` - Pitkät matkat (3000m, 5000m, 10000m)
+- `hurdles` - Aitajuoksut (60m aj, 80m aj, 100m aj, 110m aj, 300m aj, 400m aj)
+- `jumps` - Hypyt (pituus, kolmiloikka, korkeus, seiväs)
+- `throws` - Heitot (kuula, kiekko, keihäs, moukari, pallo)
+- `combined` - Yhdistetyt (5-ottelu, 7-ottelu, 10-ottelu)
+
+## Ikkunan asetukset
+
+```json
+{
+  "width": 1200,
+  "height": 800,
+  "minWidth": 800,
+  "minHeight": 600,
+  "decorations": false,   /* Oma otsikkopalkki (TitleBar.tsx) */
+  "resizable": true,
+  "center": true
+}
+```
 
 ## Kehityskomennot
 
@@ -123,10 +195,11 @@ npm run tauri dev
 npm run tauri build
 
 # Tyyppitarkistus
-npm run typecheck
+npm run build   # sisältää tsc
 
-# Lint
-npm run lint
+# Porttikonflikti (jos 1420 varattu)
+taskkill //F //IM node.exe
+taskkill //F //IM loikka-temp.exe
 ```
 
 ## Koodauskonventiot
@@ -168,16 +241,38 @@ export const useMyStore = create<MyStore>((set, get) => ({
 }));
 ```
 
-### Tyylit (Tailwind)
+### Zustand-storet
+
+| Store | Kuvaus |
+|-------|--------|
+| `useAthleteStore` | Urheilijat ja tilastot |
+| `useResultStore` | Tulokset ja lajit |
+| `useCompetitionStore` | Kilpailut |
+| `useGoalStore` | Tavoitteet |
+| `usePhotoStore` | Kuvat ja galleria |
+| `useSyncStore` | Google Drive -synkronointi |
+
+### Custom Hooks
+
+| Hook | Kuvaus |
+|------|--------|
+| `useReminders` | Kilpailumuistutukset ja notifikaatiot |
+| `useKeyboardShortcuts` | Pikanäppäimet (Ctrl+N lisää uusi) |
+| `usePhotos` | Kuvien hallinta entity-pohjaisesti |
+| `useTheme` | Teeman hallinta |
+
+### Tyylit (Tailwind v4)
 
 - Käytä Tailwind-luokkia inline
-- Toistuvat tyylit -> komponentteihin
-- Teemavärit CSS-muuttujina (`bg-primary`, `text-muted-foreground`)
+- Teemavärit CSS-muuttujina (esim. `bg-[#141414]`, `text-[#888888]`)
+- Komponenttiluokat `index.css`:ssä (`btn-primary`, `btn-secondary`, `card-hover`, ym.)
+- Animaatiot: `animate-fade-in`, `animate-slide-up`, `animate-scale-in`
 
 ### Tiedostopolut
 
 - Käytä suhteellisia polkuja (`../components/...`)
 - Index-tiedostot exporteille (`components/athletes/index.ts`)
+- Asset URL:t `convertFileSrc`-funktiolla (`@tauri-apps/api/core`)
 
 ## Tärkeät tiedostot
 
@@ -185,36 +280,46 @@ export const useMyStore = create<MyStore>((set, get) => ({
 |----------|--------|
 | `src/types/index.ts` | Kaikki TypeScript-tyypit |
 | `src/data/disciplines.ts` | Lajitiedot ja kategorialabelit |
-| `src/lib/formatters.ts` | Aika- ja matkamuotoilu |
-| `src/lib/database.ts` | Tietokanta-apufunktiot |
-| `src/index.css` | Tailwind-konfiguraatio ja teemat |
-| `src-tauri/src/db/mod.rs` | Tietokantaskeema |
-| `src-tauri/src/db/seed.rs` | Lajien seed-data |
+| `src/lib/formatters.ts` | Aika, matka, päivämäärä, asset URL -muotoilu |
+| `src/index.css` | Tailwind v4 -konfiguraatio ja teemat |
+| `src-tauri/src/db/schema.sql` | Tietokantaskeema |
+| `src-tauri/src/db/seed_disciplines.sql` | Lajien seed-data |
+| `src-tauri/src/commands/*.rs` | Tauri-komennot |
+| `src-tauri/capabilities/default.json` | Tauri-oikeudet ja -rajoitukset |
 
-## Huomioitavaa
+## Toteutetut ominaisuudet
 
-1. **Mock-data:** Tällä hetkellä storet käyttävät mock-dataa. TODO: Yhdistä SQLite-tietokantaan.
+- [x] Urheilijoiden hallinta (CRUD)
+- [x] Tulosten kirjaus ja SE/KE-seuranta
+- [x] Kilpailukalenteri
+- [x] Kilpailumuistutukset (tauri-plugin-notification)
+- [x] Tavoitteiden asettaminen
+- [x] Mitaleiden seuranta
+- [x] Kuvagalleria (entity-pohjainen)
+- [x] Profiilikuvat urheilijoille
+- [x] Tilastokaaviot (Recharts)
+- [x] Oma otsikkopalkki (decorations: false)
+- [x] Tumma teema (Linear-tyylinen)
 
-2. **Kuvavalitsin:** AthleteForm:ssa kuvavalitsin on placeholder. TODO: Integroi `@tauri-apps/plugin-dialog`.
+## Keskeneräiset ominaisuudet
 
-3. **Synkronointi:** Google Drive -synkronointi ei ole vielä toteutettu.
+1. **Google Drive -synkronointi:** Tietokanta paikallisesti, pilvivarmuuskopiointi TODO
+2. **Kehityskaaviot:** Tilastot-sivu osittain toteutettu
+3. **Testaus:** Ei testejä vielä (Vitest + Playwright suositus)
 
-4. **Kehityskaaviot:** Kehitys-välilehti on placeholder. TODO: Integroi kaaviokirjasto (esim. Recharts).
+## Tietokantamigraatiot
 
-5. **Porttikonflikti:** Jos portti 1420 on varattu, sulje aiemmat prosessit:
-   ```bash
-   taskkill //F //IM node.exe
-   taskkill //F //IM loikka-temp.exe
-   ```
+Migraatiot ajetaan automaattisesti sovelluksen käynnistyksessä (`database.rs`):
 
-## Testaus
-
-Testejä ei ole vielä konfiguroitu. Suositus:
-- Vitest yksikkötesteille
-- Playwright E2E-testeille
+| Versio | Kuvaus |
+|--------|--------|
+| v1 | Alkuperäinen skeema (schema.sql) |
+| v2 | Lajien seed-data (seed_disciplines.sql) |
+| v3 | Photos-taulun uudelleenluonti (entity-pohjainen) |
 
 ## Muuta
 
-- Sovelluksen ikkunan minimikoko: 900x600
-- Tietokannan varmuuskopiointi: TODO
-- Lokalisointi: Vain suomi tällä hetkellä
+- Asset-protokolla käytössä (`protocol-asset` feature Rust-puolella)
+- Kuvat tallennetaan `%APPDATA%/com.loikka.app/photos/` ja `profile_photos/`
+- Thumbnailit generoidaan automaattisesti (300px)
+- Lazy loading käytössä sivuille (`React.lazy` + `Suspense`)

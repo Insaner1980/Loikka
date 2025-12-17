@@ -10,23 +10,25 @@
     "frontendDist": "../dist"
   },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
-        "title": "Loikka - Nuorten yleisurheilutulosten seuranta",
+        "title": "Loikka",
         "width": 1200,
         "height": 800,
         "minWidth": 800,
         "minHeight": 600,
         "center": true,
-        "decorations": true,
-        "resizable": true
+        "decorations": false,
+        "resizable": true,
+        "transparent": false
       }
     ],
     "security": {
       "csp": null,
       "assetProtocol": {
         "enable": true,
-        "scope": ["$APPDATA/**", "$RESOURCE/**"]
+        "scope": ["$APPDATA/**", "$RESOURCE/**", "**"]
       }
     }
   },

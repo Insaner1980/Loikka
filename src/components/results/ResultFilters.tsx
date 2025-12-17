@@ -41,7 +41,7 @@ export function ResultFilters({
     <div className="flex flex-wrap items-center gap-3">
       {/* Athlete filter */}
       <select
-        className="bg-card border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+        className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
         value={filters.athleteId ?? ""}
         onChange={(e) =>
           onFilterChange({
@@ -60,7 +60,7 @@ export function ResultFilters({
 
       {/* Discipline filter */}
       <select
-        className="bg-card border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+        className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
         value={filters.disciplineId ?? ""}
         onChange={(e) =>
           onFilterChange({
@@ -85,7 +85,7 @@ export function ResultFilters({
 
       {/* Type filter */}
       <select
-        className="bg-card border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+        className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
         value={filters.type ?? ""}
         onChange={(e) =>
           onFilterChange({
@@ -101,7 +101,7 @@ export function ResultFilters({
 
       {/* Time range filter */}
       <select
-        className="bg-card border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+        className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
         value={filters.timeRange}
         onChange={(e) =>
           onFilterChange({
@@ -123,7 +123,7 @@ export function ResultFilters({
         <>
           <input
             type="date"
-            className="bg-card border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
             value={filters.startDate ?? ""}
             onChange={(e) =>
               onFilterChange({
@@ -132,10 +132,10 @@ export function ResultFilters({
               })
             }
           />
-          <span className="text-muted-foreground">–</span>
+          <span className="text-[#555555]">–</span>
           <input
             type="date"
-            className="bg-card border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+            className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
             value={filters.endDate ?? ""}
             onChange={(e) =>
               onFilterChange({
@@ -151,9 +151,9 @@ export function ResultFilters({
       {hasActiveFilters && (
         <button
           onClick={clearFilters}
-          className="flex items-center gap-1 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-1 px-3 py-2 text-[13px] text-[#555555] hover:text-foreground transition-colors duration-150"
         >
-          <X size={16} />
+          <X size={14} />
           Tyhjennä
         </button>
       )}

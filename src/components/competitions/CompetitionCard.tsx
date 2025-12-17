@@ -17,7 +17,7 @@ function DaysUntilBadge({ date }: { date: string }) {
 
   if (daysUntil < 0) {
     return (
-      <span className="px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+      <span className="px-2 py-1 rounded-md text-xs font-medium bg-white/5 text-[#666666]">
         Päättynyt
       </span>
     );
@@ -25,7 +25,7 @@ function DaysUntilBadge({ date }: { date: string }) {
 
   if (daysUntil === 0) {
     return (
-      <span className="px-2 py-1 rounded-full text-xs font-medium bg-primary text-black">
+      <span className="px-2 py-1 rounded-md text-xs font-medium bg-white/10 text-foreground">
         Tänään
       </span>
     );
@@ -33,7 +33,7 @@ function DaysUntilBadge({ date }: { date: string }) {
 
   if (daysUntil === 1) {
     return (
-      <span className="px-2 py-1 rounded-full text-xs font-medium bg-primary/20 text-primary">
+      <span className="px-2 py-1 rounded-md text-xs font-medium bg-white/5 text-[#888888]">
         Huomenna
       </span>
     );
@@ -41,14 +41,14 @@ function DaysUntilBadge({ date }: { date: string }) {
 
   if (daysUntil <= 7) {
     return (
-      <span className="px-2 py-1 rounded-full text-xs font-medium bg-primary/20 text-primary">
+      <span className="px-2 py-1 rounded-md text-xs font-medium bg-white/5 text-[#888888]">
         {daysUntil} pv
       </span>
     );
   }
 
   return (
-    <span className="px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+    <span className="px-2 py-1 rounded-md text-xs font-medium bg-white/5 text-[#666666]">
       {daysUntil} pv
     </span>
   );
@@ -94,8 +94,8 @@ export function CompetitionCard({
   return (
     <div
       onClick={onClick}
-      className={`bg-card rounded-xl border border-border p-4 transition-all ${
-        onClick ? "cursor-pointer hover:border-primary/50 hover:shadow-md" : ""
+      className={`rounded-xl bg-[#141414] p-4 transition-all ${
+        onClick ? "cursor-pointer hover:bg-[#191919]" : ""
       } ${isPast ? "opacity-60" : ""}`}
     >
       <div className="flex items-start justify-between gap-4">

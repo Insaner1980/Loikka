@@ -43,7 +43,7 @@ export function Athletes() {
       }
       setDialogOpen(false);
       setEditingAthlete(undefined);
-    } catch (err) {
+    } catch {
       toast.error("Tallennus epäonnistui");
     } finally {
       setSaving(false);
@@ -58,22 +58,22 @@ export function Athletes() {
   const dialogTitle = editingAthlete ? "Muokkaa urheilijaa" : "Lisää urheilija";
 
   return (
-    <div className="p-8 animate-fade-in">
+    <div className="p-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold">Urheilijat</h1>
+      <div className="flex items-center justify-between mb-6 pb-5 border-b border-border-subtle">
+        <h1 className="text-base font-medium text-foreground">Urheilijat</h1>
         <button
           onClick={handleAddClick}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-secondary font-medium rounded-xl hover:bg-primary/90 transition-all btn-press"
+          className="btn-primary btn-press"
         >
-          <Plus size={20} />
+          <Plus size={18} />
           Lisää urheilija
         </button>
       </div>
 
       {/* Loading state */}
       {loading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <SkeletonCard key={i} />
           ))}
@@ -95,7 +95,7 @@ export function Athletes() {
 
       {/* Athletes grid */}
       {!loading && athletes.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {athletes.map(({ athlete, stats }, index) => (
             <div
               key={athlete.id}

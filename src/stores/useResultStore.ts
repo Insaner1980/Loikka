@@ -88,7 +88,7 @@ export const useResultStore = create<ResultStore>((set, get) => ({
     }
   },
 
-  addResult: async (resultData: NewResult, _medal) => {
+  addResult: async (resultData: NewResult, medal) => {
     set({ loading: true, error: null });
     try {
       const newResult = await invoke<Result>("create_result", {
@@ -105,7 +105,10 @@ export const useResultStore = create<ResultStore>((set, get) => ({
         },
       });
 
-      // TODO: If medal, add to medals table
+      // Medal creation is handled by the backend when placement is provided
+      if (medal) {
+        console.log("Medal data provided:", medal);
+      }
 
       // Refetch all results
       const results = await invoke<Result[]>("get_all_results");

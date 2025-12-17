@@ -279,3 +279,162 @@ pub fn get_photo_url(file_path: String) -> String {
     // Convert to asset protocol URL for Tauri
     format!("asset://localhost/{}", file_path.replace('\\', "/"))
 }
+
+/// Photo with related entity details
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PhotoWithDetails {
+    pub id: i64,
+    pub entity_type: String,
+    pub entity_id: i64,
+    pub file_path: String,
+    pub thumbnail_path: Option<String>,
+    pub original_name: String,
+    pub width: Option<i32>,
+    pub height: Option<i32>,
+    pub size_bytes: i64,
+    pub created_at: String,
+    // Related entity info
+    pub athlete_name: Option<String>,
+    pub competition_name: Option<String>,
+}
+
+/// Get all photos with optional filters
+#[tauri::command]
+pub async fn get_all_photos(
+    app: AppHandle,
+    athlete_id: Option<i64>,
+    competition_id: Option<i64>,
+    year: Option<i32>,
+) -> Result<Vec<PhotoWithDetails>, String> {
+    let pool = get_pool(&app).await?;
+
+    // Build dynamic query based on filters
+    let mut query = String::from(
+        r#"SELECT p.id, p.entity_type, p.entity_id, p.file_path, p.thumbnail_path,
+                  p.original_name, p.width, p.height, p.size_bytes, p.created_at,
+                  a.first_name || ' ' || a.last_name as athlete_name,
+                  c.name as competition_name
+           FROM photos p
+           LEFT JOIN athletes a ON p.entity_type = 'athletes' AND p.entity_id = a.id
+           LEFT JOIN competitions c ON p.entity_type = 'competitions' AND p.entity_id = c.id
+           WHERE 1=1"#
+    );
+
+    // Add athlete filter - photos directly linked to athlete
+    if let Some(aid) = athlete_id {
+        query.push_str(&format!(
+            " AND (p.entity_type = 'athletes' AND p.entity_id = {})",
+            aid
+        ));
+    }
+
+    // Add competition filter
+    if let Some(cid) = competition_id {
+        query.push_str(&format!(
+            " AND (p.entity_type = 'competitions' AND p.entity_id = {})",
+            cid
+        ));
+    }
+
+    // Add year filter
+    if let Some(y) = year {
+        query.push_str(&format!(
+            " AND strftime('%Y', p.created_at) = '{}'",
+            y
+        ));
+    }
+
+    query.push_str(" ORDER BY p.created_at DESC");
+
+    let rows = sqlx::query(&query)
+        .fetch_all(&pool)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    Ok(rows
+        .iter()
+        .map(|row| PhotoWithDetails {
+            id: row.get("id"),
+            entity_type: row.get("entity_type"),
+            entity_id: row.get("entity_id"),
+            file_path: row.get("file_path"),
+            thumbnail_path: row.get("thumbnail_path"),
+            original_name: row.get("original_name"),
+            width: row.get("width"),
+            height: row.get("height"),
+            size_bytes: row.get("size_bytes"),
+            created_at: row.get("created_at"),
+            athlete_name: row.get("athlete_name"),
+            competition_name: row.get("competition_name"),
+        })
+        .collect())
+}
+
+/// Get distinct years that have photos
+#[tauri::command]
+pub async fn get_photo_years(app: AppHandle) -> Result<Vec<i32>, String> {
+    let pool = get_pool(&app).await?;
+
+    let rows: Vec<i32> = sqlx::query_scalar(
+        "SELECT DISTINCT CAST(strftime('%Y', created_at) AS INTEGER) as year FROM photos ORDER BY year DESC"
+    )
+    .fetch_all(&pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(rows)
+}
+
+/// Save an athlete profile photo (separate from the photos gallery)
+/// Returns the file path where the photo was saved
+#[tauri::command]
+pub fn save_athlete_profile_photo(
+    app: AppHandle,
+    source_path: String,
+    athlete_id: i64,
+) -> Result<String, String> {
+    // Get the source file info
+    let source = PathBuf::from(&source_path);
+    if !source.exists() {
+        return Err("Source file does not exist".to_string());
+    }
+
+    let extension = source
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("jpg")
+        .to_lowercase();
+
+    // Validate file type
+    if !["jpg", "jpeg", "png", "gif", "webp"].contains(&extension.as_str()) {
+        return Err("Unsupported image format".to_string());
+    }
+
+    // Get destination directory for athlete profile photos
+    let app_data = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| e.to_string())?;
+
+    let profile_photos_dir = app_data.join("profile_photos");
+    fs::create_dir_all(&profile_photos_dir).map_err(|e| e.to_string())?;
+
+    // Generate unique filename based on athlete ID
+    let unique_id = Uuid::new_v4();
+    let new_filename = format!("athlete_{}_{}.{}", athlete_id, unique_id, extension);
+    let dest_path = profile_photos_dir.join(&new_filename);
+
+    // Copy file
+    fs::copy(&source, &dest_path).map_err(|e| format!("Failed to copy file: {}", e))?;
+
+    // Generate thumbnail for faster loading
+    let thumbnail_filename = format!("athlete_{}_{}_thumb.{}", athlete_id, unique_id, extension);
+    let thumbnail_path = profile_photos_dir.join(&thumbnail_filename);
+
+    if let Err(e) = generate_thumbnail(&dest_path, &thumbnail_path) {
+        eprintln!("Failed to generate profile thumbnail: {}", e);
+    }
+
+    Ok(dest_path.to_string_lossy().to_string())
+}

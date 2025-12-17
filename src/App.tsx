@@ -12,6 +12,7 @@ const Results = lazy(() => import("./pages/Results").then(m => ({ default: m.Res
 const Calendar = lazy(() => import("./pages/Calendar").then(m => ({ default: m.Calendar })));
 const Statistics = lazy(() => import("./pages/Statistics").then(m => ({ default: m.Statistics })));
 const Goals = lazy(() => import("./pages/Goals").then(m => ({ default: m.Goals })));
+const Photos = lazy(() => import("./pages/Photos").then(m => ({ default: m.Photos })));
 const Settings = lazy(() => import("./pages/Settings").then(m => ({ default: m.Settings })));
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
             <Route path="calendar" element={<Calendar />} />
             <Route path="statistics" element={<Statistics />} />
             <Route path="goals" element={<Goals />} />
+            <Route path="photos" element={<Photos />} />
             <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>

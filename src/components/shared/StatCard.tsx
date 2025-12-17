@@ -4,25 +4,20 @@ interface StatCardProps {
   icon: ReactNode;
   value: string | number;
   label: string;
-  highlight?: boolean;
 }
 
-export function StatCard({ icon, value, label, highlight }: StatCardProps) {
+export function StatCard({ icon, value, label }: StatCardProps) {
   return (
-    <div
-      className={`flex items-center gap-4 p-4 rounded-xl border border-border
-        ${highlight ? "bg-primary/10" : "bg-card"}`}
-    >
-      <div
-        className={`flex items-center justify-center w-12 h-12 rounded-xl
-          ${highlight ? "bg-primary text-secondary" : "bg-muted text-muted-foreground"}`}
-      >
-        {icon}
+    <div className="p-5 rounded-xl bg-[#141414]">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="text-[#555555]">
+          {icon}
+        </div>
       </div>
-      <div>
-        <div className="text-2xl font-bold">{value}</div>
-        <div className="text-sm text-muted-foreground">{label}</div>
+      <div className="text-[28px] font-medium text-foreground tracking-tight leading-none mb-1">
+        {value}
       </div>
+      <div className="text-[13px] text-[#666666]">{label}</div>
     </div>
   );
 }

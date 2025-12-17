@@ -1,270 +1,240 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
-  ClipboardList,
-  Trophy,
-  Medal,
   ChevronRight,
-  Plus,
-  User,
   MapPin,
   Calendar,
+  Users,
 } from "lucide-react";
-import { StatCard } from "../components/shared";
-
-// Placeholder data - will be replaced with real data from database
-const upcomingCompetitions = [
-  {
-    id: 1,
-    name: "Nuorten SM-kisat",
-    date: "2024-06-15",
-    location: "Helsinki",
-    daysUntil: 12,
-  },
-  {
-    id: 2,
-    name: "Kalevan kisat",
-    date: "2024-07-05",
-    location: "Tampere",
-    daysUntil: 32,
-  },
-  {
-    id: 3,
-    name: "Seuracup",
-    date: "2024-07-20",
-    location: "Turku",
-    daysUntil: 47,
-  },
-];
-
-const athletes = [
-  { id: 1, firstName: "Eemeli", lastName: "Virtanen" },
-  { id: 2, firstName: "Aino", lastName: "Korhonen" },
-  { id: 3, firstName: "Veeti", lastName: "Mäkinen" },
-  { id: 4, firstName: "Ella", lastName: "Laine" },
-];
-
-const recentResults = [
-  {
-    id: 1,
-    athleteName: "Eemeli Virtanen",
-    discipline: "100m",
-    value: "11.23",
-    isSB: true,
-    isPB: false,
-    date: "2024-05-28",
-  },
-  {
-    id: 2,
-    athleteName: "Aino Korhonen",
-    discipline: "Pituus",
-    value: "5.42",
-    isSB: true,
-    isPB: true,
-    date: "2024-05-27",
-  },
-  {
-    id: 3,
-    athleteName: "Veeti Mäkinen",
-    discipline: "Kuula",
-    value: "14.85",
-    isSB: false,
-    isPB: false,
-    date: "2024-05-26",
-  },
-  {
-    id: 4,
-    athleteName: "Ella Laine",
-    discipline: "800m",
-    value: "2:15.33",
-    isSB: true,
-    isPB: false,
-    date: "2024-05-25",
-  },
-  {
-    id: 5,
-    athleteName: "Eemeli Virtanen",
-    discipline: "200m",
-    value: "22.89",
-    isSB: false,
-    isPB: false,
-    date: "2024-05-24",
-  },
-];
+import { useAthleteStore } from "../stores/useAthleteStore";
+import { useResultStore } from "../stores/useResultStore";
+import { useCompetitionStore } from "../stores/useCompetitionStore";
+import { getDisciplineById } from "../data/disciplines";
+import { formatTime, formatDistance, toAssetUrl } from "../lib/formatters";
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
   return date.toLocaleDateString("fi-FI", { day: "numeric", month: "numeric" });
 }
 
+function getInitials(firstName: string, lastName: string): string {
+  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+}
+
+function getDaysUntil(dateStr: string): number {
+  const date = new Date(dateStr);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  date.setHours(0, 0, 0, 0);
+  const diff = date.getTime() - today.getTime();
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
 export function Dashboard() {
+  const { athletes, fetchAthletes } = useAthleteStore();
+  const { results, fetchResults } = useResultStore();
+  const { competitions, fetchCompetitions } = useCompetitionStore();
+
+  useEffect(() => {
+    fetchAthletes();
+    fetchResults();
+    fetchCompetitions();
+  }, [fetchAthletes, fetchResults, fetchCompetitions]);
+
+  // Get upcoming competitions (future dates only)
+  const upcomingCompetitions = competitions
+    .filter((c) => getDaysUntil(c.date) >= 0)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .slice(0, 3);
+
+  // Get recent results with athlete names
+  const recentResults = results
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5)
+    .map((result) => {
+      const athleteData = athletes.find((a) => a.athlete.id === result.athleteId);
+      const discipline = getDisciplineById(result.disciplineId);
+      return {
+        ...result,
+        athleteName: athleteData
+          ? `${athleteData.athlete.firstName} ${athleteData.athlete.lastName}`
+          : "Tuntematon",
+        disciplineName: discipline?.name || "Tuntematon",
+        disciplineUnit: discipline?.unit || "time",
+      };
+    });
+
   return (
-    <div className="p-8 space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold">Tervetuloa!</h1>
-      </div>
-
-      {/* Stats row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard
-          icon={<ClipboardList size={24} />}
-          value={127}
-          label="Tulosta tänä vuonna"
-        />
-        <StatCard
-          icon={<Trophy size={24} />}
-          value={23}
-          label="Ennätystä tänä vuonna"
-          highlight
-        />
-        <StatCard
-          icon={<Medal size={24} />}
-          value={15}
-          label="Mitalia yhteensä"
-        />
-      </div>
-
+    <div className="p-6 space-y-8 max-w-7xl mx-auto w-full">
       {/* Two column layout for competitions and athletes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Upcoming competitions */}
         <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Tulevat kilpailut</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-[13px] font-medium text-[#888888]">Tulevat kilpailut</h2>
             <Link
               to="/calendar"
-              className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
+              className="text-[13px] text-[#555555] hover:text-[#888888] flex items-center gap-0.5 transition-colors duration-150"
             >
-              Kaikki <ChevronRight size={16} />
+              Kaikki <ChevronRight size={14} />
             </Link>
           </div>
-          <div className="space-y-3">
-            {upcomingCompetitions.map((competition) => (
-              <div
-                key={competition.id}
-                className="p-4 bg-card rounded-xl border border-border"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="font-medium">{competition.name}</div>
-                    <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Calendar size={14} />
-                        {formatDate(competition.date)}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <MapPin size={14} />
-                        {competition.location}
-                      </span>
+          {upcomingCompetitions.length === 0 ? (
+            <div className="text-[13px] text-[#555555] py-4">
+              Ei tulevia kilpailuja
+            </div>
+          ) : (
+            <div className="divide-y divide-white/[0.03]">
+              {upcomingCompetitions.map((competition) => (
+                <div
+                  key={competition.id}
+                  className="py-3 first:pt-0 last:pb-0"
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="text-[14px] font-medium text-foreground">{competition.name}</div>
+                      <div className="flex items-center gap-3 mt-1.5 text-[13px] text-[#666666]">
+                        <span className="flex items-center gap-1">
+                          <Calendar size={13} />
+                          {formatDate(competition.date)}
+                        </span>
+                        {competition.location && (
+                          <span className="flex items-center gap-1">
+                            <MapPin size={13} />
+                            {competition.location}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="px-2 py-1 rounded-md bg-white/5 text-[11px] text-[#888888]">
+                      {getDaysUntil(competition.date)} pv
                     </div>
                   </div>
-                  <div className="text-sm text-muted-foreground">
-                    {competition.daysUntil} pv
-                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Athletes */}
         <section>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Urheilijat</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-[13px] font-medium text-[#888888]">Urheilijat</h2>
             <Link
               to="/athletes"
-              className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
+              className="text-[13px] text-[#555555] hover:text-[#888888] flex items-center gap-0.5 transition-colors duration-150"
             >
-              Kaikki <ChevronRight size={16} />
+              Kaikki <ChevronRight size={14} />
             </Link>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {athletes.map((athlete) => (
+          {athletes.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <Users size={32} className="text-[#444444] mb-2" />
+              <p className="text-[13px] text-[#555555]">Ei urheilijoita</p>
               <Link
-                key={athlete.id}
-                to={`/athletes/${athlete.id}`}
-                className="flex-shrink-0 w-24 p-3 bg-card rounded-xl border border-border hover:border-primary transition-colors text-center"
+                to="/athletes"
+                className="text-[13px] text-[#888888] hover:text-foreground mt-1"
               >
-                <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-                  <User size={20} />
-                </div>
-                <div className="text-sm font-medium truncate">
-                  {athlete.firstName}
-                </div>
-                <div className="text-xs text-muted-foreground truncate">
-                  {athlete.lastName}
-                </div>
+                Lisää urheilija
               </Link>
-            ))}
-            <Link
-              to="/athletes"
-              className="flex-shrink-0 w-24 p-3 bg-card rounded-xl border border-dashed border-border hover:border-primary transition-colors text-center flex flex-col items-center justify-center"
-            >
-              <div className="w-12 h-12 mb-2 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-                <Plus size={20} />
-              </div>
-              <div className="text-sm text-muted-foreground">Lisää</div>
-            </Link>
-          </div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-3">
+              {athletes.slice(0, 3).map(({ athlete }) => (
+                <Link
+                  key={athlete.id}
+                  to={`/athletes/${athlete.id}`}
+                  className="p-4 rounded-lg hover:bg-white/[0.02] transition-colors duration-150 text-center"
+                >
+                  {athlete.photoPath ? (
+                    <img
+                      src={toAssetUrl(athlete.photoPath)}
+                      alt={`${athlete.firstName} ${athlete.lastName}`}
+                      className="w-9 h-9 mx-auto mb-2.5 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-9 h-9 mx-auto mb-2.5 rounded-full bg-[#191919] flex items-center justify-center text-[#666666] text-sm font-medium">
+                      {getInitials(athlete.firstName, athlete.lastName)}
+                    </div>
+                  )}
+                  <div className="text-sm font-medium truncate text-foreground">
+                    {athlete.firstName}
+                  </div>
+                  <div className="text-[13px] text-[#666666] truncate">
+                    {athlete.lastName}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </section>
       </div>
 
       {/* Recent results */}
       <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Viimeisimmät tulokset</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-[13px] font-medium text-[#888888]">Viimeisimmät tulokset</h2>
           <Link
             to="/results"
-            className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
+            className="text-[13px] text-[#555555] hover:text-[#888888] flex items-center gap-0.5 transition-colors duration-150"
           >
-            Kaikki <ChevronRight size={16} />
+            Kaikki <ChevronRight size={14} />
           </Link>
         </div>
-        <div className="bg-card rounded-xl border border-border overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border text-left text-sm text-muted-foreground">
-                <th className="px-4 py-3 font-medium">Urheilija</th>
-                <th className="px-4 py-3 font-medium">Laji</th>
-                <th className="px-4 py-3 font-medium">Tulos</th>
-                <th className="px-4 py-3 font-medium"></th>
-                <th className="px-4 py-3 font-medium text-right">Pvm</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentResults.map((result) => (
-                <tr
-                  key={result.id}
-                  className="border-b border-border last:border-0 hover:bg-muted/50"
-                >
-                  <td className="px-4 py-3 font-medium">
-                    {result.athleteName}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {result.discipline}
-                  </td>
-                  <td className="px-4 py-3 font-mono">{result.value}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-1">
-                      {result.isPB && (
-                        <span className="px-1.5 py-0.5 text-xs font-medium bg-gold text-black rounded">
-                          SE
-                        </span>
-                      )}
-                      {result.isSB && !result.isPB && (
-                        <span className="px-1.5 py-0.5 text-xs font-medium bg-primary/20 text-primary rounded">
-                          KE
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-right text-muted-foreground">
-                    {formatDate(result.date)}
-                  </td>
+        {recentResults.length === 0 ? (
+          <div className="text-[13px] text-[#555555] py-4">
+            Ei tuloksia vielä
+          </div>
+        ) : (
+          <div className="rounded-xl bg-[#0F0F0F]">
+            <table className="w-full">
+              <thead>
+                <tr className="text-left text-[12px] font-medium text-[#555555]">
+                  <th className="px-4 py-3">Urheilija</th>
+                  <th className="px-4 py-3">Laji</th>
+                  <th className="px-4 py-3">Tulos</th>
+                  <th className="px-4 py-3"></th>
+                  <th className="px-4 py-3 text-right">Pvm</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {recentResults.map((result, index) => (
+                  <tr
+                    key={result.id}
+                    className={`hover:bg-white/[0.02] transition-colors duration-150 ${
+                      index !== recentResults.length - 1 ? "border-b border-white/[0.03]" : ""
+                    }`}
+                  >
+                    <td className="px-4 py-3 text-sm font-medium text-foreground">
+                      {result.athleteName}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-[#888888]">
+                      {result.disciplineName}
+                    </td>
+                    <td className="px-4 py-3 text-sm font-mono tabular-nums text-foreground">
+                      {result.disciplineUnit === "time"
+                        ? formatTime(result.value)
+                        : formatDistance(result.value)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-1">
+                        {result.isPersonalBest && (
+                          <span className="badge-pb">SE</span>
+                        )}
+                        {result.isSeasonBest && !result.isPersonalBest && (
+                          <span className="badge-sb">KE</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-right text-sm text-[#888888]">
+                      {formatDate(result.date)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </div>
   );

@@ -9,10 +9,19 @@ use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_notification::init());
+
+    // MCP Bridge plugin - only in debug builds
+    #[cfg(debug_assertions)]
+    {
+        builder = builder.plugin(tauri_plugin_mcp_bridge::init());
+    }
+
+    builder
         .manage(AppDatabase::new())
         .setup(|app| {
             let handle = app.handle().clone();
@@ -83,6 +92,9 @@ pub fn run() {
             commands::get_photo_count,
             commands::delete_photo,
             commands::get_photo_url,
+            commands::get_all_photos,
+            commands::get_photo_years,
+            commands::save_athlete_profile_photo,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

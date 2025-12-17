@@ -46,14 +46,12 @@ export function GoalCard({
   return (
     <div
       onClick={onClick}
-      className={`bg-card rounded-xl border p-4 transition-all ${
-        onClick ? "cursor-pointer hover:shadow-md" : ""
+      className={`rounded-xl p-4 transition-all ${
+        onClick ? "cursor-pointer" : ""
       } ${
         isAchieved
-          ? "border-success/50 bg-success/5"
-          : isCloseToGoal
-            ? "border-primary/50"
-            : "border-border"
+          ? "bg-success/10"
+          : "bg-[#141414] hover:bg-[#191919]"
       }`}
     >
       {/* Header */}
@@ -68,15 +66,15 @@ export function GoalCard({
               </span>
             )}
             {isCloseToGoal && (
-              <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-primary/20 text-primary">
+              <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-white/10 text-[#888888]">
                 Lähellä!
               </span>
             )}
           </div>
           <p className="text-sm text-muted-foreground">{disciplineName}</p>
         </div>
-        <div className="p-2 bg-muted rounded-lg">
-          <Target size={20} className="text-muted-foreground" />
+        <div className="p-2 bg-white/5 rounded-lg">
+          <Target size={20} className="text-[#555555]" />
         </div>
       </div>
 
@@ -94,7 +92,7 @@ export function GoalCard({
           <span className="text-muted-foreground">Edistyminen</span>
           <span className="font-medium">{Math.round(progress)}%</span>
         </div>
-        <div className="h-2 bg-muted rounded-full overflow-hidden">
+        <div className="h-2 bg-white/5 rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all ${getProgressColor()}`}
             style={{ width: `${Math.min(100, progress)}%` }}
@@ -124,7 +122,7 @@ export function GoalCard({
 
       {/* Target date */}
       {goal.targetDate && !isAchieved && (
-        <div className="mt-3 pt-3 border-t border-border flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="mt-3 pt-3 flex items-center gap-2 text-sm text-[#666666]">
           <Calendar size={14} />
           <span>DDL: {formatDate(goal.targetDate)}</span>
         </div>

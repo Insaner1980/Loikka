@@ -39,7 +39,7 @@ export function AthleteCard({ athlete, stats }: AthleteCardProps) {
   return (
     <Link
       to={`/athletes/${athlete.id}`}
-      className="block p-4 rounded-lg bg-[#141414] hover:bg-[#191919] transition-colors duration-150"
+      className="block p-4 rounded-xl bg-[#141414] border border-transparent hover:border-white/[0.06] transition-colors duration-150"
     >
       {/* Profile section */}
       <div className="flex items-center gap-3 mb-4">

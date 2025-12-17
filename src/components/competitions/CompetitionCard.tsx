@@ -25,7 +25,7 @@ function DaysUntilBadge({ date }: { date: string }) {
 
   if (daysUntil === 0) {
     return (
-      <span className="px-2 py-1 rounded-md text-xs font-medium bg-white/10 text-foreground">
+      <span className="px-2 py-1 rounded-md text-xs font-medium bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30">
         Tänään
       </span>
     );
@@ -33,22 +33,38 @@ function DaysUntilBadge({ date }: { date: string }) {
 
   if (daysUntil === 1) {
     return (
-      <span className="px-2 py-1 rounded-md text-xs font-medium bg-white/5 text-[#888888]">
+      <span className="px-2 py-1 rounded-md text-xs font-medium bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30">
         Huomenna
+      </span>
+    );
+  }
+
+  if (daysUntil <= 3) {
+    return (
+      <span className="px-2 py-1 rounded-md text-xs font-medium bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30">
+        {daysUntil} pv
       </span>
     );
   }
 
   if (daysUntil <= 7) {
     return (
-      <span className="px-2 py-1 rounded-md text-xs font-medium bg-white/5 text-[#888888]">
+      <span className="px-2 py-1 rounded-md text-xs font-medium bg-[#FACC15]/15 text-[#FACC15] border border-[#FACC15]/25">
+        {daysUntil} pv
+      </span>
+    );
+  }
+
+  if (daysUntil <= 14) {
+    return (
+      <span className="px-2 py-1 rounded-md text-xs font-medium bg-[#F59E0B]/15 text-[#F59E0B] border border-[#F59E0B]/25">
         {daysUntil} pv
       </span>
     );
   }
 
   return (
-    <span className="px-2 py-1 rounded-md text-xs font-medium bg-white/5 text-[#666666]">
+    <span className="px-2 py-1 rounded-md text-xs font-medium bg-white/5 text-[#888888]">
       {daysUntil} pv
     </span>
   );
@@ -94,8 +110,8 @@ export function CompetitionCard({
   return (
     <div
       onClick={onClick}
-      className={`rounded-xl bg-[#141414] p-4 transition-all ${
-        onClick ? "cursor-pointer hover:bg-[#191919]" : ""
+      className={`rounded-xl bg-[#141414] border border-transparent p-4 transition-colors duration-150 ${
+        onClick ? "cursor-pointer hover:border-white/[0.06]" : ""
       } ${isPast ? "opacity-60" : ""}`}
     >
       <div className="flex items-start justify-between gap-4">
@@ -107,7 +123,7 @@ export function CompetitionCard({
           </div>
 
           {/* Name */}
-          <h3 className="font-semibold text-lg truncate">{competition.name}</h3>
+          <h3 className="font-semibold text-base truncate">{competition.name}</h3>
 
           {/* Location */}
           {competition.location && (

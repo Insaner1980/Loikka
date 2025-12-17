@@ -123,18 +123,17 @@ export function Statistics() {
     chartData.length > 0;
 
   return (
-    <div className="p-8 h-full flex flex-col">
+    <div className="p-6 h-full flex flex-col">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Tilastot</h1>
-        <p className="text-muted-foreground">Tilastot ja analyysit</p>
+      <div className="mb-6 pb-5 border-b border-border-subtle">
+        <h1 className="text-base font-medium text-foreground">Tilastot</h1>
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
         {/* Athlete selector */}
         <select
-          className="bg-card border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+          className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
           value={selectedAthleteId ?? ""}
           onChange={(e) =>
             setSelectedAthleteId(
@@ -152,7 +151,7 @@ export function Statistics() {
 
         {/* Discipline selector */}
         <select
-          className="bg-card border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+          className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
           value={selectedDisciplineId ?? ""}
           onChange={(e) =>
             setSelectedDisciplineId(
@@ -178,7 +177,7 @@ export function Statistics() {
 
         {/* Year selector */}
         <select
-          className="bg-card border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
+          className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
           value={selectedYear}
           onChange={(e) => setSelectedYear(Number(e.target.value))}
           disabled={availableYears.length === 0}

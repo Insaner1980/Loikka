@@ -79,8 +79,11 @@ export function Settings() {
   };
 
   return (
-    <div className="p-8 max-w-2xl">
-      <h1 className="text-2xl font-bold mb-6">Asetukset</h1>
+    <div className="p-6 max-w-2xl">
+      {/* Header */}
+      <div className="mb-6 pb-5 border-b border-border-subtle">
+        <h1 className="text-base font-medium text-foreground">Asetukset</h1>
+      </div>
 
       <div className="space-y-6">
         {/* Appearance section */}

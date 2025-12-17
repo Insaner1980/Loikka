@@ -40,12 +40,7 @@ export function Results() {
     <div className="p-6 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 pb-5 border-b border-border-subtle">
-        <div>
-          <h1 className="text-base font-medium text-foreground">Tulokset</h1>
-          <p className="text-[13px] text-text-secondary mt-0.5">
-            Kilpailu- ja harjoitustulokset
-          </p>
-        </div>
+        <h1 className="text-base font-medium text-foreground">Tulokset</h1>
         <button
           onClick={() => setIsFormOpen(true)}
           className="btn-primary btn-press"

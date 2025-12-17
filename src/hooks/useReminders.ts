@@ -136,9 +136,6 @@ export function useReminders() {
 
       // Check if already shown
       if (hasReminderBeenShown(reminder.competition.id, today)) {
-        console.log(
-          `[Reminder] Already shown for ${reminder.competition.name}`
-        );
         return false;
       }
 
@@ -151,7 +148,6 @@ export function useReminders() {
         }
 
         if (!permissionGranted) {
-          console.log("[Reminder] Notification permission not granted");
           return false;
         }
 
@@ -183,10 +179,8 @@ export function useReminders() {
         // Mark as shown
         markReminderAsShown(reminder.competition.id, today);
 
-        console.log(`[Reminder] Notification sent for ${reminder.competition.name}`);
         return true;
-      } catch (error) {
-        console.error("[Reminder] Failed to send notification:", error);
+      } catch {
         return false;
       }
     },

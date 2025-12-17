@@ -35,7 +35,8 @@ pub async fn complete_auth(code: String) -> Result<bool, String> {
     // 2. Store tokens securely (keyring or encrypted file)
     // 3. Return success/failure
 
-    println!("Received auth code: {}", code);
+    // Auth code received, but not implemented yet
+    let _ = code;
 
     // For now, return false (not implemented)
     Ok(false)

@@ -134,8 +134,8 @@ export function CalendarView({
               {/* Competition indicator dot */}
               {hasCompetition && (
                 <span
-                  className={`absolute bottom-1 w-1 h-1 rounded-full ${
-                    isSelected ? "bg-white" : "bg-[#666666]"
+                  className={`absolute bottom-1.5 w-1.5 h-1.5 rounded-full ${
+                    isSelected ? "bg-white" : "bg-white/60"
                   }`}
                 />
               )}

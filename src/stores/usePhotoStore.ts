@@ -109,7 +109,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
       // Refetch photos to get the updated list with details
       await get().fetchPhotos();
 
-      return photo as unknown as PhotoWithDetails;
+      return photo;
     } catch (error) {
       set({ error: (error as Error).message || String(error), loading: false });
       return null;

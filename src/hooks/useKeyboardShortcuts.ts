@@ -45,6 +45,9 @@ export function useKeyboardShortcuts(onNew?: () => void) {
             navigate("/goals");
             break;
           case "7":
+            navigate("/photos");
+            break;
+          case "8":
             navigate("/settings");
             break;
         }

@@ -94,7 +94,7 @@ export function ProgressChart({ data, discipline }: ProgressChartProps) {
 
   return (
     <div className="bg-card rounded-xl border border-border p-4">
-      <h3 className="text-lg font-semibold mb-4">Kehitys</h3>
+      <h3 className="text-sm font-medium text-foreground mb-4">Kehitys</h3>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart

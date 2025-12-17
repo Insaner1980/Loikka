@@ -386,3 +386,40 @@ pub async fn get_athlete_medals(app: AppHandle, athlete_id: i64) -> Result<Vec<M
         created_at: row.get("created_at"),
     }).collect())
 }
+
+#[tauri::command]
+pub async fn create_medal(
+    app: AppHandle,
+    athlete_id: i64,
+    result_id: Option<i64>,
+    medal_type: String,
+    competition_name: String,
+    date: String,
+) -> Result<Medal, String> {
+    let pool = get_pool(&app).await?;
+
+    let result = sqlx::query(
+        r#"INSERT INTO medals (athlete_id, result_id, type, competition_name, date)
+           VALUES (?, ?, ?, ?, ?)
+           RETURNING id, athlete_id, result_id, type, competition_name, date, created_at"#
+    )
+    .bind(athlete_id)
+    .bind(result_id)
+    .bind(&medal_type)
+    .bind(&competition_name)
+    .bind(&date)
+    .fetch_one(&pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    Ok(Medal {
+        id: result.get("id"),
+        athlete_id: result.get("athlete_id"),
+        result_id: result.get("result_id"),
+        medal_type: result.get("type"),
+        competition_name: result.get("competition_name"),
+        discipline_name: None,
+        date: result.get("date"),
+        created_at: result.get("created_at"),
+    })
+}

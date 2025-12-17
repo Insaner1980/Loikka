@@ -105,9 +105,15 @@ export const useResultStore = create<ResultStore>((set, get) => ({
         },
       });
 
-      // Medal creation is handled by the backend when placement is provided
+      // Create medal if provided
       if (medal) {
-        console.log("Medal data provided:", medal);
+        await invoke("create_medal", {
+          athleteId: resultData.athleteId,
+          resultId: newResult.id,
+          medalType: medal.type,
+          competitionName: medal.competitionName,
+          date: resultData.date,
+        });
       }
 
       // Refetch all results

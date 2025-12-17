@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from "react";
-import { Trophy } from "lucide-react";
 import { useAthleteStore } from "../../stores/useAthleteStore";
 import { useResultStore } from "../../stores/useResultStore";
 import {
@@ -40,9 +39,26 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
   const [location, setLocation] = useState("");
   const [placement, setPlacement] = useState<number | "">("");
   const [notes, setNotes] = useState("");
-  const [addMedal, setAddMedal] = useState(false);
-  const [medalType, setMedalType] = useState<MedalType>("gold");
   const [errors, setErrors] = useState<FormErrors>({});
+
+  // Clear errors when fields change
+  useEffect(() => {
+    if (errors.value && valueInput.trim()) {
+      setErrors((prev) => ({ ...prev, value: undefined }));
+    }
+  }, [valueInput, errors.value]);
+
+  useEffect(() => {
+    if (errors.competitionName && competitionName.trim()) {
+      setErrors((prev) => ({ ...prev, competitionName: undefined }));
+    }
+  }, [competitionName, errors.competitionName]);
+
+  useEffect(() => {
+    if (errors.disciplineId && disciplineId) {
+      setErrors((prev) => ({ ...prev, disciplineId: undefined }));
+    }
+  }, [disciplineId, errors.disciplineId]);
 
   // Fetch athletes if not loaded
   useEffect(() => {
@@ -125,6 +141,14 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
     }
 
     setErrors(newErrors);
+
+    // Scroll to first error if any
+    if (Object.keys(newErrors).length > 0) {
+      const firstErrorKey = Object.keys(newErrors)[0];
+      const element = document.getElementById(firstErrorKey === "athleteId" ? "athlete" : firstErrorKey === "disciplineId" ? "discipline" : firstErrorKey);
+      element?.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+
     return Object.keys(newErrors).length === 0;
   };
 
@@ -154,10 +178,19 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
       isSeasonBest: potentialBests.isSB,
     };
 
-    const medal =
-      addMedal && resultType === "competition"
-        ? { type: medalType, competitionName: competitionName.trim() }
-        : undefined;
+    // Automatically create medal for placements 1-3 in competitions
+    let medal: { type: MedalType; competitionName: string } | undefined;
+    if (resultType === "competition" && placement && placement >= 1 && placement <= 3) {
+      const medalTypeMap: Record<number, MedalType> = {
+        1: "gold",
+        2: "silver",
+        3: "bronze",
+      };
+      medal = {
+        type: medalTypeMap[placement as number],
+        competitionName: competitionName.trim(),
+      };
+    }
 
     onSave(resultData, medal);
   };
@@ -184,7 +217,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
           htmlFor="athlete"
           className="block text-sm font-medium mb-1.5"
         >
-          Urheilija <span className="text-red-500">*</span>
+          Urheilija <span className="text-error">*</span>
         </label>
         <select
           id="athlete"
@@ -194,7 +227,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
           }
           disabled={!!athleteId}
           className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
-            errors.athleteId ? "border-red-500" : "border-border"
+            errors.athleteId ? "border-error" : "border-border"
           } ${athleteId ? "opacity-60" : ""}`}
         >
           <option value="">Valitse urheilija</option>
@@ -205,7 +238,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
           ))}
         </select>
         {errors.athleteId && (
-          <p className="mt-1 text-sm text-red-500">{errors.athleteId}</p>
+          <p className="mt-1 text-sm text-error">{errors.athleteId}</p>
         )}
       </div>
 
@@ -215,7 +248,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
           htmlFor="discipline"
           className="block text-sm font-medium mb-1.5"
         >
-          Laji <span className="text-red-500">*</span>
+          Laji <span className="text-error">*</span>
         </label>
         <select
           id="discipline"
@@ -224,7 +257,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
             setDisciplineId(e.target.value ? parseInt(e.target.value) : "")
           }
           className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
-            errors.disciplineId ? "border-red-500" : "border-border"
+            errors.disciplineId ? "border-error" : "border-border"
           }`}
         >
           <option value="">Valitse laji</option>
@@ -244,14 +277,14 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
           })}
         </select>
         {errors.disciplineId && (
-          <p className="mt-1 text-sm text-red-500">{errors.disciplineId}</p>
+          <p className="mt-1 text-sm text-error">{errors.disciplineId}</p>
         )}
       </div>
 
       {/* Result value */}
       <div>
         <label htmlFor="value" className="block text-sm font-medium mb-1.5">
-          {getValueLabel()} <span className="text-red-500">*</span>
+          {getValueLabel()} <span className="text-error">*</span>
         </label>
         <div className="relative">
           <input
@@ -261,7 +294,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
             onChange={(e) => setValueInput(e.target.value)}
             placeholder={getValuePlaceholder()}
             className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
-              errors.value ? "border-red-500" : "border-border"
+              errors.value ? "border-error" : "border-border"
             }`}
           />
           {/* PB/SB indicators */}
@@ -269,26 +302,26 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1">
               {potentialBests.isPB && (
                 <span className="px-2 py-0.5 rounded text-xs font-semibold bg-gold text-black">
-                  SE!
+                  Ennätys!
                 </span>
               )}
               {!potentialBests.isPB && potentialBests.isSB && (
                 <span className="px-2 py-0.5 rounded text-xs font-semibold bg-primary/20 text-primary">
-                  KE!
+                  Kauden paras!
                 </span>
               )}
             </div>
           )}
         </div>
         {errors.value && (
-          <p className="mt-1 text-sm text-red-500">{errors.value}</p>
+          <p className="mt-1 text-sm text-error">{errors.value}</p>
         )}
       </div>
 
       {/* Date */}
       <div>
         <label htmlFor="date" className="block text-sm font-medium mb-1.5">
-          Päivämäärä <span className="text-red-500">*</span>
+          Päivämäärä <span className="text-error">*</span>
         </label>
         <input
           type="date"
@@ -296,11 +329,11 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
           value={date}
           onChange={(e) => setDate(e.target.value)}
           className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
-            errors.date ? "border-red-500" : "border-border"
+            errors.date ? "border-error" : "border-border"
           }`}
         />
         {errors.date && (
-          <p className="mt-1 text-sm text-red-500">{errors.date}</p>
+          <p className="mt-1 text-sm text-error">{errors.date}</p>
         )}
       </div>
 
@@ -342,7 +375,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
               htmlFor="competitionName"
               className="block text-sm font-medium mb-1.5"
             >
-              Kilpailun nimi <span className="text-red-500">*</span>
+              Kilpailun nimi <span className="text-error">*</span>
             </label>
             <input
               type="text"
@@ -351,11 +384,11 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
               onChange={(e) => setCompetitionName(e.target.value)}
               placeholder="esim. Tampereen aluemestaruus"
               className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
-                errors.competitionName ? "border-red-500" : "border-border"
+                errors.competitionName ? "border-error" : "border-border"
               }`}
             />
             {errors.competitionName && (
-              <p className="mt-1 text-sm text-red-500">{errors.competitionName}</p>
+              <p className="mt-1 text-sm text-error">{errors.competitionName}</p>
             )}
           </div>
 
@@ -409,75 +442,18 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
         />
       </div>
 
-      {/* Medal checkbox - only for competitions */}
-      {resultType === "competition" && (
-        <div className="p-4 bg-muted/50 rounded-lg space-y-3">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={addMedal}
-              onChange={(e) => setAddMedal(e.target.checked)}
-              className="w-4 h-4 text-primary focus:ring-primary rounded"
-            />
-            <Trophy size={18} className="text-gold" />
-            <span className="font-medium">Lisää mitali</span>
-          </label>
-
-          {addMedal && (
-            <div className="flex gap-2 pl-6">
-              <button
-                type="button"
-                onClick={() => setMedalType("gold")}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
-                  medalType === "gold"
-                    ? "bg-gold/20 border-gold"
-                    : "border-border hover:bg-muted"
-                }`}
-              >
-                <span className="text-lg">🥇</span>
-                <span className="text-sm">Kulta</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setMedalType("silver")}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
-                  medalType === "silver"
-                    ? "bg-silver/20 border-silver"
-                    : "border-border hover:bg-muted"
-                }`}
-              >
-                <span className="text-lg">🥈</span>
-                <span className="text-sm">Hopea</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setMedalType("bronze")}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors ${
-                  medalType === "bronze"
-                    ? "bg-bronze/20 border-bronze"
-                    : "border-border hover:bg-muted"
-                }`}
-              >
-                <span className="text-lg">🥉</span>
-                <span className="text-sm">Pronssi</span>
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Buttons */}
       <div className="flex justify-end gap-3 pt-2">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium rounded-lg border border-border hover:bg-muted transition-colors"
+          className="btn-secondary"
         >
           Peruuta
         </button>
         <button
           type="submit"
-          className="px-4 py-2 text-sm font-medium rounded-lg bg-primary text-secondary hover:bg-primary/90 transition-colors"
+          className="btn-primary"
         >
           Tallenna
         </button>

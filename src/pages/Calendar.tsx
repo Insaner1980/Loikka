@@ -8,7 +8,7 @@ import { CalendarView } from "../components/competitions/CalendarView";
 import { CompetitionCard } from "../components/competitions/CompetitionCard";
 import { CompetitionForm } from "../components/competitions/CompetitionForm";
 import { Dialog } from "../components/ui/Dialog";
-import type { NewCompetition } from "../types";
+import type { Competition, NewCompetition } from "../types";
 
 type ViewMode = "list" | "month";
 
@@ -20,7 +20,9 @@ export function Calendar() {
     getUpcomingCompetitions,
     getCompetitionsByDate,
     addCompetition,
+    updateCompetition,
     addParticipant,
+    removeParticipant,
   } = useCompetitionStore();
   const { athletes, fetchAthletes } = useAthleteStore();
 
@@ -28,6 +30,7 @@ export function Calendar() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingCompetition, setEditingCompetition] = useState<Competition | null>(null);
 
   useEffect(() => {
     fetchCompetitions();
@@ -63,32 +66,100 @@ export function Calendar() {
     setSelectedDate(date);
   };
 
+  const handleOpenEdit = (competition: Competition) => {
+    setEditingCompetition(competition);
+    setIsFormOpen(true);
+  };
+
+  const handleCloseForm = () => {
+    setIsFormOpen(false);
+    setEditingCompetition(null);
+  };
+
   const handleSaveCompetition = async (
     competitionData: NewCompetition,
     competitionParticipants: { athleteId: number; disciplinesPlanned?: number[] }[]
   ) => {
-    const newCompetition = await addCompetition(competitionData);
+    if (editingCompetition) {
+      // Update existing competition
+      await updateCompetition(editingCompetition.id, competitionData);
 
-    // Add participants
-    for (const participant of competitionParticipants) {
-      await addParticipant(
-        newCompetition.id,
-        participant.athleteId,
-        participant.disciplinesPlanned
+      // Get current participants for this competition
+      const currentParticipants = participants.filter(
+        (p) => p.competitionId === editingCompetition.id
       );
+
+      // Remove participants that are no longer in the list
+      for (const current of currentParticipants) {
+        const stillExists = competitionParticipants.some(
+          (p) => p.athleteId === current.athleteId
+        );
+        if (!stillExists) {
+          await removeParticipant(editingCompetition.id, current.athleteId);
+        }
+      }
+
+      // Add new participants or update disciplines for existing
+      for (const participant of competitionParticipants) {
+        const existingParticipant = currentParticipants.find(
+          (p) => p.athleteId === participant.athleteId
+        );
+        if (!existingParticipant) {
+          await addParticipant(
+            editingCompetition.id,
+            participant.athleteId,
+            participant.disciplinesPlanned
+          );
+        } else {
+          // Update disciplines by removing and re-adding the participant
+          const currentDisciplines = existingParticipant.disciplinesPlanned ?? [];
+          const newDisciplines = participant.disciplinesPlanned ?? [];
+          const disciplinesChanged =
+            currentDisciplines.length !== newDisciplines.length ||
+            !currentDisciplines.every((d) => newDisciplines.includes(d));
+
+          if (disciplinesChanged) {
+            await removeParticipant(editingCompetition.id, participant.athleteId);
+            await addParticipant(
+              editingCompetition.id,
+              participant.athleteId,
+              participant.disciplinesPlanned
+            );
+          }
+        }
+      }
+    } else {
+      // Create new competition
+      const newCompetition = await addCompetition(competitionData);
+
+      // Add participants
+      for (const participant of competitionParticipants) {
+        await addParticipant(
+          newCompetition.id,
+          participant.athleteId,
+          participant.disciplinesPlanned
+        );
+      }
     }
 
-    setIsFormOpen(false);
+    handleCloseForm();
+  };
+
+  // Get initial participants for editing
+  const getInitialParticipants = (competitionId: number) => {
+    return participants
+      .filter((p) => p.competitionId === competitionId)
+      .map((p) => ({
+        athleteId: p.athleteId,
+        disciplinesPlanned: p.disciplinesPlanned,
+      }));
   };
 
   return (
     <div className="p-6 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 pb-5 border-b border-border-subtle">
-        <div>
-          <h1 className="text-base font-medium text-foreground">Kalenteri</h1>
-          <p className="text-[13px] text-text-secondary mt-0.5">Kilpailukalenteri</p>
-        </div>
+        <h1 className="text-base font-medium text-foreground">Kalenteri</h1>
         <button
           onClick={() => setIsFormOpen(true)}
           className="btn-primary btn-press"
@@ -144,9 +215,7 @@ export function Calendar() {
                     key={competition.id}
                     competition={competition}
                     participants={getParticipantsWithAthletes(competition.id)}
-                    onClick={() => {
-                      // TODO: Open edit dialog
-                    }}
+                    onClick={() => handleOpenEdit(competition)}
                   />
                 ))}
               </div>
@@ -185,9 +254,7 @@ export function Calendar() {
                           participants={getParticipantsWithAthletes(
                             competition.id
                           )}
-                          onClick={() => {
-                            // TODO: Open edit dialog
-                          }}
+                          onClick={() => handleOpenEdit(competition)}
                         />
                       ))}
                     </div>
@@ -204,16 +271,23 @@ export function Calendar() {
         )}
       </div>
 
-      {/* Add Competition Dialog */}
+      {/* Add/Edit Competition Dialog */}
       <Dialog
         open={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
-        title="Lisää kilpailu"
+        onClose={handleCloseForm}
+        title={editingCompetition ? "Muokkaa kilpailua" : "Lisää kilpailu"}
         maxWidth="lg"
       >
         <CompetitionForm
+          competition={editingCompetition ?? undefined}
+          initialDate={selectedDate ? format(selectedDate, "yyyy-MM-dd") : undefined}
+          initialParticipants={
+            editingCompetition
+              ? getInitialParticipants(editingCompetition.id)
+              : undefined
+          }
           onSave={handleSaveCompetition}
-          onCancel={() => setIsFormOpen(false)}
+          onCancel={handleCloseForm}
         />
       </Dialog>
     </div>

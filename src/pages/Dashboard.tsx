@@ -1,16 +1,20 @@
-import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ChevronRight,
   MapPin,
   Calendar,
   Users,
+  Trash2,
 } from "lucide-react";
 import { useAthleteStore } from "../stores/useAthleteStore";
 import { useResultStore } from "../stores/useResultStore";
 import { useCompetitionStore } from "../stores/useCompetitionStore";
 import { getDisciplineById } from "../data/disciplines";
 import { formatTime, formatDistance, toAssetUrl } from "../lib/formatters";
+import { Dialog } from "../components/ui/Dialog";
+import { CompetitionForm } from "../components/competitions/CompetitionForm";
+import type { Competition, NewCompetition } from "../types";
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
@@ -30,10 +34,22 @@ function getDaysUntil(dateStr: string): number {
   return Math.ceil(diff / (1000 * 60 * 60 * 24));
 }
 
+function getDaysUntilColor(days: number): string {
+  if (days <= 3) return "bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30"; // Green - imminent
+  if (days <= 7) return "bg-[#FACC15]/15 text-[#FACC15] border border-[#FACC15]/25"; // Yellow - soon
+  if (days <= 14) return "bg-[#F59E0B]/15 text-[#F59E0B] border border-[#F59E0B]/25"; // Orange - upcoming
+  return "bg-white/5 text-[#888888]"; // Default gray
+}
+
 export function Dashboard() {
+  const navigate = useNavigate();
   const { athletes, fetchAthletes } = useAthleteStore();
   const { results, fetchResults } = useResultStore();
-  const { competitions, fetchCompetitions } = useCompetitionStore();
+  const { competitions, fetchCompetitions, updateCompetition, deleteCompetition, getParticipants } = useCompetitionStore();
+
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedCompetition, setSelectedCompetition] = useState<Competition | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   useEffect(() => {
     fetchAthletes();
@@ -41,11 +57,38 @@ export function Dashboard() {
     fetchCompetitions();
   }, [fetchAthletes, fetchResults, fetchCompetitions]);
 
+  const handleCompetitionClick = (competition: Competition) => {
+    setSelectedCompetition(competition);
+    setEditDialogOpen(true);
+  };
+
+  const handleCompetitionSave = async (
+    competitionData: NewCompetition,
+    _participants: { athleteId: number; disciplinesPlanned?: number[] }[]
+  ) => {
+    if (!selectedCompetition) return;
+    await updateCompetition(selectedCompetition.id, competitionData);
+    setEditDialogOpen(false);
+    setSelectedCompetition(null);
+  };
+
+  const handleDeleteClick = () => {
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedCompetition) return;
+    await deleteCompetition(selectedCompetition.id);
+    setDeleteConfirmOpen(false);
+    setEditDialogOpen(false);
+    setSelectedCompetition(null);
+  };
+
   // Get upcoming competitions (future dates only)
   const upcomingCompetitions = competitions
     .filter((c) => getDaysUntil(c.date) >= 0)
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .slice(0, 3);
+    .slice(0, 4);
 
   // Get recent results with athlete names
   const recentResults = results
@@ -66,6 +109,11 @@ export function Dashboard() {
 
   return (
     <div className="p-6 space-y-8 max-w-7xl mx-auto w-full">
+      {/* Header */}
+      <div className="pb-5 border-b border-border-subtle">
+        <h1 className="text-base font-medium text-foreground">Lähtöviiva</h1>
+      </div>
+
       {/* Two column layout for competitions and athletes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Upcoming competitions */}
@@ -86,9 +134,10 @@ export function Dashboard() {
           ) : (
             <div className="divide-y divide-white/[0.03]">
               {upcomingCompetitions.map((competition) => (
-                <div
+                <button
                   key={competition.id}
-                  className="py-3 first:pt-0 last:pb-0"
+                  onClick={() => handleCompetitionClick(competition)}
+                  className="block w-full text-left py-3 first:pt-0 last:pb-0 hover:bg-white/[0.02] -mx-2 px-2 rounded-lg transition-colors duration-150"
                 >
                   <div className="flex items-start justify-between">
                     <div>
@@ -106,11 +155,11 @@ export function Dashboard() {
                         )}
                       </div>
                     </div>
-                    <div className="px-2 py-1 rounded-md bg-white/5 text-[11px] text-[#888888]">
+                    <div className={`px-2 py-1 rounded-md text-[11px] font-medium ${getDaysUntilColor(getDaysUntil(competition.date))}`}>
                       {getDaysUntil(competition.date)} pv
                     </div>
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}
@@ -139,29 +188,32 @@ export function Dashboard() {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-3">
-              {athletes.slice(0, 3).map(({ athlete }) => (
+            <div className="grid grid-cols-2 gap-3">
+              {athletes.slice(0, 2).map(({ athlete }) => (
                 <Link
                   key={athlete.id}
                   to={`/athletes/${athlete.id}`}
-                  className="p-4 rounded-lg hover:bg-white/[0.02] transition-colors duration-150 text-center"
+                  className="aspect-square rounded-xl bg-[#141414] hover:bg-[#191919] transition-colors duration-150 overflow-hidden relative group"
                 >
                   {athlete.photoPath ? (
                     <img
                       src={toAssetUrl(athlete.photoPath)}
                       alt={`${athlete.firstName} ${athlete.lastName}`}
-                      className="w-9 h-9 mx-auto mb-2.5 rounded-full object-cover"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-9 h-9 mx-auto mb-2.5 rounded-full bg-[#191919] flex items-center justify-center text-[#666666] text-sm font-medium">
+                    <div className="w-full h-full flex items-center justify-center text-[#444444] text-4xl font-medium">
                       {getInitials(athlete.firstName, athlete.lastName)}
                     </div>
                   )}
-                  <div className="text-sm font-medium truncate text-foreground">
-                    {athlete.firstName}
-                  </div>
-                  <div className="text-[13px] text-[#666666] truncate">
-                    {athlete.lastName}
+                  {/* Name overlay at bottom */}
+                  <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
+                    <div className="text-sm font-medium text-white">
+                      {athlete.firstName}
+                    </div>
+                    <div className="text-[12px] text-white/70">
+                      {athlete.lastName}
+                    </div>
                   </div>
                 </Link>
               ))}
@@ -186,7 +238,7 @@ export function Dashboard() {
             Ei tuloksia vielä
           </div>
         ) : (
-          <div className="rounded-xl bg-[#0F0F0F]">
+          <div className="rounded-xl">
             <table className="w-full">
               <thead>
                 <tr className="text-left text-[12px] font-medium text-[#555555]">
@@ -201,9 +253,10 @@ export function Dashboard() {
                 {recentResults.map((result, index) => (
                   <tr
                     key={result.id}
-                    className={`hover:bg-white/[0.02] transition-colors duration-150 ${
+                    className={`hover:bg-white/[0.02] transition-colors duration-150 cursor-pointer ${
                       index !== recentResults.length - 1 ? "border-b border-white/[0.03]" : ""
                     }`}
+                    onClick={() => navigate(`/athletes/${result.athleteId}`)}
                   >
                     <td className="px-4 py-3 text-sm font-medium text-foreground">
                       {result.athleteName}
@@ -236,6 +289,71 @@ export function Dashboard() {
           </div>
         )}
       </section>
+
+      {/* Edit Competition Dialog */}
+      <Dialog
+        open={editDialogOpen}
+        onClose={() => {
+          setEditDialogOpen(false);
+          setSelectedCompetition(null);
+        }}
+        title="Muokkaa kilpailua"
+        maxWidth="lg"
+      >
+        {selectedCompetition && (
+          <div className="space-y-4">
+            <CompetitionForm
+              competition={selectedCompetition}
+              initialParticipants={getParticipants(selectedCompetition.id).map((p) => ({
+                athleteId: p.athleteId,
+                disciplinesPlanned: p.disciplinesPlanned || undefined,
+              }))}
+              onSave={handleCompetitionSave}
+              onCancel={() => {
+                setEditDialogOpen(false);
+                setSelectedCompetition(null);
+              }}
+            />
+            <div className="pt-4 border-t border-border">
+              <button
+                onClick={handleDeleteClick}
+                className="flex items-center gap-2 text-sm text-[#888888] hover:text-foreground transition-colors"
+              >
+                <Trash2 size={16} />
+                Poista kilpailu
+              </button>
+            </div>
+          </div>
+        )}
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        title="Poista kilpailu"
+        maxWidth="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Haluatko varmasti poistaa kilpailun "{selectedCompetition?.name}"? Tätä toimintoa ei voi peruuttaa.
+          </p>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setDeleteConfirmOpen(false)}
+              className="btn-secondary"
+            >
+              Peruuta
+            </button>
+            <button
+              onClick={handleDeleteConfirm}
+              className="btn-primary"
+            >
+              Poista
+            </button>
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 }

@@ -128,7 +128,7 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
           htmlFor="athlete"
           className="block text-sm font-medium mb-1.5"
         >
-          Urheilija <span className="text-red-500">*</span>
+          Urheilija <span className="text-error">*</span>
         </label>
         <select
           id="athlete"
@@ -138,7 +138,7 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
           }
           disabled={!!athleteId}
           className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
-            errors.athleteId ? "border-red-500" : "border-border"
+            errors.athleteId ? "border-error" : "border-border"
           } ${athleteId ? "opacity-60" : ""}`}
         >
           <option value="">Valitse urheilija</option>
@@ -149,7 +149,7 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
           ))}
         </select>
         {errors.athleteId && (
-          <p className="mt-1 text-sm text-red-500">{errors.athleteId}</p>
+          <p className="mt-1 text-sm text-error">{errors.athleteId}</p>
         )}
       </div>
 
@@ -159,7 +159,7 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
           htmlFor="discipline"
           className="block text-sm font-medium mb-1.5"
         >
-          Laji <span className="text-red-500">*</span>
+          Laji <span className="text-error">*</span>
         </label>
         <select
           id="discipline"
@@ -168,7 +168,7 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
             setDisciplineId(e.target.value ? parseInt(e.target.value) : "")
           }
           className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
-            errors.disciplineId ? "border-red-500" : "border-border"
+            errors.disciplineId ? "border-error" : "border-border"
           }`}
         >
           <option value="">Valitse laji</option>
@@ -188,7 +188,7 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
           })}
         </select>
         {errors.disciplineId && (
-          <p className="mt-1 text-sm text-red-500">{errors.disciplineId}</p>
+          <p className="mt-1 text-sm text-error">{errors.disciplineId}</p>
         )}
       </div>
 
@@ -198,7 +198,7 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
           htmlFor="targetValue"
           className="block text-sm font-medium mb-1.5"
         >
-          {getValueLabel()} <span className="text-red-500">*</span>
+          {getValueLabel()} <span className="text-error">*</span>
         </label>
         <input
           type="text"
@@ -207,11 +207,11 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
           onChange={(e) => setTargetValueInput(e.target.value)}
           placeholder={getValuePlaceholder()}
           className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
-            errors.targetValue ? "border-red-500" : "border-border"
+            errors.targetValue ? "border-error" : "border-border"
           }`}
         />
         {errors.targetValue && (
-          <p className="mt-1 text-sm text-red-500">{errors.targetValue}</p>
+          <p className="mt-1 text-sm text-error">{errors.targetValue}</p>
         )}
       </div>
 

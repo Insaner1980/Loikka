@@ -7,6 +7,7 @@ import type { Competition, NewCompetition } from "../../types";
 
 interface CompetitionFormProps {
   competition?: Competition;
+  initialDate?: string;
   initialParticipants?: {
     athleteId: number;
     disciplinesPlanned?: number[];
@@ -34,6 +35,7 @@ const reminderDaysOptions = [
 
 export function CompetitionForm({
   competition,
+  initialDate,
   initialParticipants = [],
   onSave,
   onCancel,
@@ -42,7 +44,7 @@ export function CompetitionForm({
 
   // Form state
   const [name, setName] = useState(competition?.name ?? "");
-  const [date, setDate] = useState(competition?.date ?? getTodayISO());
+  const [date, setDate] = useState(competition?.date ?? initialDate ?? getTodayISO());
   const [endDate, setEndDate] = useState(competition?.endDate ?? "");
   const [location, setLocation] = useState(competition?.location ?? "");
   const [address, setAddress] = useState(competition?.address ?? "");
@@ -156,7 +158,7 @@ export function CompetitionForm({
       {/* Name */}
       <div>
         <label htmlFor="name" className="block text-sm font-medium mb-1.5">
-          Nimi <span className="text-red-500">*</span>
+          Nimi <span className="text-error">*</span>
         </label>
         <input
           type="text"
@@ -165,11 +167,11 @@ export function CompetitionForm({
           onChange={(e) => setName(e.target.value)}
           placeholder="esim. Tampereen aluemestaruus"
           className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
-            errors.name ? "border-red-500" : "border-border"
+            errors.name ? "border-error" : "border-border"
           }`}
         />
         {errors.name && (
-          <p className="mt-1 text-sm text-red-500">{errors.name}</p>
+          <p className="mt-1 text-sm text-error">{errors.name}</p>
         )}
       </div>
 
@@ -177,7 +179,7 @@ export function CompetitionForm({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label htmlFor="date" className="block text-sm font-medium mb-1.5">
-            Päivämäärä <span className="text-red-500">*</span>
+            Päivämäärä <span className="text-error">*</span>
           </label>
           <input
             type="date"
@@ -185,11 +187,11 @@ export function CompetitionForm({
             value={date}
             onChange={(e) => setDate(e.target.value)}
             className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
-              errors.date ? "border-red-500" : "border-border"
+              errors.date ? "border-error" : "border-border"
             }`}
           />
           {errors.date && (
-            <p className="mt-1 text-sm text-red-500">{errors.date}</p>
+            <p className="mt-1 text-sm text-error">{errors.date}</p>
           )}
         </div>
 
@@ -204,11 +206,11 @@ export function CompetitionForm({
             onChange={(e) => setEndDate(e.target.value)}
             min={date}
             className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
-              errors.endDate ? "border-red-500" : "border-border"
+              errors.endDate ? "border-error" : "border-border"
             }`}
           />
           {errors.endDate && (
-            <p className="mt-1 text-sm text-red-500">{errors.endDate}</p>
+            <p className="mt-1 text-sm text-error">{errors.endDate}</p>
           )}
         </div>
       </div>
@@ -294,9 +296,6 @@ export function CompetitionForm({
                   {/* Discipline selector - only shown when athlete is selected */}
                   {isSelected && (
                     <div className="pl-6 mt-2">
-                      <p className="text-xs text-muted-foreground mb-2">
-                        Valitse suunnitellut lajit:
-                      </p>
                       <div className="flex flex-wrap gap-1">
                         {categoryOrder.map((category) => {
                           const categoryDisciplines = disciplines.filter(
@@ -315,8 +314,8 @@ export function CompetitionForm({
                                 }
                                 className={`px-2 py-1 text-xs rounded-full border transition-colors ${
                                   isChecked
-                                    ? "bg-primary text-black border-primary"
-                                    : "bg-card border-border hover:border-primary/50"
+                                    ? "bg-white/10 text-foreground border-white/20"
+                                    : "bg-card border-border hover:border-border-hover"
                                 }`}
                               >
                                 {discipline.name}
@@ -369,13 +368,13 @@ export function CompetitionForm({
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium rounded-lg border border-border hover:bg-muted transition-colors"
+          className="btn-secondary"
         >
           Peruuta
         </button>
         <button
           type="submit"
-          className="px-4 py-2 text-sm font-medium rounded-lg bg-primary text-black hover:bg-primary/90 transition-colors"
+          className="btn-primary"
         >
           Tallenna
         </button>

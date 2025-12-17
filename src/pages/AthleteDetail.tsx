@@ -5,7 +5,6 @@ import {
   Edit,
   Plus,
   User,
-  Trophy,
   BarChart3,
   Target,
   CheckCircle,
@@ -133,13 +132,15 @@ export function AthleteDetail() {
     medal?: { type: MedalType; competitionName: string }
   ) => {
     await addResult(data, medal);
-    // Reload results
-    const [resultsData, pbData] = await Promise.all([
+    // Reload results and medals
+    const [resultsData, pbData, medalsData] = await Promise.all([
       getAthleteResults(athleteId),
       getAthletePersonalBests(athleteId),
+      getAthleteMedals(athleteId),
     ]);
     setResults(resultsData);
     setPersonalBests(pbData);
+    setMedals(medalsData);
     setResultDialogOpen(false);
   };
 
@@ -245,10 +246,8 @@ export function AthleteDetail() {
                   className="flex items-center gap-4 p-4 bg-[#141414] rounded-lg"
                 >
                   <div
-                    className={`w-9 h-9 rounded-full ${medalClasses[medal.type]} flex items-center justify-center`}
-                  >
-                    <Trophy size={18} className="text-black/70" />
-                  </div>
+                    className={`w-9 h-9 rounded-full ${medalClasses[medal.type]} shadow-lg`}
+                  />
                   <div className="flex-1">
                     <div className="text-sm font-medium text-foreground">{medal.competitionName}</div>
                     <div className="text-[13px] text-[#666666] mt-0.5">

@@ -25,8 +25,7 @@ export function Tooltip({ content, side = "right", children }: TooltipProps) {
       {children}
       {isVisible && (
         <div
-          className={`absolute z-50 px-3 py-1.5 text-sm font-medium whitespace-nowrap
-            bg-card text-foreground border border-border rounded-lg shadow-lg
+          className={`absolute z-50 px-2 py-1 text-sm font-medium whitespace-nowrap text-text-secondary
             ${positionClasses[side]}`}
           role="tooltip"
         >

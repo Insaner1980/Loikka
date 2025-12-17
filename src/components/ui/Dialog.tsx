@@ -60,13 +60,13 @@ export function Dialog({
 
       {/* Dialog */}
       <div
-        className={`relative w-full ${maxWidthClasses[maxWidth]} mx-4 bg-[#141414] rounded-xl animate-scale-in`}
+        className={`relative w-full ${maxWidthClasses[maxWidth]} mx-4 max-h-[90vh] flex flex-col bg-[#141414] rounded-xl animate-scale-in`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="dialog-title"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.04]">
+        <div className="flex-shrink-0 flex items-center justify-between px-5 py-4 border-b border-white/[0.04]">
           <h2 id="dialog-title" className="text-sm font-medium text-foreground">
             {title}
           </h2>
@@ -80,7 +80,7 @@ export function Dialog({
         </div>
 
         {/* Content */}
-        <div className="p-5">{children}</div>
+        <div className="p-5 overflow-y-auto">{children}</div>
       </div>
     </div>
   );

@@ -56,6 +56,7 @@ pub fn run() {
             commands::check_personal_best,
             commands::check_season_best,
             commands::get_athlete_medals,
+            commands::create_medal,
             // Competitions
             commands::get_all_competitions,
             commands::get_upcoming_competitions,

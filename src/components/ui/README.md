@@ -178,12 +178,12 @@ const [activeTab, setActiveTab] = useState<AthleteTab>("records");
 
 ### ResultBadge
 
-Ennätysmerkki (SE/KE).
+Ennätysmerkki (OE/KE).
 
 ```tsx
 import { ResultBadge } from "@/components/results";
 
-<ResultBadge type="pb" /> // SE - Ennätys
+<ResultBadge type="pb" /> // OE - Oma ennätys
 <ResultBadge type="sb" /> // KE - Kauden ennätys
 ```
 

@@ -58,7 +58,7 @@ pub async fn get_active_goals(app: AppHandle) -> Result<Vec<Goal>, String> {
 
     let rows = sqlx::query(
         r#"SELECT id, athlete_id, discipline_id, target_value, target_date, status, achieved_at, created_at
-        FROM goals WHERE status = 'active' ORDER BY target_date ASC NULLS LAST"#
+        FROM goals WHERE status = 'active' ORDER BY target_date IS NULL, target_date ASC"#
     )
     .fetch_all(&pool)
     .await

@@ -54,6 +54,28 @@ export async function deleteCloudBackup(backupId: string): Promise<boolean> {
   return invoke<boolean>("delete_cloud_backup", { backupId });
 }
 
+// Photo and selective sync functions
+import type { SyncOptions, CloudPhoto, LocalPhoto } from "../types";
+
+export async function listCloudPhotos(): Promise<CloudPhoto[]> {
+  return invoke<CloudPhoto[]>("list_cloud_photos");
+}
+
+export async function listLocalPhotos(): Promise<LocalPhoto[]> {
+  return invoke<LocalPhoto[]>("list_local_photos");
+}
+
+export async function syncToDriveWithOptions(options: SyncOptions): Promise<SyncResult> {
+  return invoke<SyncResult>("sync_to_drive_with_options", { options });
+}
+
+export async function restoreFromDriveWithOptions(
+  backupId: string | null,
+  options: SyncOptions
+): Promise<SyncResult> {
+  return invoke<SyncResult>("restore_from_drive_with_options", { backupId, options });
+}
+
 // Utility functions
 export function formatBackupSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;

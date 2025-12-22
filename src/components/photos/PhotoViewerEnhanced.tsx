@@ -1,7 +1,9 @@
-import { useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { X, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import type { PhotoWithDetails } from "../../stores/usePhotoStore";
 import { formatDate } from "../../lib/formatters";
+import { Dialog } from "../ui/Dialog";
 
 interface PhotoViewerEnhancedProps {
   photos: PhotoWithDetails[];
@@ -22,6 +24,7 @@ export function PhotoViewerEnhanced({
 }: PhotoViewerEnhancedProps) {
   const currentPhoto = photos[currentIndex];
   const hasMultiple = photos.length > 1;
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   // Handle keyboard navigation
   const handleKeyDown = useCallback(
@@ -57,8 +60,13 @@ export function PhotoViewerEnhanced({
     }
   };
 
-  const handleDelete = () => {
-    if (onDelete && window.confirm("Haluatko varmasti poistaa tämän kuvan?")) {
+  const handleDeleteClick = () => {
+    setConfirmDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    setConfirmDeleteOpen(false);
+    if (onDelete) {
       onDelete(currentPhoto);
     }
   };
@@ -72,20 +80,20 @@ export function PhotoViewerEnhanced({
   }
   if (currentPhoto.competitionName) {
     captionParts.push(currentPhoto.competitionName);
+  } else if (currentPhoto.eventName) {
+    captionParts.push(currentPhoto.eventName);
   }
   captionParts.push(formatDate(currentPhoto.createdAt));
 
-  return (
+  const content = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ backgroundColor: "rgba(0,0,0,0.95)" }}
+      className="photo-viewer-overlay"
       onClick={handleBackdropClick}
     >
       {/* Close button */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 p-2 text-[#666666] hover:text-white hover:bg-white/10 rounded-lg transition-colors z-10"
-        title="Sulje (Esc)"
+        className="absolute top-4 right-4 p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors z-10 cursor-pointer"
       >
         <X size={24} />
       </button>
@@ -93,45 +101,70 @@ export function PhotoViewerEnhanced({
       {/* Delete button */}
       {onDelete && (
         <button
-          onClick={handleDelete}
-          className="absolute top-4 left-4 p-2 text-[#666666] hover:text-red-400 hover:bg-white/10 rounded-lg transition-colors z-10"
-          title="Poista kuva"
+          onClick={handleDeleteClick}
+          className="absolute top-4 left-4 p-2 text-white/50 hover:text-red-400 hover:bg-white/10 rounded-lg transition-colors z-10 cursor-pointer"
         >
           <Trash2 size={20} />
         </button>
       )}
+
+      {/* Delete confirmation dialog */}
+      <Dialog
+        open={confirmDeleteOpen}
+        onClose={() => setConfirmDeleteOpen(false)}
+        title="Poista kuva"
+        maxWidth="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Haluatko varmasti poistaa tämän kuvan? Tätä toimintoa ei voi perua.
+          </p>
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={() => setConfirmDeleteOpen(false)}
+              className="btn-secondary"
+            >
+              Peruuta
+            </button>
+            <button
+              onClick={handleConfirmDelete}
+              className="btn-primary bg-[var(--status-error)] hover:bg-[var(--status-error)]/90 cursor-pointer"
+            >
+              Poista
+            </button>
+          </div>
+        </div>
+      </Dialog>
 
       {/* Navigation buttons */}
       {hasMultiple && (
         <>
           <button
             onClick={() => onNavigate("prev")}
-            className="absolute left-4 top-1/2 -translate-y-1/2 p-3 text-[#666666] hover:text-white hover:bg-white/10 rounded-full transition-colors z-10"
-            title="Edellinen (←)"
+            className="absolute left-4 top-1/2 -translate-y-1/2 p-3 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors z-10 cursor-pointer"
           >
             <ChevronLeft size={32} />
           </button>
           <button
             onClick={() => onNavigate("next")}
-            className="absolute right-4 top-1/2 -translate-y-1/2 p-3 text-[#666666] hover:text-white hover:bg-white/10 rounded-full transition-colors z-10"
-            title="Seuraava (→)"
+            className="absolute right-4 top-1/2 -translate-y-1/2 p-3 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors z-10 cursor-pointer"
           >
             <ChevronRight size={32} />
           </button>
         </>
       )}
 
-      {/* Main image */}
-      <div className="flex flex-col items-center max-w-[90vw]">
+      {/* Main image container */}
+      <div className="photo-viewer-content">
         <img
           src={getPhotoUrl(currentPhoto)}
           alt={currentPhoto.originalName}
-          className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl"
+          className="photo-viewer-image rounded-lg shadow-2xl"
         />
 
         {/* Caption below photo */}
-        <div className="mt-4 text-center">
-          <p className="text-[#888888] text-sm">
+        <div className="mt-3 text-center">
+          <p className="text-white/60 text-sm">
             {captionParts.join(" · ")}
           </p>
         </div>
@@ -139,7 +172,7 @@ export function PhotoViewerEnhanced({
 
       {/* Photo counter and dots */}
       {hasMultiple && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
           <div className="flex gap-1.5">
             {photos.map((_, index) => (
               <button
@@ -166,4 +199,6 @@ export function PhotoViewerEnhanced({
       )}
     </div>
   );
+
+  return createPortal(content, document.body);
 }

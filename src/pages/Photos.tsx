@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Plus, Camera } from "lucide-react";
 import { usePhotoStore, type PhotoWithDetails } from "../stores/usePhotoStore";
 import { useAthleteStore } from "../stores/useAthleteStore";
@@ -6,15 +7,17 @@ import { useCompetitionStore } from "../stores/useCompetitionStore";
 import { PhotoGrid } from "../components/photos/PhotoGrid";
 import { PhotoViewerEnhanced } from "../components/photos/PhotoViewerEnhanced";
 import { AddPhotoDialog } from "../components/photos/AddPhotoDialog";
+import { YEAR_RANGE } from "../lib/constants";
 
 export function Photos() {
+  const [searchParams] = useSearchParams();
+  const initializedRef = useRef(false);
+
   const {
     photos,
-    years,
     loading,
     filters,
     fetchPhotos,
-    fetchYears,
     setFilters,
     deletePhoto,
     getPhotoUrl,
@@ -28,13 +31,27 @@ export function Photos() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [addDialogOpen, setAddDialogOpen] = useState(false);
 
-  // Fetch data on mount
+  // Fetch data on mount, apply URL params if present
   useEffect(() => {
-    fetchPhotos();
-    fetchYears();
     if (athletes.length === 0) fetchAthletes();
     if (competitions.length === 0) fetchCompetitions();
-  }, [fetchPhotos, fetchYears, fetchAthletes, fetchCompetitions, athletes.length, competitions.length]);
+  }, [fetchAthletes, fetchCompetitions, athletes.length, competitions.length]);
+
+  // Apply URL params on initial mount
+  useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+
+    const athleteParam = searchParams.get("athlete");
+    if (athleteParam) {
+      const athleteId = parseInt(athleteParam, 10);
+      if (!isNaN(athleteId)) {
+        setFilters({ ...filters, athleteId });
+        return;
+      }
+    }
+    fetchPhotos();
+  }, [searchParams, setFilters, fetchPhotos, filters]);
 
   const handlePhotoClick = useCallback((index: number) => {
     setSelectedIndex(index);
@@ -69,18 +86,22 @@ export function Photos() {
   const handlePhotoAdded = useCallback(() => {
     setAddDialogOpen(false);
     fetchPhotos();
-    fetchYears();
-  }, [fetchPhotos, fetchYears]);
+  }, [fetchPhotos]);
 
-  // Generate year options (current year + stored years)
+  // Generate year options (fixed range)
   const currentYear = new Date().getFullYear();
-  const yearOptions = Array.from(new Set([currentYear, ...years])).sort((a, b) => b - a);
+  const startYear = YEAR_RANGE.START_YEAR;
+  const endYear = currentYear + YEAR_RANGE.YEARS_AHEAD;
+  const yearOptions: number[] = [];
+  for (let y = endYear; y >= startYear; y--) {
+    yearOptions.push(y);
+  }
 
   return (
     <div className="p-6 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 pb-5 border-b border-border-subtle">
-        <h1 className="text-base font-medium text-foreground">Kuvat</h1>
+        <h1 className="text-title font-medium text-foreground">Kuvat</h1>
         <button
           onClick={() => setAddDialogOpen(true)}
           className="btn-primary btn-press"
@@ -96,7 +117,7 @@ export function Photos() {
         <select
           value={filters.athleteId || ""}
           onChange={(e) => handleFilterChange("athleteId", e.target.value ? Number(e.target.value) : undefined)}
-          className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
+          className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
         >
           <option value="">Kaikki urheilijat</option>
           {athletes.map((a) => (
@@ -110,7 +131,7 @@ export function Photos() {
         <select
           value={filters.competitionId || ""}
           onChange={(e) => handleFilterChange("competitionId", e.target.value ? Number(e.target.value) : undefined)}
-          className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
+          className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
         >
           <option value="">Kaikki kilpailut</option>
           {competitions.map((c) => (
@@ -124,7 +145,7 @@ export function Photos() {
         <select
           value={filters.year || ""}
           onChange={(e) => handleFilterChange("year", e.target.value ? Number(e.target.value) : undefined)}
-          className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
+          className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
         >
           <option value="">Kaikki vuodet</option>
           {yearOptions.map((y) => (
@@ -137,7 +158,7 @@ export function Photos() {
 
       {/* Photo count */}
       {photos.length > 0 && (
-        <p className="text-[13px] text-text-secondary mb-4">
+        <p className="text-body text-muted-foreground mb-4">
           {photos.length} kuvaa
         </p>
       )}
@@ -148,7 +169,7 @@ export function Photos() {
         loading={loading}
         onPhotoClick={handlePhotoClick}
         getThumbnailUrl={getThumbnailUrl}
-        emptyIcon={<Camera size={48} className="text-[#444444]" />}
+        emptyIcon={<Camera size={48} className="text-tertiary" />}
         emptyMessage="Ei kuvia"
         emptySubMessage="Lisää ensimmäinen kuva klikkaamalla Lisää kuva -painiketta"
       />

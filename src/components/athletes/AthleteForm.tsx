@@ -4,6 +4,8 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import type { Athlete, NewAthlete } from "../../types";
 import { toAssetUrl } from "../../lib/formatters";
+import { ATHLETE_BIRTH_YEAR } from "../../lib/constants";
+import { toast } from "../ui/Toast";
 
 interface AthleteFormProps {
   athlete?: Athlete;
@@ -18,8 +20,11 @@ interface FormErrors {
   birthYear?: string;
 }
 
-// Generate birth year options (2005-2022)
-const birthYearOptions = Array.from({ length: 18 }, (_, i) => 2022 - i);
+// Generate birth year options
+const birthYearOptions = Array.from(
+  { length: ATHLETE_BIRTH_YEAR.MAX - ATHLETE_BIRTH_YEAR.MIN + 1 },
+  (_, i) => ATHLETE_BIRTH_YEAR.MAX - i
+);
 
 export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: AthleteFormProps) {
   const [firstName, setFirstName] = useState(athlete?.firstName || "");
@@ -96,6 +101,7 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       birthYear: birthYear as number,
+      gender: "T", // Always female athletes
       clubName: clubName.trim() || undefined,
       // For new athletes, pass the pending source path; for existing, pass the saved path
       photoPath: pendingPhotoSource || photoPath || undefined,
@@ -131,8 +137,8 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
           setPhotoPreviewUrl(toAssetUrl(selected));
         }
       }
-    } catch (e) {
-      console.error("Failed to select photo:", e);
+    } catch {
+      toast.error("Kuvan valinta epäonnistui");
     }
   };
 
@@ -156,7 +162,7 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
           <button
             type="button"
             onClick={handlePhotoSelect}
-            className="relative group"
+            className="relative group cursor-pointer"
           >
             {photoPreviewUrl ? (
               <img
@@ -165,7 +171,7 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
                 className="w-20 h-20 rounded-full object-cover"
               />
             ) : (
-              <div className="w-20 h-20 rounded-full bg-[#191919] flex items-center justify-center text-[#666666] font-medium text-xl">
+              <div className="w-20 h-20 rounded-full bg-elevated flex items-center justify-center text-[var(--text-placeholder)] font-medium text-xl">
                 {firstName || lastName ? getInitials() : <User size={28} />}
               </div>
             )}
@@ -177,8 +183,7 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
             <button
               type="button"
               onClick={handleRemovePhoto}
-              className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-[#333333] hover:bg-[#444444] flex items-center justify-center text-[#888888] hover:text-white transition-colors"
-              title="Poista kuva"
+              className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-muted hover:bg-card-hover flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
               <X size={14} />
             </button>
@@ -190,7 +195,7 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
       <div>
         <label
           htmlFor="firstName"
-          className="block text-[13px] font-medium text-[#888888] mb-1.5"
+          className="block text-body font-medium text-muted-foreground mb-1.5"
         >
           Etunimi <span className="text-error">*</span>
         </label>
@@ -205,13 +210,13 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
           placeholder="Esim. Eemeli"
         />
         {errors.firstName && (
-          <p className="mt-1.5 text-[12px] text-error">{errors.firstName}</p>
+          <p className="mt-1.5 text-xs text-error">{errors.firstName}</p>
         )}
       </div>
 
       {/* Last name */}
       <div>
-        <label htmlFor="lastName" className="block text-[13px] font-medium text-[#888888] mb-1.5">
+        <label htmlFor="lastName" className="block text-body font-medium text-muted-foreground mb-1.5">
           Sukunimi <span className="text-error">*</span>
         </label>
         <input
@@ -225,13 +230,13 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
           placeholder="Esim. Virtanen"
         />
         {errors.lastName && (
-          <p className="mt-1.5 text-[12px] text-error">{errors.lastName}</p>
+          <p className="mt-1.5 text-xs text-error">{errors.lastName}</p>
         )}
       </div>
 
       {/* Birth year */}
       <div>
-        <label htmlFor="birthYear" className="block text-[13px] font-medium text-[#888888] mb-1.5">
+        <label htmlFor="birthYear" className="block text-body font-medium text-muted-foreground mb-1.5">
           Syntymävuosi <span className="text-error">*</span>
         </label>
         <select
@@ -240,7 +245,7 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
           onChange={(e) =>
             setBirthYear(e.target.value ? parseInt(e.target.value) : "")
           }
-          className={`w-full px-3 py-2 text-sm bg-background border rounded-md input-focus ${
+          className={`w-full px-3 py-2 text-sm bg-background border rounded-md input-focus cursor-pointer ${
             errors.birthYear ? "border-error" : "border-border-subtle"
           }`}
         >
@@ -252,13 +257,13 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
           ))}
         </select>
         {errors.birthYear && (
-          <p className="mt-1.5 text-[12px] text-error">{errors.birthYear}</p>
+          <p className="mt-1.5 text-xs text-error">{errors.birthYear}</p>
         )}
       </div>
 
       {/* Club name */}
       <div>
-        <label htmlFor="clubName" className="block text-[13px] font-medium text-[#888888] mb-1.5">
+        <label htmlFor="clubName" className="block text-body font-medium text-muted-foreground mb-1.5">
           Seura
         </label>
         <input
@@ -277,14 +282,14 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
           type="button"
           onClick={onCancel}
           disabled={disabled}
-          className="btn-secondary btn-press text-sm"
+          className="btn-secondary btn-press"
         >
           Peruuta
         </button>
         <button
           type="submit"
           disabled={disabled}
-          className="btn-primary btn-press text-sm"
+          className="btn-primary btn-press"
         >
           {disabled ? "Tallennetaan..." : "Tallenna"}
         </button>

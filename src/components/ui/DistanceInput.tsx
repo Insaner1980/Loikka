@@ -1,0 +1,155 @@
+import { useRef, useState } from "react";
+
+interface DistanceInputProps {
+  value: number | null; // Value in centimeters (e.g., 550 = 5.50m)
+  onChange: (value: number | null) => void;
+  error?: boolean;
+  disabled?: boolean;
+  id?: string;
+}
+
+export function DistanceInput({
+  value,
+  onChange,
+  error = false,
+  disabled = false,
+  id,
+}: DistanceInputProps) {
+  const metersRef = useRef<HTMLInputElement>(null);
+  const centimetersRef = useRef<HTMLInputElement>(null);
+
+  // Track if centimeters field is being edited
+  const [cmEditing, setCmEditing] = useState(false);
+  const [cmEditValue, setCmEditValue] = useState("");
+
+  // Parse value into meters and centimeters
+  const parseValue = (val: number | null) => {
+    if (val === null) return { meters: "", centimeters: "" };
+
+    const meters = Math.floor(val / 100);
+    const centimeters = val % 100;
+
+    return {
+      meters: meters.toString(),
+      centimeters: centimeters.toString().padStart(2, "0"),
+    };
+  };
+
+  const parsed = parseValue(value);
+  const meters = parsed.meters;
+  // Use edit value while editing, otherwise show parsed value
+  const centimeters = cmEditing ? cmEditValue : parsed.centimeters;
+
+  // Combine values into centimeters
+  const combineValues = (m: string, cm: string) => {
+    const mVal = m ? parseInt(m, 10) : 0;
+    // Pad or trim centimeters to 2 digits
+    const cmVal = cm ? parseInt(cm.padEnd(2, "0").slice(0, 2), 10) : 0;
+
+    if (isNaN(mVal) || isNaN(cmVal)) return null;
+    if (!m && !cm) return null;
+
+    return mVal * 100 + cmVal;
+  };
+
+  const handleMetersChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, "").slice(0, 2); // Max 99 meters
+    const newValue = combineValues(val, cmEditing ? cmEditValue : parsed.centimeters);
+    onChange(newValue);
+
+    // Auto-advance to centimeters when a digit is entered
+    if (val.length >= 1 && parseInt(val, 10) > 0) {
+      setTimeout(() => {
+        centimetersRef.current?.focus();
+        // Pre-set editing state for smooth transition
+        setCmEditing(true);
+        setCmEditValue("");
+      }, 0);
+    }
+  };
+
+  const handleCentimetersChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, "").slice(0, 2);
+    setCmEditValue(val);
+    const newValue = combineValues(meters, val);
+    onChange(newValue);
+  };
+
+  const handleCentimetersFocus = () => {
+    setCmEditing(true);
+    // If current value is "00", start with empty for easier typing
+    if (parsed.centimeters === "00") {
+      setCmEditValue("");
+    } else {
+      setCmEditValue(parsed.centimeters);
+    }
+  };
+
+  const handleCentimetersBlur = () => {
+    setCmEditing(false);
+  };
+
+  // Handle backspace to go to previous field
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    field: "meters" | "centimeters"
+  ) => {
+    if (e.key === "Backspace" && e.currentTarget.value === "") {
+      e.preventDefault();
+      if (field === "centimeters") {
+        metersRef.current?.focus();
+      }
+    }
+    // Handle arrow keys for navigation
+    if (e.key === "ArrowRight" && e.currentTarget.selectionStart === e.currentTarget.value.length) {
+      e.preventDefault();
+      if (field === "meters") centimetersRef.current?.focus();
+    }
+    if (e.key === "ArrowLeft" && e.currentTarget.selectionStart === 0) {
+      e.preventDefault();
+      if (field === "centimeters") metersRef.current?.focus();
+    }
+  };
+
+  const inputClassName = `w-full text-center bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
+    error ? "border-error" : "border-border"
+  } ${disabled ? "opacity-60 cursor-not-allowed" : ""}`;
+
+  return (
+    <div className="flex items-center gap-1" id={id}>
+      <div className="flex flex-col items-center">
+        <input
+          ref={metersRef}
+          type="text"
+          inputMode="numeric"
+          value={meters}
+          onChange={handleMetersChange}
+          onKeyDown={(e) => handleKeyDown(e, "meters")}
+          placeholder="0"
+          disabled={disabled}
+          className={`${inputClassName} w-14 px-2 py-2`}
+          aria-label="Metrit"
+        />
+        <span className="text-xs text-muted-foreground mt-1">m</span>
+      </div>
+      <span className="text-lg font-medium text-muted-foreground pb-5">.</span>
+      <div className="flex flex-col items-center">
+        <input
+          ref={centimetersRef}
+          type="text"
+          inputMode="numeric"
+          value={centimeters}
+          onChange={handleCentimetersChange}
+          onFocus={handleCentimetersFocus}
+          onBlur={handleCentimetersBlur}
+          onKeyDown={(e) => handleKeyDown(e, "centimeters")}
+          placeholder="00"
+          disabled={disabled}
+          className={`${inputClassName} w-14 px-2 py-2`}
+          aria-label="Senttimetrit"
+        />
+        <span className="text-xs text-muted-foreground mt-1">cm</span>
+      </div>
+    </div>
+  );
+}

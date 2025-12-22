@@ -24,7 +24,20 @@
       "Bash(git branch:*)",
       "Bash(git push:*)",
       "Bash(rm:*)",
-      "Bash(cargo build:*)"
+      "Bash(cargo build:*)",
+      "Bash(cargo clippy:*)",
+      "Bash(wc:*)",
+      "Bash(grep:*)",
+      "Bash(cmd /c \"echo %APPDATA%\")",
+      "Bash(npm run build:*)",
+      "Bash(netstat:*)",
+      "Bash(tasklist:*)",
+      "Bash(wmic process where processid=25352 get commandline)",
+      "Bash(findstr:*)",
+      "Bash(curl:*)",
+      "Bash(dir \"%APPDATA%\\com.loikka.app\\photos\")",
+      "Bash(dir:*)",
+      "Bash(cmd /c \"dir C:\\Users\\Emma\\AppData\\Roaming\\com.loikka.app /s\")"
     ],
     "deny": [],
     "ask": []

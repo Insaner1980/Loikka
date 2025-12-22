@@ -8,7 +8,7 @@ pub async fn get_all_competitions(app: AppHandle) -> Result<Vec<Competition>, St
     let pool = get_pool(&app).await?;
 
     let rows = sqlx::query(
-        r#"SELECT id, name, date, end_date, location, address, notes, reminder_enabled, reminder_days_before, created_at
+        r#"SELECT id, name, date, end_date, location, address, level, notes, reminder_enabled, reminder_days_before, created_at
         FROM competitions ORDER BY date DESC"#
     )
     .fetch_all(&pool)
@@ -22,6 +22,7 @@ pub async fn get_all_competitions(app: AppHandle) -> Result<Vec<Competition>, St
         end_date: row.get("end_date"),
         location: row.get("location"),
         address: row.get("address"),
+        level: row.get("level"),
         notes: row.get("notes"),
         reminder_enabled: row.get::<i32, _>("reminder_enabled") == 1,
         reminder_days_before: row.get("reminder_days_before"),
@@ -34,7 +35,7 @@ pub async fn get_upcoming_competitions(app: AppHandle) -> Result<Vec<Competition
     let pool = get_pool(&app).await?;
 
     let rows = sqlx::query(
-        r#"SELECT id, name, date, end_date, location, address, notes, reminder_enabled, reminder_days_before, created_at
+        r#"SELECT id, name, date, end_date, location, address, level, notes, reminder_enabled, reminder_days_before, created_at
         FROM competitions
         WHERE date >= date('now')
         ORDER BY date ASC"#
@@ -50,6 +51,7 @@ pub async fn get_upcoming_competitions(app: AppHandle) -> Result<Vec<Competition
         end_date: row.get("end_date"),
         location: row.get("location"),
         address: row.get("address"),
+        level: row.get("level"),
         notes: row.get("notes"),
         reminder_enabled: row.get::<i32, _>("reminder_enabled") == 1,
         reminder_days_before: row.get("reminder_days_before"),
@@ -62,7 +64,7 @@ pub async fn get_competition(app: AppHandle, id: i64) -> Result<Option<Competiti
     let pool = get_pool(&app).await?;
 
     let row = sqlx::query(
-        r#"SELECT id, name, date, end_date, location, address, notes, reminder_enabled, reminder_days_before, created_at
+        r#"SELECT id, name, date, end_date, location, address, level, notes, reminder_enabled, reminder_days_before, created_at
         FROM competitions WHERE id = ?"#
     )
     .bind(id)
@@ -77,6 +79,7 @@ pub async fn get_competition(app: AppHandle, id: i64) -> Result<Option<Competiti
         end_date: row.get("end_date"),
         location: row.get("location"),
         address: row.get("address"),
+        level: row.get("level"),
         notes: row.get("notes"),
         reminder_enabled: row.get::<i32, _>("reminder_enabled") == 1,
         reminder_days_before: row.get("reminder_days_before"),
@@ -89,14 +92,15 @@ pub async fn create_competition(app: AppHandle, competition: CreateCompetition) 
     let pool = get_pool(&app).await?;
 
     let result = sqlx::query(
-        r#"INSERT INTO competitions (name, date, end_date, location, address, notes, reminder_enabled, reminder_days_before)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)"#
+        r#"INSERT INTO competitions (name, date, end_date, location, address, level, notes, reminder_enabled, reminder_days_before)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"#
     )
     .bind(&competition.name)
     .bind(&competition.date)
     .bind(&competition.end_date)
     .bind(&competition.location)
     .bind(&competition.address)
+    .bind(&competition.level)
     .bind(&competition.notes)
     .bind(competition.reminder_enabled as i32)
     .bind(competition.reminder_days_before)
@@ -107,7 +111,7 @@ pub async fn create_competition(app: AppHandle, competition: CreateCompetition) 
     let id = result.last_insert_rowid();
 
     let row = sqlx::query(
-        r#"SELECT id, name, date, end_date, location, address, notes, reminder_enabled, reminder_days_before, created_at
+        r#"SELECT id, name, date, end_date, location, address, level, notes, reminder_enabled, reminder_days_before, created_at
         FROM competitions WHERE id = ?"#
     )
     .bind(id)
@@ -122,6 +126,7 @@ pub async fn create_competition(app: AppHandle, competition: CreateCompetition) 
         end_date: row.get("end_date"),
         location: row.get("location"),
         address: row.get("address"),
+        level: row.get("level"),
         notes: row.get("notes"),
         reminder_enabled: row.get::<i32, _>("reminder_enabled") == 1,
         reminder_days_before: row.get("reminder_days_before"),
@@ -140,6 +145,7 @@ pub async fn update_competition(app: AppHandle, id: i64, competition: UpdateComp
             end_date = ?,
             location = ?,
             address = ?,
+            level = ?,
             notes = ?,
             reminder_enabled = COALESCE(?, reminder_enabled),
             reminder_days_before = ?
@@ -150,6 +156,7 @@ pub async fn update_competition(app: AppHandle, id: i64, competition: UpdateComp
     .bind(&competition.end_date)
     .bind(&competition.location)
     .bind(&competition.address)
+    .bind(&competition.level)
     .bind(&competition.notes)
     .bind(competition.reminder_enabled.map(|b| b as i32))
     .bind(competition.reminder_days_before)
@@ -159,7 +166,7 @@ pub async fn update_competition(app: AppHandle, id: i64, competition: UpdateComp
     .map_err(|e| e.to_string())?;
 
     let row = sqlx::query(
-        r#"SELECT id, name, date, end_date, location, address, notes, reminder_enabled, reminder_days_before, created_at
+        r#"SELECT id, name, date, end_date, location, address, level, notes, reminder_enabled, reminder_days_before, created_at
         FROM competitions WHERE id = ?"#
     )
     .bind(id)
@@ -174,6 +181,7 @@ pub async fn update_competition(app: AppHandle, id: i64, competition: UpdateComp
         end_date: row.get("end_date"),
         location: row.get("location"),
         address: row.get("address"),
+        level: row.get("level"),
         notes: row.get("notes"),
         reminder_enabled: row.get::<i32, _>("reminder_enabled") == 1,
         reminder_days_before: row.get("reminder_days_before"),
@@ -218,7 +226,10 @@ pub async fn get_competition_participants(app: AppHandle, competition_id: i64) -
 pub async fn add_competition_participant(app: AppHandle, participant: CreateCompetitionParticipant) -> Result<CompetitionParticipant, String> {
     let pool = get_pool(&app).await?;
 
-    let disciplines_json = participant.disciplines_planned.map(|d| serde_json::to_string(&d).unwrap_or_default());
+    let disciplines_json = match participant.disciplines_planned {
+        Some(d) => Some(serde_json::to_string(&d).map_err(|e| format!("Failed to serialize disciplines: {}", e))?),
+        None => None,
+    };
 
     let result = sqlx::query(
         "INSERT OR REPLACE INTO competition_participants (competition_id, athlete_id, disciplines_planned) VALUES (?, ?, ?)"

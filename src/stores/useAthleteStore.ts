@@ -9,6 +9,7 @@ import type {
   Discipline,
 } from "../types";
 import { getDisciplineById } from "../data/disciplines";
+import { getErrorMessage } from "../lib";
 
 interface AthleteStats {
   disciplineCount: number;
@@ -54,7 +55,7 @@ export const useAthleteStore = create<AthleteStore>((set, get) => ({
       const athletes = await invoke<AthleteWithStats[]>("get_all_athletes");
       set({ athletes, loading: false });
     } catch (error) {
-      set({ error: (error as Error).message || String(error), loading: false });
+      set({ error: getErrorMessage(error), loading: false });
     }
   },
 
@@ -104,7 +105,7 @@ export const useAthleteStore = create<AthleteStore>((set, get) => ({
 
       return newAthlete;
     } catch (error) {
-      set({ error: (error as Error).message || String(error), loading: false });
+      set({ error: getErrorMessage(error), loading: false });
       throw error;
     }
   },
@@ -127,7 +128,7 @@ export const useAthleteStore = create<AthleteStore>((set, get) => ({
       const athletes = await invoke<AthleteWithStats[]>("get_all_athletes");
       set({ athletes, loading: false });
     } catch (error) {
-      set({ error: (error as Error).message || String(error), loading: false });
+      set({ error: getErrorMessage(error), loading: false });
       throw error;
     }
   },
@@ -141,7 +142,7 @@ export const useAthleteStore = create<AthleteStore>((set, get) => ({
       const athletes = await invoke<AthleteWithStats[]>("get_all_athletes");
       set({ athletes, loading: false });
     } catch (error) {
-      set({ error: (error as Error).message || String(error), loading: false });
+      set({ error: getErrorMessage(error), loading: false });
       throw error;
     }
   },

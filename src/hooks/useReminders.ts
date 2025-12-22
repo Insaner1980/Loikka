@@ -11,6 +11,8 @@ import type { Competition } from "../types";
 
 // Local storage key for tracking shown reminders
 const SHOWN_REMINDERS_KEY = "loikka_shown_reminders";
+const REMINDER_CLEANUP_DAYS = 60;
+const REMINDER_CHECK_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 
 interface ReminderInfo {
   competition: Competition;
@@ -51,9 +53,9 @@ function markReminderAsShown(competitionId: number, date: Date): void {
 
   if (!exists) {
     shown.push({ competitionId, reminderDate });
-    // Clean up old entries (older than 60 days)
+    // Clean up old entries
     const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 60);
+    cutoff.setDate(cutoff.getDate() - REMINDER_CLEANUP_DAYS);
     const cleaned = shown.filter(
       (r) => new Date(r.reminderDate) >= cutoff
     );
@@ -220,15 +222,22 @@ export function useReminders() {
   }, [competitions, checkAndSendReminders]);
 
   // Set up periodic checking (every hour)
+  // Use ref to avoid recreating interval on every dependency change
+  const checkAndSendRemindersRef = useRef(checkAndSendReminders);
+  checkAndSendRemindersRef.current = checkAndSendReminders;
+
+  const competitionsLengthRef = useRef(competitions.length);
+  competitionsLengthRef.current = competitions.length;
+
   useEffect(() => {
     const interval = setInterval(() => {
-      if (competitions.length > 0) {
-        checkAndSendReminders();
+      if (competitionsLengthRef.current > 0) {
+        checkAndSendRemindersRef.current();
       }
-    }, 60 * 60 * 1000); // 1 hour
+    }, REMINDER_CHECK_INTERVAL_MS);
 
     return () => clearInterval(interval);
-  }, [competitions, checkAndSendReminders]);
+  }, []); // Empty deps - interval created once
 
   // Fetch competitions on mount if empty
   useEffect(() => {

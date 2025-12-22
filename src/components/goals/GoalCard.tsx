@@ -22,7 +22,10 @@ export function GoalCard({
   onClick,
 }: GoalCardProps) {
   const isAchieved = goal.status === "achieved";
-  const isCloseToGoal = progress >= 90 && !isAchieved;
+  // Goal is completed when progress reaches 100% (even if not yet marked in DB)
+  const isCompleted = progress >= 100 || isAchieved;
+  // Show "Lähellä!" only when close but not yet completed
+  const isCloseToGoal = progress >= 90 && progress < 100 && !isCompleted;
 
   const formatValue = (value: number | null) => {
     if (value === null) return "-";
@@ -36,22 +39,17 @@ export function GoalCard({
 
   const disciplineName = discipline?.fullName ?? "Tuntematon laji";
 
-  // Calculate progress bar color
+  // Calculate progress bar color - accent color when completed or close
   const getProgressColor = () => {
-    if (isAchieved) return "bg-success";
-    if (isCloseToGoal) return "bg-primary";
-    return "bg-secondary";
+    if (isCompleted || isCloseToGoal) return "bg-[var(--accent)]";
+    return "bg-muted";
   };
 
   return (
     <div
       onClick={onClick}
-      className={`rounded-xl p-4 transition-all ${
+      className={`rounded-xl p-4 border transition-colors duration-150 bg-card border-border-subtle hover:border-border-hover ${
         onClick ? "cursor-pointer" : ""
-      } ${
-        isAchieved
-          ? "bg-success/10"
-          : "bg-[#141414] hover:bg-[#191919]"
       }`}
     >
       {/* Header */}
@@ -59,22 +57,22 @@ export function GoalCard({
         <div>
           <div className="flex items-center gap-2">
             <span className="font-medium">{athleteName}</span>
-            {isAchieved && (
-              <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-success text-white">
+            {isCompleted && (
+              <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-caption font-medium bg-transparent text-[var(--text-muted)] border border-[var(--border-hover)]">
                 <Check size={12} />
                 Saavutettu
               </span>
             )}
             {isCloseToGoal && (
-              <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-white/10 text-[#888888]">
+              <span className="px-1.5 py-0.5 rounded text-caption font-medium bg-transparent text-[var(--text-muted)] border border-[var(--border-hover)]">
                 Lähellä!
               </span>
             )}
           </div>
           <p className="text-sm text-muted-foreground">{disciplineName}</p>
         </div>
-        <div className="p-2 bg-white/5 rounded-lg">
-          <Target size={20} className="text-[#555555]" />
+        <div className="p-2 bg-muted rounded-lg">
+          <Target size={20} className="text-tertiary" />
         </div>
       </div>
 
@@ -92,7 +90,7 @@ export function GoalCard({
           <span className="text-muted-foreground">Edistyminen</span>
           <span className="font-medium">{Math.round(progress)}%</span>
         </div>
-        <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+        <div className="h-2 bg-muted rounded-full overflow-hidden">
           <div
             className={`h-full rounded-full transition-all ${getProgressColor()}`}
             style={{ width: `${Math.min(100, progress)}%` }}
@@ -106,13 +104,13 @@ export function GoalCard({
           <span className="text-muted-foreground">Nykyinen:</span>
           <p className="font-medium">{formatValue(currentBest)}</p>
         </div>
-        {!isAchieved && remaining !== null && (
+        {!isCompleted && remaining !== null && (
           <div>
             <span className="text-muted-foreground">Jäljellä:</span>
             <p className="font-medium">{formatValue(remaining)}</p>
           </div>
         )}
-        {isAchieved && goal.achievedAt && (
+        {goal.achievedAt && (
           <div>
             <span className="text-muted-foreground">Saavutettu:</span>
             <p className="font-medium">{formatDate(goal.achievedAt)}</p>
@@ -121,8 +119,8 @@ export function GoalCard({
       </div>
 
       {/* Target date */}
-      {goal.targetDate && !isAchieved && (
-        <div className="mt-3 pt-3 flex items-center gap-2 text-sm text-[#666666]">
+      {goal.targetDate && !isCompleted && (
+        <div className="mt-3 pt-3 flex items-center gap-2 text-sm text-muted-foreground">
           <Calendar size={14} />
           <span>DDL: {formatDate(goal.targetDate)}</span>
         </div>

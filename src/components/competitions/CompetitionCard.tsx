@@ -1,8 +1,19 @@
-import { Calendar, MapPin, Users, Timer } from "lucide-react";
+import { Calendar, MapPin, Users } from "lucide-react";
 import { format, differenceInDays, isBefore, startOfDay } from "date-fns";
 import { fi } from "date-fns/locale";
-import type { Competition, Athlete, CompetitionParticipant } from "../../types";
-import { getDisciplineById } from "../../data/disciplines";
+import type { Competition, Athlete, CompetitionParticipant, CompetitionLevel } from "../../types";
+
+// Competition level labels and highlight status
+const levelConfig: Record<CompetitionLevel, { label: string; highlighted: boolean }> = {
+  seura: { label: "Seura", highlighted: false },
+  seuraottelu: { label: "Seuraottelu", highlighted: false },
+  piiri: { label: "Piiri", highlighted: false },
+  pm: { label: "PM", highlighted: true },
+  alue: { label: "Alue", highlighted: false },
+  sm: { label: "SM", highlighted: true },
+  kll: { label: "KLL", highlighted: true },
+  muu: { label: "Muu", highlighted: false },
+};
 
 interface CompetitionCardProps {
   competition: Competition;
@@ -15,57 +26,31 @@ function DaysUntilBadge({ date }: { date: string }) {
   const competitionDate = startOfDay(new Date(date));
   const daysUntil = differenceInDays(competitionDate, today);
 
+  // All badges use the same gray style
+  const baseStyle = "px-1.5 py-0.5 rounded text-caption font-medium bg-transparent text-[var(--text-muted)] border border-[var(--border-hover)]";
+
   if (daysUntil < 0) {
-    return (
-      <span className="px-2 py-1 rounded-md text-xs font-medium bg-white/5 text-[#666666]">
-        Päättynyt
-      </span>
-    );
+    return <span className={baseStyle}>Päättynyt</span>;
   }
 
   if (daysUntil === 0) {
-    return (
-      <span className="px-2 py-1 rounded-md text-xs font-medium bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30">
-        Tänään
-      </span>
-    );
+    return <span className={baseStyle}>Tänään</span>;
   }
 
   if (daysUntil === 1) {
-    return (
-      <span className="px-2 py-1 rounded-md text-xs font-medium bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30">
-        Huomenna
-      </span>
-    );
+    return <span className={baseStyle}>Huomenna</span>;
   }
 
-  if (daysUntil <= 3) {
-    return (
-      <span className="px-2 py-1 rounded-md text-xs font-medium bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/30">
-        {daysUntil} pv
-      </span>
-    );
-  }
+  return <span className={baseStyle}>{daysUntil} pv</span>;
+}
 
-  if (daysUntil <= 7) {
-    return (
-      <span className="px-2 py-1 rounded-md text-xs font-medium bg-[#FACC15]/15 text-[#FACC15] border border-[#FACC15]/25">
-        {daysUntil} pv
-      </span>
-    );
-  }
+function LevelBadge({ level }: { level: CompetitionLevel }) {
+  const config = levelConfig[level];
 
-  if (daysUntil <= 14) {
-    return (
-      <span className="px-2 py-1 rounded-md text-xs font-medium bg-[#F59E0B]/15 text-[#F59E0B] border border-[#F59E0B]/25">
-        {daysUntil} pv
-      </span>
-    );
-  }
-
+  // All badges use the same style as OE/KE/SE (badge-pb style)
   return (
-    <span className="px-2 py-1 rounded-md text-xs font-medium bg-white/5 text-[#888888]">
-      {daysUntil} pv
+    <span className="px-1.5 py-0.5 font-medium rounded text-caption bg-transparent text-[var(--text-muted)] border border-[var(--border-hover)]">
+      {config.label}
     </span>
   );
 }
@@ -79,91 +64,71 @@ export function CompetitionCard({
   const today = startOfDay(new Date());
   const isPast = isBefore(startOfDay(competitionDate), today);
 
-  // Format date with weekday (e.g., "La 15.3.")
-  const formattedDate = format(competitionDate, "EEEEEE d.M.", { locale: fi });
+  // Format date with weekday (e.g., "La 15.3.2025")
+  const formattedDate = format(competitionDate, "EEEEEE d.M.yyyy", { locale: fi });
   const capitalizedDate =
     formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 
   // If multi-day event, show date range
   const dateDisplay = competition.endDate
-    ? `${capitalizedDate} – ${format(new Date(competition.endDate), "EEEEEE d.M.", { locale: fi })}`
+    ? `${capitalizedDate} – ${format(new Date(competition.endDate), "EEEEEE d.M.yyyy", { locale: fi })}`
     : capitalizedDate;
 
-  // Get unique disciplines planned
-  const disciplineIds = new Set<number>();
-  for (const participant of participants) {
-    if (participant.disciplinesPlanned) {
-      for (const id of participant.disciplinesPlanned) {
-        disciplineIds.add(id);
-      }
-    }
-  }
-  const disciplines = Array.from(disciplineIds)
-    .map((id) => getDisciplineById(id))
-    .filter(Boolean);
-
-  // Get athlete names
+  // Get athlete names (first name only)
   const athleteNames = participants
     .filter((p) => p.athlete)
-    .map((p) => `${p.athlete!.firstName} ${p.athlete!.lastName.charAt(0)}.`);
+    .map((p) => p.athlete!.firstName);
 
   return (
     <div
       onClick={onClick}
-      className={`rounded-xl bg-[#141414] border border-transparent p-4 transition-colors duration-150 ${
-        onClick ? "cursor-pointer hover:border-white/[0.06]" : ""
+      className={`rounded-xl bg-card border border-border-subtle p-4 transition-colors duration-150 flex flex-col ${
+        onClick ? "cursor-pointer hover:border-border-hover" : ""
       } ${isPast ? "opacity-60" : ""}`}
     >
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          {/* Date */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
-            <Calendar size={14} />
-            <span>{dateDisplay}</span>
-          </div>
-
-          {/* Name */}
-          <h3 className="font-semibold text-base truncate">{competition.name}</h3>
-
-          {/* Location */}
-          {competition.location && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
-              <MapPin size={14} />
-              <span>
-                {competition.location}
-                {competition.address && `, ${competition.address}`}
-              </span>
-            </div>
-          )}
-
-          {/* Participants */}
-          {athleteNames.length > 0 && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
-              <Users size={14} />
-              <span className="truncate">{athleteNames.join(", ")}</span>
-            </div>
-          )}
-
-          {/* Disciplines */}
-          {disciplines.length > 0 && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
-              <Timer size={14} />
-              <span className="truncate">
-                {disciplines.map((d) => d!.name).join(", ")}
-              </span>
-            </div>
-          )}
-
-          {/* Notes */}
-          {competition.notes && (
-            <p className="text-sm text-muted-foreground mt-2 italic">
-              {competition.notes}
-            </p>
-          )}
+      {/* Top: Date + days badge */}
+      <div className="flex items-center justify-between gap-2 mb-2">
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <Calendar size={13} className="shrink-0" />
+          <span>{dateDisplay}</span>
         </div>
-
-        {/* Days until badge */}
         <DaysUntilBadge date={competition.date} />
+      </div>
+
+      {/* Name and level */}
+      <div className="flex items-center gap-2 mb-3">
+        <h3 className="font-semibold text-foreground truncate">{competition.name}</h3>
+        {competition.level && <LevelBadge level={competition.level} />}
+      </div>
+
+      {/* Divider */}
+      <div className="h-px w-full bg-white/10 my-2" />
+
+      {/* Bottom info */}
+      <div className="space-y-1.5 text-sm text-muted-foreground">
+        {/* Location */}
+        {competition.location && (
+          <div className="flex items-center gap-1.5">
+            <MapPin size={13} className="shrink-0" />
+            <span className="truncate">
+              {competition.location}
+              {competition.address && `, ${competition.address}`}
+            </span>
+          </div>
+        )}
+
+        {/* Participants */}
+        {athleteNames.length > 0 && (
+          <div className="flex items-center gap-1.5">
+            <Users size={13} className="shrink-0" />
+            <span className="truncate">{athleteNames.join(", ")}</span>
+          </div>
+        )}
+
+        {/* Notes */}
+        {competition.notes && (
+          <p className="italic truncate">{competition.notes}</p>
+        )}
       </div>
     </div>
   );

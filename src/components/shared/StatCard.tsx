@@ -8,16 +8,16 @@ interface StatCardProps {
 
 export function StatCard({ icon, value, label }: StatCardProps) {
   return (
-    <div className="p-5 rounded-xl bg-[#141414] border border-transparent hover:border-white/[0.06] transition-colors duration-150">
+    <div className="p-5 rounded-xl bg-card border border-border-subtle hover:border-border-hover transition-colors duration-150">
       <div className="flex items-center gap-3 mb-3">
-        <div className="text-[#10B981]">
+        <div className="text-success">
           {icon}
         </div>
       </div>
-      <div className="text-[28px] font-medium text-foreground tracking-tight leading-none mb-1">
+      <div className="text-hero-stat font-medium text-foreground mb-1">
         {value}
       </div>
-      <div className="text-[13px] text-[#666666]">{label}</div>
+      <div className="text-body text-muted-foreground">{label}</div>
     </div>
   );
 }

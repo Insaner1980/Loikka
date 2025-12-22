@@ -2,6 +2,7 @@
 mod commands;
 mod database;
 mod db;
+mod google_drive;
 mod types;
 
 use database::{init_database, AppDatabase};
@@ -30,7 +31,6 @@ pub fn run() {
                     Ok(pool) => {
                         let state = handle.state::<AppDatabase>();
                         *state.0.lock().await = Some(pool);
-                        println!("Database initialized successfully");
                     }
                     Err(e) => {
                         eprintln!("Failed to initialize database: {}", e);
@@ -87,6 +87,10 @@ pub fn run() {
             commands::sync_from_drive,
             commands::get_cloud_backups,
             commands::delete_cloud_backup,
+            commands::list_cloud_photos,
+            commands::list_local_photos,
+            commands::sync_to_drive_with_options,
+            commands::restore_from_drive_with_options,
             // Photos
             commands::save_photo,
             commands::get_photos,

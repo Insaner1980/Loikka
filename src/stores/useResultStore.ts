@@ -1,15 +1,82 @@
 import { create } from "zustand";
 import { invoke } from "@tauri-apps/api/core";
-import type { Result, NewResult, MedalType, ResultType } from "../types";
+import type { Result, NewResult, UpdateResult, MedalType, ResultType, Athlete, Goal } from "../types";
 import { getDisciplineById } from "../data/disciplines";
+import { getAgeCategory, getErrorMessage } from "../lib";
+
+// Helper to check if a result is valid (treats undefined/null status as valid for backwards compatibility)
+function isValidResult(result: Result): boolean {
+  return result.status === "valid" || result.status === undefined || result.status === null;
+}
+
+// Helper function to check and mark goals as achieved
+async function checkAndMarkGoalsAchieved(
+  athleteId: number,
+  disciplineId: number,
+  results: Result[]
+) {
+  try {
+    // Get all goals
+    const goals = await invoke<Goal[]>("get_all_goals");
+
+    // Find active goals for this athlete and discipline
+    const activeGoals = goals.filter(
+      (g) => g.athleteId === athleteId &&
+             g.disciplineId === disciplineId &&
+             g.status === "active"
+    );
+
+    if (activeGoals.length === 0) return;
+
+    // Get the discipline to determine if lower is better
+    const discipline = getDisciplineById(disciplineId);
+    if (!discipline) return;
+
+    // Calculate current best for this athlete/discipline (only valid results)
+    const athleteResults = results.filter(
+      (r) =>
+        r.athleteId === athleteId &&
+        r.disciplineId === disciplineId &&
+        isValidResult(r)
+    );
+
+    if (athleteResults.length === 0) return;
+
+    const values = athleteResults.map((r) => r.value);
+    const currentBest = discipline.lowerIsBetter
+      ? Math.min(...values)
+      : Math.max(...values);
+
+    // Check each active goal and mark as achieved if target is met
+    let goalsMarked = false;
+    for (const goal of activeGoals) {
+      const isAchieved = discipline.lowerIsBetter
+        ? currentBest <= goal.targetValue
+        : currentBest >= goal.targetValue;
+
+      if (isAchieved) {
+        await invoke("mark_goal_achieved", { id: goal.id });
+        goalsMarked = true;
+      }
+    }
+
+    // Refresh the goal store if any goals were marked as achieved
+    if (goalsMarked) {
+      // Dynamic import to avoid circular dependency
+      const { useGoalStore } = await import("./useGoalStore");
+      await useGoalStore.getState().fetchGoals();
+    }
+  } catch (error) {
+    console.error("Error checking goals:", error);
+  }
+}
 
 export interface ResultFilters {
   athleteId: number | null;
   disciplineId: number | null;
   type: ResultType | null;
-  timeRange: "all" | "thisYear" | "lastYear" | "custom";
-  startDate?: string;
-  endDate?: string;
+  year: number | null; // null = all years
+  ageCategory: string | null; // null = all categories
 }
 
 export interface ResultsByDate {
@@ -21,6 +88,8 @@ export interface ChartDataPoint {
   date: string;
   value: number;
   isPersonalBest: boolean;
+  isSeasonBest: boolean;
+  isNationalRecord: boolean;
 }
 
 export interface SeasonStatsData {
@@ -44,6 +113,8 @@ interface ResultStore {
     result: NewResult,
     medal?: { type: MedalType; competitionName: string }
   ) => Promise<Result>;
+  updateResult: (id: number, result: UpdateResult) => Promise<Result>;
+  deleteResult: (id: number) => Promise<boolean>;
   checkPersonalBest: (
     athleteId: number,
     disciplineId: number,
@@ -56,8 +127,8 @@ interface ResultStore {
     year: number
   ) => Promise<boolean>;
   getResultsByAthlete: (athleteId: number) => Result[];
-  getFilteredResults: (filters: ResultFilters) => Result[];
-  getResultsByDate: (filters: ResultFilters) => ResultsByDate[];
+  getFilteredResults: (filters: ResultFilters, athletes?: Athlete[]) => Result[];
+  getResultsByDate: (filters: ResultFilters, athletes?: Athlete[]) => ResultsByDate[];
   getResultsForChart: (
     athleteId: number,
     disciplineId: number
@@ -84,7 +155,7 @@ export const useResultStore = create<ResultStore>((set, get) => ({
       const results = await invoke<Result[]>("get_all_results");
       set({ results, loading: false });
     } catch (error) {
-      set({ error: (error as Error).message || String(error), loading: false });
+      set({ error: getErrorMessage(error), loading: false });
     }
   },
 
@@ -99,9 +170,18 @@ export const useResultStore = create<ResultStore>((set, get) => ({
           value: resultData.value,
           type: resultData.type,
           competitionName: resultData.competitionName || null,
+          competitionLevel: resultData.competitionLevel || null,
           location: resultData.location || null,
           placement: resultData.placement || null,
           notes: resultData.notes || null,
+          isPersonalBest: resultData.isPersonalBest || false,
+          isSeasonBest: resultData.isSeasonBest || false,
+          isNationalRecord: resultData.isNationalRecord || false,
+          wind: resultData.wind ?? null,
+          status: resultData.status || "valid",
+          equipmentWeight: resultData.equipmentWeight ?? null,
+          hurdleHeight: resultData.hurdleHeight ?? null,
+          hurdleSpacing: resultData.hurdleSpacing ?? null,
         },
       });
 
@@ -120,9 +200,69 @@ export const useResultStore = create<ResultStore>((set, get) => ({
       const results = await invoke<Result[]>("get_all_results");
       set({ results, loading: false });
 
+      // Check if any goals should be marked as achieved
+      await checkAndMarkGoalsAchieved(resultData.athleteId, resultData.disciplineId, results);
+
       return newResult;
     } catch (error) {
-      set({ error: (error as Error).message || String(error), loading: false });
+      set({ error: getErrorMessage(error), loading: false });
+      throw error;
+    }
+  },
+
+  updateResult: async (id: number, resultData: UpdateResult) => {
+    set({ loading: true, error: null });
+    try {
+      const updatedResult = await invoke<Result>("update_result", {
+        id,
+        result: {
+          athleteId: resultData.athleteId,
+          disciplineId: resultData.disciplineId,
+          date: resultData.date,
+          value: resultData.value,
+          type: resultData.type,
+          competitionName: resultData.competitionName || null,
+          competitionLevel: resultData.competitionLevel || null,
+          location: resultData.location || null,
+          placement: resultData.placement || null,
+          notes: resultData.notes || null,
+          wind: resultData.wind ?? null,
+          status: resultData.status || null,
+          equipmentWeight: resultData.equipmentWeight ?? null,
+          hurdleHeight: resultData.hurdleHeight ?? null,
+          hurdleSpacing: resultData.hurdleSpacing ?? null,
+          isNationalRecord: resultData.isNationalRecord,
+        },
+      });
+
+      // Refetch all results to ensure consistency
+      const results = await invoke<Result[]>("get_all_results");
+      set({ results, loading: false });
+
+      // Check if any goals should be marked as achieved
+      if (resultData.athleteId && resultData.disciplineId) {
+        await checkAndMarkGoalsAchieved(resultData.athleteId, resultData.disciplineId, results);
+      }
+
+      return updatedResult;
+    } catch (error) {
+      set({ error: getErrorMessage(error), loading: false });
+      throw error;
+    }
+  },
+
+  deleteResult: async (id: number) => {
+    set({ loading: true, error: null });
+    try {
+      await invoke<boolean>("delete_result", { id });
+
+      // Refetch all results
+      const results = await invoke<Result[]>("get_all_results");
+      set({ results, loading: false });
+
+      return true;
+    } catch (error) {
+      set({ error: getErrorMessage(error), loading: false });
       throw error;
     }
   },
@@ -146,7 +286,10 @@ export const useResultStore = create<ResultStore>((set, get) => ({
       if (!discipline) return false;
 
       const athleteResults = results.filter(
-        (r) => r.athleteId === athleteId && r.disciplineId === disciplineId
+        (r) =>
+          r.athleteId === athleteId &&
+          r.disciplineId === disciplineId &&
+          isValidResult(r)
       );
 
       if (athleteResults.length === 0) return true;
@@ -185,6 +328,7 @@ export const useResultStore = create<ResultStore>((set, get) => ({
         (r) =>
           r.athleteId === athleteId &&
           r.disciplineId === disciplineId &&
+          isValidResult(r) &&
           new Date(r.date).getFullYear() === year
       );
 
@@ -206,9 +350,14 @@ export const useResultStore = create<ResultStore>((set, get) => ({
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   },
 
-  getFilteredResults: (filters: ResultFilters): Result[] => {
+  getFilteredResults: (filters: ResultFilters, athletes?: Athlete[]): Result[] => {
     const { results } = get();
-    const currentYear = new Date().getFullYear();
+
+    // Build athlete birth year map for age category filtering
+    const athleteBirthYearMap = new Map<number, number>();
+    if (athletes && filters.ageCategory !== null) {
+      athletes.forEach((a) => athleteBirthYearMap.set(a.id, a.birthYear));
+    }
 
     return results.filter((result) => {
       if (
@@ -229,28 +378,25 @@ export const useResultStore = create<ResultStore>((set, get) => ({
         return false;
       }
 
-      const resultDate = new Date(result.date);
-      const resultYear = resultDate.getFullYear();
+      // Year filter
+      if (filters.year !== null) {
+        const resultYear = new Date(result.date).getFullYear();
+        if (resultYear !== filters.year) return false;
+      }
 
-      switch (filters.timeRange) {
-        case "thisYear":
-          if (resultYear !== currentYear) return false;
-          break;
-        case "lastYear":
-          if (resultYear !== currentYear - 1) return false;
-          break;
-        case "custom":
-          if (filters.startDate && result.date < filters.startDate) return false;
-          if (filters.endDate && result.date > filters.endDate) return false;
-          break;
+      // Age category filter
+      if (filters.ageCategory !== null) {
+        const birthYear = athleteBirthYearMap.get(result.athleteId);
+        if (birthYear === undefined) return false;
+        if (getAgeCategory(birthYear) !== filters.ageCategory) return false;
       }
 
       return true;
     });
   },
 
-  getResultsByDate: (filters: ResultFilters): ResultsByDate[] => {
-    const filteredResults = get().getFilteredResults(filters);
+  getResultsByDate: (filters: ResultFilters, athletes?: Athlete[]): ResultsByDate[] => {
+    const filteredResults = get().getFilteredResults(filters, athletes);
 
     const sorted = [...filteredResults].sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -277,13 +423,18 @@ export const useResultStore = create<ResultStore>((set, get) => ({
 
     return results
       .filter(
-        (r) => r.athleteId === athleteId && r.disciplineId === disciplineId
+        (r) =>
+          r.athleteId === athleteId &&
+          r.disciplineId === disciplineId &&
+          isValidResult(r)
       )
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .map((r) => ({
         date: r.date,
         value: r.value,
         isPersonalBest: r.isPersonalBest,
+        isSeasonBest: r.isSeasonBest,
+        isNationalRecord: r.isNationalRecord,
       }));
   },
 
@@ -299,6 +450,7 @@ export const useResultStore = create<ResultStore>((set, get) => ({
       (r) =>
         r.athleteId === athleteId &&
         r.disciplineId === disciplineId &&
+        isValidResult(r) &&
         new Date(r.date).getFullYear() === year
     );
 
@@ -306,6 +458,7 @@ export const useResultStore = create<ResultStore>((set, get) => ({
       (r) =>
         r.athleteId === athleteId &&
         r.disciplineId === disciplineId &&
+        isValidResult(r) &&
         new Date(r.date).getFullYear() === year - 1
     );
 
@@ -357,7 +510,10 @@ export const useResultStore = create<ResultStore>((set, get) => ({
     const discipline = getDisciplineById(disciplineId);
 
     const athleteResults = results.filter(
-      (r) => r.athleteId === athleteId && r.disciplineId === disciplineId
+      (r) =>
+        r.athleteId === athleteId &&
+        r.disciplineId === disciplineId &&
+        isValidResult(r)
     );
 
     if (athleteResults.length === 0) {

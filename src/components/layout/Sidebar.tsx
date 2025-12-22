@@ -9,7 +9,6 @@ import {
   Settings,
 } from "lucide-react";
 import { SidebarIcon } from "./SidebarIcon";
-import { SyncIndicator } from "./SyncIndicator";
 
 const navigationItems = [
   { icon: Home, path: "/" },
@@ -23,7 +22,7 @@ const navigationItems = [
 
 export function Sidebar() {
   return (
-    <aside className="w-12 h-full flex flex-col py-4 pb-6">
+    <aside className="w-14 h-full flex flex-col py-4 pb-6 pl-1">
       {/* Top spacer */}
       <div className="flex-1" />
 
@@ -39,14 +38,13 @@ export function Sidebar() {
       </nav>
 
       {/* Separator */}
-      <div className="my-3 mx-3 border-t border-white/[0.06]" />
+      <div className="my-3 mx-3 border-t border-border" />
 
       {/* Bottom spacer */}
       <div className="flex-1" />
 
-      {/* Sync indicator and Settings at bottom */}
+      {/* Settings at bottom */}
       <div className="flex flex-col items-center gap-1 px-1.5">
-        <SyncIndicator />
         <SidebarIcon
           icon={Settings}
           path="/settings"

@@ -73,8 +73,7 @@ export function PhotoViewer({
       {/* Close button */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors z-10"
-        title="Sulje (Esc)"
+        className="absolute top-4 right-4 p-2 text-white/70 hover:text-white hover:bg-white/10 rounded-lg transition-colors z-10 cursor-pointer"
       >
         <X size={24} />
       </button>
@@ -84,8 +83,7 @@ export function PhotoViewer({
         {onDelete && (
           <button
             onClick={handleDelete}
-            className="p-2 text-white/70 hover:text-red-400 hover:bg-white/10 rounded-lg transition-colors"
-            title="Poista kuva"
+            className="p-2 text-white/70 hover:text-red-400 hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
           >
             <Trash2 size={20} />
           </button>
@@ -97,15 +95,13 @@ export function PhotoViewer({
         <>
           <button
             onClick={() => onNavigate("prev")}
-            className="absolute left-4 top-1/2 -translate-y-1/2 p-3 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-colors z-10"
-            title="Edellinen (←)"
+            className="absolute left-4 top-1/2 -translate-y-1/2 p-3 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-colors z-10 cursor-pointer"
           >
             <ChevronLeft size={32} />
           </button>
           <button
             onClick={() => onNavigate("next")}
-            className="absolute right-4 top-1/2 -translate-y-1/2 p-3 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-colors z-10"
-            title="Seuraava (→)"
+            className="absolute right-4 top-1/2 -translate-y-1/2 p-3 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-colors z-10 cursor-pointer"
           >
             <ChevronRight size={32} />
           </button>
@@ -135,7 +131,7 @@ export function PhotoViewer({
                     onNavigate(direction);
                   }
                 }}
-                className={`w-2 h-2 rounded-full transition-colors ${
+                className={`w-2 h-2 rounded-full transition-colors cursor-pointer ${
                   index === currentIndex ? "bg-white" : "bg-white/40 hover:bg-white/60"
                 }`}
               />

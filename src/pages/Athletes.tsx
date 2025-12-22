@@ -58,10 +58,10 @@ export function Athletes() {
   const dialogTitle = editingAthlete ? "Muokkaa urheilijaa" : "Lisää urheilija";
 
   return (
-    <div className="p-6 animate-fade-in">
+    <div className="p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 pb-5 border-b border-border-subtle">
-        <h1 className="text-base font-medium text-foreground">Urheilijat</h1>
+        <h1 className="text-title font-medium text-foreground">Urheilijat</h1>
         <button
           onClick={handleAddClick}
           className="btn-primary btn-press"
@@ -73,9 +73,9 @@ export function Athletes() {
 
       {/* Loading state */}
       {loading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <SkeletonCard key={i} />
+        <div className="flex flex-col gap-3">
+          {[1, 2, 3].map((i) => (
+            <SkeletonCard key={i} variant="horizontal" />
           ))}
         </div>
       )}
@@ -93,17 +93,11 @@ export function Athletes() {
         />
       )}
 
-      {/* Athletes grid */}
+      {/* Athletes list */}
       {!loading && athletes.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {athletes.map(({ athlete, stats }, index) => (
-            <div
-              key={athlete.id}
-              className="animate-fade-in"
-              style={{ animationDelay: `${index * 50}ms` }}
-            >
-              <AthleteCard athlete={athlete} stats={stats} />
-            </div>
+        <div className="flex flex-col gap-3">
+          {athletes.map(({ athlete, stats }) => (
+            <AthleteCard key={athlete.id} athlete={athlete} stats={stats} />
           ))}
         </div>
       )}

@@ -16,6 +16,14 @@ export const disciplines: Discipline[] = [
   // Sprints
   {
     id: 1,
+    name: "40m",
+    fullName: "40 metriä",
+    category: "sprints",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+  {
+    id: 2,
     name: "60m",
     fullName: "60 metriä",
     category: "sprints",
@@ -23,7 +31,7 @@ export const disciplines: Discipline[] = [
     lowerIsBetter: true,
   },
   {
-    id: 2,
+    id: 3,
     name: "100m",
     fullName: "100 metriä",
     category: "sprints",
@@ -31,7 +39,7 @@ export const disciplines: Discipline[] = [
     lowerIsBetter: true,
   },
   {
-    id: 3,
+    id: 4,
     name: "200m",
     fullName: "200 metriä",
     category: "sprints",
@@ -39,7 +47,7 @@ export const disciplines: Discipline[] = [
     lowerIsBetter: true,
   },
   {
-    id: 4,
+    id: 5,
     name: "400m",
     fullName: "400 metriä",
     category: "sprints",
@@ -49,7 +57,7 @@ export const disciplines: Discipline[] = [
 
   // Middle Distance
   {
-    id: 5,
+    id: 6,
     name: "800m",
     fullName: "800 metriä",
     category: "middleDistance",
@@ -57,7 +65,7 @@ export const disciplines: Discipline[] = [
     lowerIsBetter: true,
   },
   {
-    id: 6,
+    id: 7,
     name: "1000m",
     fullName: "1000 metriä",
     category: "middleDistance",
@@ -65,7 +73,7 @@ export const disciplines: Discipline[] = [
     lowerIsBetter: true,
   },
   {
-    id: 7,
+    id: 8,
     name: "1500m",
     fullName: "1500 metriä",
     category: "middleDistance",
@@ -75,7 +83,7 @@ export const disciplines: Discipline[] = [
 
   // Long Distance
   {
-    id: 8,
+    id: 9,
     name: "3000m",
     fullName: "3000 metriä",
     category: "longDistance",
@@ -83,7 +91,7 @@ export const disciplines: Discipline[] = [
     lowerIsBetter: true,
   },
   {
-    id: 9,
+    id: 10,
     name: "5000m",
     fullName: "5000 metriä",
     category: "longDistance",
@@ -91,7 +99,7 @@ export const disciplines: Discipline[] = [
     lowerIsBetter: true,
   },
   {
-    id: 10,
+    id: 11,
     name: "10000m",
     fullName: "10000 metriä",
     category: "longDistance",
@@ -101,7 +109,7 @@ export const disciplines: Discipline[] = [
 
   // Hurdles
   {
-    id: 11,
+    id: 12,
     name: "60m aj",
     fullName: "60 metriä aidat",
     category: "hurdles",
@@ -109,7 +117,7 @@ export const disciplines: Discipline[] = [
     lowerIsBetter: true,
   },
   {
-    id: 12,
+    id: 13,
     name: "80m aj",
     fullName: "80 metriä aidat",
     category: "hurdles",
@@ -117,17 +125,9 @@ export const disciplines: Discipline[] = [
     lowerIsBetter: true,
   },
   {
-    id: 13,
+    id: 14,
     name: "100m aj",
     fullName: "100 metriä aidat",
-    category: "hurdles",
-    unit: "time",
-    lowerIsBetter: true,
-  },
-  {
-    id: 14,
-    name: "110m aj",
-    fullName: "110 metriä aidat",
     category: "hurdles",
     unit: "time",
     lowerIsBetter: true,
@@ -242,14 +242,6 @@ export const disciplines: Discipline[] = [
     unit: "distance",
     lowerIsBetter: false,
   },
-  {
-    id: 28,
-    name: "10-ottelu",
-    fullName: "10-ottelu",
-    category: "combined",
-    unit: "distance",
-    lowerIsBetter: false,
-  },
 ];
 
 // Get disciplines grouped by category
@@ -280,3 +272,20 @@ export const categoryOrder: DisciplineCategory[] = [
   "throws",
   "combined",
 ];
+
+// Disciplines that typically take over 1 minute (need minutes field in input)
+const DISCIPLINES_WITH_MINUTES = new Set([
+  5,  // 400m
+  6,  // 800m
+  7,  // 1000m
+  8,  // 1500m
+  9,  // 3000m
+  10, // 5000m
+  11, // 10000m
+  16, // 400m aj
+]);
+
+// Check if a discipline needs minutes field in time input
+export function disciplineNeedsMinutes(disciplineId: number): boolean {
+  return DISCIPLINES_WITH_MINUTES.has(disciplineId);
+}

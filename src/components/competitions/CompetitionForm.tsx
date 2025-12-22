@@ -1,9 +1,22 @@
-import { useState, useEffect } from "react";
-import { Bell, Users } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Users } from "lucide-react";
 import { useAthleteStore } from "../../stores/useAthleteStore";
+import { useCompetitionStore } from "../../stores/useCompetitionStore";
 import { disciplines, categoryOrder } from "../../data/disciplines";
 import { getTodayISO } from "../../lib/formatters";
-import type { Competition, NewCompetition } from "../../types";
+import { DatePicker } from "../ui/DatePicker";
+import type { Competition, NewCompetition, CompetitionLevel } from "../../types";
+
+const competitionLevelOptions: { value: CompetitionLevel; label: string }[] = [
+  { value: "seura", label: "Seuran kisat" },
+  { value: "seuraottelu", label: "Seuraottelu" },
+  { value: "piiri", label: "Piirikisat" },
+  { value: "pm", label: "Piirimestaruus (PM)" },
+  { value: "alue", label: "Aluemestaruus" },
+  { value: "sm", label: "Suomenmestaruus (SM)" },
+  { value: "kll", label: "Koululiikuntaliiton kisat (KLL)" },
+  { value: "muu", label: "Muu" },
+];
 
 interface CompetitionFormProps {
   competition?: Competition;
@@ -25,14 +38,6 @@ interface FormErrors {
   endDate?: string;
 }
 
-const reminderDaysOptions = [
-  { value: 1, label: "1 päivä ennen" },
-  { value: 2, label: "2 päivää ennen" },
-  { value: 3, label: "3 päivää ennen" },
-  { value: 7, label: "1 viikko ennen" },
-  { value: 14, label: "2 viikkoa ennen" },
-];
-
 export function CompetitionForm({
   competition,
   initialDate,
@@ -41,6 +46,13 @@ export function CompetitionForm({
   onCancel,
 }: CompetitionFormProps) {
   const { athletes, fetchAthletes } = useAthleteStore();
+  const { competitions, fetchCompetitions } = useCompetitionStore();
+
+  // Autocomplete state
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
 
   // Form state
   const [name, setName] = useState(competition?.name ?? "");
@@ -48,13 +60,8 @@ export function CompetitionForm({
   const [endDate, setEndDate] = useState(competition?.endDate ?? "");
   const [location, setLocation] = useState(competition?.location ?? "");
   const [address, setAddress] = useState(competition?.address ?? "");
+  const [level, setLevel] = useState<CompetitionLevel | "">(competition?.level ?? "");
   const [notes, setNotes] = useState(competition?.notes ?? "");
-  const [reminderEnabled, setReminderEnabled] = useState(
-    competition?.reminderEnabled ?? true
-  );
-  const [reminderDaysBefore, setReminderDaysBefore] = useState(
-    competition?.reminderDaysBefore ?? 3
-  );
 
   // Participants state: map of athleteId -> selected disciplines
   const [selectedParticipants, setSelectedParticipants] = useState<
@@ -69,12 +76,57 @@ export function CompetitionForm({
 
   const [errors, setErrors] = useState<FormErrors>({});
 
-  // Fetch athletes if not loaded
+  // Fetch athletes and competitions if not loaded
   useEffect(() => {
     if (athletes.length === 0) {
       fetchAthletes();
     }
-  }, [athletes.length, fetchAthletes]);
+    if (competitions.length === 0) {
+      fetchCompetitions();
+    }
+  }, [athletes.length, fetchAthletes, competitions.length, fetchCompetitions]);
+
+  // Get unique competition names for autocomplete
+  const uniqueCompetitionNames = [...new Set(competitions.map((c) => c.name))];
+
+  // Handle name input change with autocomplete
+  const handleNameChange = (value: string) => {
+    setName(value);
+
+    if (value.trim().length > 0) {
+      const filtered = uniqueCompetitionNames.filter((n) =>
+        n.toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredSuggestions(filtered);
+      setShowSuggestions(filtered.length > 0);
+    } else {
+      setShowSuggestions(false);
+    }
+  };
+
+  // Handle suggestion click
+  const handleSuggestionClick = (suggestion: string) => {
+    setName(suggestion);
+    setFilteredSuggestions([]);
+    setShowSuggestions(false);
+  };
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target as Node) &&
+        nameInputRef.current &&
+        !nameInputRef.current.contains(event.target as Node)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const toggleParticipant = (athleteId: number) => {
     setSelectedParticipants((prev) => {
@@ -138,9 +190,10 @@ export function CompetitionForm({
       endDate: endDate || undefined,
       location: location.trim() || undefined,
       address: address.trim() || undefined,
+      level: level || undefined,
       notes: notes.trim() || undefined,
-      reminderEnabled,
-      reminderDaysBefore: reminderEnabled ? reminderDaysBefore : undefined,
+      reminderEnabled: false,
+      reminderDaysBefore: undefined,
     };
 
     const participants = Array.from(selectedParticipants.entries()).map(
@@ -154,41 +207,86 @@ export function CompetitionForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      {/* Name */}
-      <div>
-        <label htmlFor="name" className="block text-sm font-medium mb-1.5">
-          Nimi <span className="text-error">*</span>
-        </label>
-        <input
-          type="text"
-          id="name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="esim. Tampereen aluemestaruus"
-          className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
-            errors.name ? "border-error" : "border-border"
-          }`}
-        />
-        {errors.name && (
-          <p className="mt-1 text-sm text-error">{errors.name}</p>
-        )}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* Row 1: Name and Level */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Name */}
+        <div className="relative">
+          <label htmlFor="name" className="block text-sm font-medium mb-1.5">
+            Nimi <span className="text-error">*</span>
+          </label>
+          <input
+            ref={nameInputRef}
+            type="text"
+            id="name"
+            value={name}
+            onChange={(e) => handleNameChange(e.target.value)}
+            onFocus={() => {
+              if (name.trim().length > 0 && filteredSuggestions.length > 0) {
+                setShowSuggestions(true);
+              }
+            }}
+            placeholder="esim. Tampereen aluemestaruus"
+            autoComplete="off"
+            className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
+              errors.name ? "border-error" : "border-border"
+            }`}
+          />
+          {/* Autocomplete suggestions */}
+          {showSuggestions && filteredSuggestions.length > 0 && (
+            <div
+              ref={suggestionsRef}
+              className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto"
+            >
+              {filteredSuggestions.map((suggestion, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  onClick={() => handleSuggestionClick(suggestion)}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors cursor-pointer"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          )}
+          {errors.name && (
+            <p className="mt-1 text-sm text-error">{errors.name}</p>
+          )}
+        </div>
+
+        {/* Competition level */}
+        <div>
+          <label htmlFor="level" className="block text-sm font-medium mb-1.5">
+            Kilpailutaso
+          </label>
+          <select
+            id="level"
+            value={level}
+            onChange={(e) => setLevel(e.target.value as CompetitionLevel | "")}
+            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer"
+          >
+            <option value="">Valitse taso</option>
+            {competitionLevelOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
-      {/* Date fields */}
+      {/* Row 2: Date fields */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label htmlFor="date" className="block text-sm font-medium mb-1.5">
             Päivämäärä <span className="text-error">*</span>
           </label>
-          <input
-            type="date"
+          <DatePicker
             id="date"
             value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
-              errors.date ? "border-error" : "border-border"
-            }`}
+            onChange={setDate}
+            error={!!errors.date}
           />
           {errors.date && (
             <p className="mt-1 text-sm text-error">{errors.date}</p>
@@ -199,15 +297,12 @@ export function CompetitionForm({
           <label htmlFor="endDate" className="block text-sm font-medium mb-1.5">
             Päättymispäivä
           </label>
-          <input
-            type="date"
+          <DatePicker
             id="endDate"
             value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
+            onChange={setEndDate}
             min={date}
-            className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
-              errors.endDate ? "border-error" : "border-border"
-            }`}
+            error={!!errors.endDate}
           />
           {errors.endDate && (
             <p className="mt-1 text-sm text-error">{errors.endDate}</p>
@@ -215,34 +310,37 @@ export function CompetitionForm({
         </div>
       </div>
 
-      {/* Location */}
-      <div>
-        <label htmlFor="location" className="block text-sm font-medium mb-1.5">
-          Paikka
-        </label>
-        <input
-          type="text"
-          id="location"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          placeholder="esim. Tampere"
-          className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
-        />
-      </div>
+      {/* Row 3: Location and Address */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Location */}
+        <div>
+          <label htmlFor="location" className="block text-sm font-medium mb-1.5">
+            Paikka
+          </label>
+          <input
+            type="text"
+            id="location"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="esim. Tampere"
+            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
+          />
+        </div>
 
-      {/* Address */}
-      <div>
-        <label htmlFor="address" className="block text-sm font-medium mb-1.5">
-          Osoite
-        </label>
-        <input
-          type="text"
-          id="address"
-          value={address}
-          onChange={(e) => setAddress(e.target.value)}
-          placeholder="esim. Ratina stadion"
-          className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
-        />
+        {/* Address */}
+        <div>
+          <label htmlFor="address" className="block text-sm font-medium mb-1.5">
+            Osoite
+          </label>
+          <input
+            type="text"
+            id="address"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder="esim. Ratina stadion"
+            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
+          />
+        </div>
       </div>
 
       {/* Notes */}
@@ -250,13 +348,13 @@ export function CompetitionForm({
         <label htmlFor="notes" className="block text-sm font-medium mb-1.5">
           Muistiinpanot
         </label>
-        <textarea
+        <input
+          type="text"
           id="notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          rows={2}
           placeholder="Valinnainen lisätieto..."
-          className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors resize-none"
+          className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
         />
       </div>
 
@@ -314,7 +412,7 @@ export function CompetitionForm({
                                 }
                                 className={`px-2 py-1 text-xs rounded-full border transition-colors ${
                                   isChecked
-                                    ? "bg-white/10 text-foreground border-white/20"
+                                    ? "bg-[var(--accent-muted)] text-foreground border-[var(--accent)]"
                                     : "bg-card border-border hover:border-border-hover"
                                 }`}
                               >
@@ -329,36 +427,6 @@ export function CompetitionForm({
                 </div>
               );
             })}
-          </div>
-        )}
-      </div>
-
-      {/* Reminder section */}
-      <div className="p-4 bg-muted/50 rounded-lg space-y-3">
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={reminderEnabled}
-            onChange={(e) => setReminderEnabled(e.target.checked)}
-            className="w-4 h-4 text-primary focus:ring-primary rounded"
-          />
-          <Bell size={18} />
-          <span className="font-medium">Muistutus</span>
-        </label>
-
-        {reminderEnabled && (
-          <div className="pl-6">
-            <select
-              value={reminderDaysBefore}
-              onChange={(e) => setReminderDaysBefore(Number(e.target.value))}
-              className="px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
-            >
-              {reminderDaysOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
           </div>
         )}
       </div>

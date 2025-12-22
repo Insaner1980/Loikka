@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc } from "@tauri-apps/api/core";
+import { getErrorMessage } from "../lib";
 
 export interface Photo {
   id: number;
@@ -46,7 +47,7 @@ export function usePhotos(entityType: EntityType, entityId: number): UsePhotosRe
       });
       setPhotos(result);
     } catch (err) {
-      setError((err as Error).message || String(err));
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -84,7 +85,7 @@ export function usePhotos(entityType: EntityType, entityId: number): UsePhotosRe
 
       return photo;
     } catch (err) {
-      setError((err as Error).message || String(err));
+      setError(getErrorMessage(err));
       return null;
     } finally {
       setLoading(false);
@@ -101,7 +102,7 @@ export function usePhotos(entityType: EntityType, entityId: number): UsePhotosRe
       }
       return success;
     } catch (err) {
-      setError((err as Error).message || String(err));
+      setError(getErrorMessage(err));
       return false;
     } finally {
       setLoading(false);

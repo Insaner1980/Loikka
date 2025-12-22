@@ -7,31 +7,44 @@ use tauri::AppHandle;
 pub async fn get_all_athletes(app: AppHandle) -> Result<Vec<AthleteWithStats>, String> {
     let pool = get_pool(&app).await?;
 
+    // Use a single query with subqueries to avoid N+1 problem
     let rows = sqlx::query(
-        r#"SELECT id, first_name, last_name, birth_year, club_name, photo_path, created_at, updated_at
-        FROM athletes ORDER BY last_name, first_name"#
+        r#"SELECT
+            a.id, a.first_name, a.last_name, a.birth_year, a.gender, a.club_name, a.photo_path, a.created_at, a.updated_at,
+            COALESCE((SELECT COUNT(DISTINCT discipline_id) FROM results WHERE athlete_id = a.id), 0) as discipline_count,
+            COALESCE((SELECT COUNT(*) FROM results WHERE athlete_id = a.id), 0) as result_count,
+            COALESCE((SELECT COUNT(*) FROM results WHERE athlete_id = a.id AND is_personal_best = 1), 0) as pb_count,
+            COALESCE((SELECT COUNT(*) FROM medals WHERE athlete_id = a.id AND type = 'gold'), 0) as gold_medals,
+            COALESCE((SELECT COUNT(*) FROM medals WHERE athlete_id = a.id AND type = 'silver'), 0) as silver_medals,
+            COALESCE((SELECT COUNT(*) FROM medals WHERE athlete_id = a.id AND type = 'bronze'), 0) as bronze_medals
+        FROM athletes a
+        ORDER BY a.last_name, a.first_name"#
     )
     .fetch_all(&pool)
     .await
     .map_err(|e| e.to_string())?;
 
-    let mut result = Vec::new();
-    for row in rows {
-        let athlete = Athlete {
+    Ok(rows.iter().map(|row| AthleteWithStats {
+        athlete: Athlete {
             id: row.get("id"),
             first_name: row.get("first_name"),
             last_name: row.get("last_name"),
             birth_year: row.get("birth_year"),
+            gender: row.get("gender"),
             club_name: row.get("club_name"),
             photo_path: row.get("photo_path"),
             created_at: row.get("created_at"),
             updated_at: row.get("updated_at"),
-        };
-        let stats = get_athlete_stats_internal(&pool, athlete.id).await?;
-        result.push(AthleteWithStats { athlete, stats });
-    }
-
-    Ok(result)
+        },
+        stats: AthleteStats {
+            discipline_count: row.get("discipline_count"),
+            result_count: row.get("result_count"),
+            pb_count: row.get("pb_count"),
+            gold_medals: row.get("gold_medals"),
+            silver_medals: row.get("silver_medals"),
+            bronze_medals: row.get("bronze_medals"),
+        },
+    }).collect())
 }
 
 async fn get_athlete_stats_internal(pool: &sqlx::Pool<sqlx::Sqlite>, athlete_id: i64) -> Result<AthleteStats, String> {
@@ -98,7 +111,7 @@ pub async fn get_athlete(app: AppHandle, id: i64) -> Result<Option<AthleteWithSt
     let pool = get_pool(&app).await?;
 
     let row = sqlx::query(
-        r#"SELECT id, first_name, last_name, birth_year, club_name, photo_path, created_at, updated_at
+        r#"SELECT id, first_name, last_name, birth_year, gender, club_name, photo_path, created_at, updated_at
         FROM athletes WHERE id = ?"#
     )
     .bind(id)
@@ -113,6 +126,7 @@ pub async fn get_athlete(app: AppHandle, id: i64) -> Result<Option<AthleteWithSt
                 first_name: row.get("first_name"),
                 last_name: row.get("last_name"),
                 birth_year: row.get("birth_year"),
+                gender: row.get("gender"),
                 club_name: row.get("club_name"),
                 photo_path: row.get("photo_path"),
                 created_at: row.get("created_at"),
@@ -130,11 +144,12 @@ pub async fn create_athlete(app: AppHandle, athlete: CreateAthlete) -> Result<At
     let pool = get_pool(&app).await?;
 
     let result = sqlx::query(
-        "INSERT INTO athletes (first_name, last_name, birth_year, club_name, photo_path) VALUES (?, ?, ?, ?, ?)"
+        "INSERT INTO athletes (first_name, last_name, birth_year, gender, club_name, photo_path) VALUES (?, ?, ?, ?, ?, ?)"
     )
     .bind(&athlete.first_name)
     .bind(&athlete.last_name)
     .bind(athlete.birth_year)
+    .bind(&athlete.gender)
     .bind(&athlete.club_name)
     .bind(&athlete.photo_path)
     .execute(&pool)
@@ -144,7 +159,7 @@ pub async fn create_athlete(app: AppHandle, athlete: CreateAthlete) -> Result<At
     let id = result.last_insert_rowid();
 
     let row = sqlx::query(
-        r#"SELECT id, first_name, last_name, birth_year, club_name, photo_path, created_at, updated_at
+        r#"SELECT id, first_name, last_name, birth_year, gender, club_name, photo_path, created_at, updated_at
         FROM athletes WHERE id = ?"#
     )
     .bind(id)
@@ -157,6 +172,7 @@ pub async fn create_athlete(app: AppHandle, athlete: CreateAthlete) -> Result<At
         first_name: row.get("first_name"),
         last_name: row.get("last_name"),
         birth_year: row.get("birth_year"),
+        gender: row.get("gender"),
         club_name: row.get("club_name"),
         photo_path: row.get("photo_path"),
         created_at: row.get("created_at"),
@@ -170,11 +186,12 @@ pub async fn update_athlete(app: AppHandle, id: i64, athlete: UpdateAthlete) -> 
 
     // Always update all fields - let the frontend send current values for unchanged fields
     sqlx::query(
-        "UPDATE athletes SET first_name = COALESCE(?, first_name), last_name = COALESCE(?, last_name), birth_year = COALESCE(?, birth_year), club_name = ?, photo_path = ? WHERE id = ?"
+        "UPDATE athletes SET first_name = COALESCE(?, first_name), last_name = COALESCE(?, last_name), birth_year = COALESCE(?, birth_year), gender = COALESCE(?, gender), club_name = ?, photo_path = ? WHERE id = ?"
     )
     .bind(&athlete.first_name)
     .bind(&athlete.last_name)
     .bind(athlete.birth_year)
+    .bind(&athlete.gender)
     .bind(&athlete.club_name)
     .bind(&athlete.photo_path)
     .bind(id)
@@ -183,7 +200,7 @@ pub async fn update_athlete(app: AppHandle, id: i64, athlete: UpdateAthlete) -> 
     .map_err(|e| e.to_string())?;
 
     let row = sqlx::query(
-        r#"SELECT id, first_name, last_name, birth_year, club_name, photo_path, created_at, updated_at
+        r#"SELECT id, first_name, last_name, birth_year, gender, club_name, photo_path, created_at, updated_at
         FROM athletes WHERE id = ?"#
     )
     .bind(id)
@@ -196,6 +213,7 @@ pub async fn update_athlete(app: AppHandle, id: i64, athlete: UpdateAthlete) -> 
         first_name: row.get("first_name"),
         last_name: row.get("last_name"),
         birth_year: row.get("birth_year"),
+        gender: row.get("gender"),
         club_name: row.get("club_name"),
         photo_path: row.get("photo_path"),
         created_at: row.get("created_at"),

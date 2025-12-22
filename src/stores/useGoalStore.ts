@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import type { Goal, NewGoal, GoalStatus } from "../types";
 import { getDisciplineById } from "../data/disciplines";
 import { useResultStore } from "./useResultStore";
+import { getErrorMessage } from "../lib";
 
 interface GoalWithProgress extends Goal {
   currentBest: number | null;
@@ -38,7 +39,7 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
       const goals = await invoke<Goal[]>("get_all_goals");
       set({ goals, loading: false });
     } catch (error) {
-      set({ error: (error as Error).message || String(error), loading: false });
+      set({ error: getErrorMessage(error), loading: false });
     }
   },
 
@@ -59,7 +60,7 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
 
       return newGoal;
     } catch (error) {
-      set({ error: (error as Error).message || String(error), loading: false });
+      set({ error: getErrorMessage(error), loading: false });
       throw error;
     }
   },
@@ -79,7 +80,7 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
       const goals = await invoke<Goal[]>("get_all_goals");
       set({ goals, loading: false });
     } catch (error) {
-      set({ error: (error as Error).message || String(error), loading: false });
+      set({ error: getErrorMessage(error), loading: false });
       throw error;
     }
   },
@@ -92,7 +93,7 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
       const goals = await invoke<Goal[]>("get_all_goals");
       set({ goals, loading: false });
     } catch (error) {
-      set({ error: (error as Error).message || String(error), loading: false });
+      set({ error: getErrorMessage(error), loading: false });
       throw error;
     }
   },
@@ -105,7 +106,7 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
       const goals = await invoke<Goal[]>("get_all_goals");
       set({ goals, loading: false });
     } catch (error) {
-      set({ error: (error as Error).message || String(error), loading: false });
+      set({ error: getErrorMessage(error), loading: false });
       throw error;
     }
   },
@@ -123,7 +124,7 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
       const goals = await invoke<Goal[]>("get_all_goals");
       set({ goals, loading: false });
     } catch (error) {
-      set({ error: (error as Error).message || String(error), loading: false });
+      set({ error: getErrorMessage(error), loading: false });
       throw error;
     }
   },

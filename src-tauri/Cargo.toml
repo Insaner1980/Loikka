@@ -33,3 +33,11 @@ chrono = { version = "0.4", features = ["serde"] }
 image = "0.25"
 uuid = { version = "1", features = ["v4"] }
 
+# Google Drive integration
+oauth2 = "4"
+reqwest = { version = "0.12", features = ["json", "multipart"] }
+tiny_http = "0.12"
+urlencoding = "2"
+dirs = "5"
+lazy_static = "1.5"
+

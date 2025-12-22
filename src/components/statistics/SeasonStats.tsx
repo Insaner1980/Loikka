@@ -26,7 +26,7 @@ function StatCard({ title, value, subtitle, icon, trend }: StatCardProps) {
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm text-muted-foreground">{title}</p>
-          <p className="text-2xl font-bold mt-1">{value}</p>
+          <p className="text-stat font-bold mt-1">{value}</p>
           {subtitle && (
             <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
           )}
@@ -34,11 +34,7 @@ function StatCard({ title, value, subtitle, icon, trend }: StatCardProps) {
         <div className="p-2 bg-primary/10 rounded-lg text-primary">{icon}</div>
       </div>
       {trend && (
-        <div
-          className={`flex items-center gap-1 mt-3 text-sm ${
-            trend.isPositive ? "text-success" : "text-error"
-          }`}
-        >
+        <div className="flex items-center gap-1 mt-3 text-sm text-foreground">
           {trend.isPositive ? (
             <TrendingUp size={16} />
           ) : (

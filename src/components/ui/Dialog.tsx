@@ -1,4 +1,5 @@
 import { ReactNode, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 interface DialogProps {
@@ -49,30 +50,30 @@ export function Dialog({
 
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+  return createPortal(
+    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-[var(--overlay-bg)] backdrop-blur-sm"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Dialog */}
       <div
-        className={`relative w-full ${maxWidthClasses[maxWidth]} mx-4 max-h-[90vh] flex flex-col bg-[#141414] rounded-xl animate-scale-in`}
+        className={`relative w-full ${maxWidthClasses[maxWidth]} max-h-[85vh] flex flex-col bg-card rounded-xl animate-scale-in shadow-2xl`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="dialog-title"
       >
         {/* Header */}
-        <div className="flex-shrink-0 flex items-center justify-between px-5 py-4 border-b border-white/[0.04]">
+        <div className="flex-shrink-0 flex items-center justify-between px-5 py-4 border-b border-border-subtle">
           <h2 id="dialog-title" className="text-sm font-medium text-foreground">
             {title}
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-md text-[#555555] hover:text-foreground hover:bg-white/5 transition-colors duration-150"
+            className="p-1.5 rounded-md text-tertiary hover:text-foreground hover:bg-muted transition-colors duration-150 cursor-pointer"
             aria-label="Sulje"
           >
             <X size={18} />
@@ -82,6 +83,7 @@ export function Dialog({
         {/* Content */}
         <div className="p-5 overflow-y-auto">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

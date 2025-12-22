@@ -1,13 +1,36 @@
 @import "tailwindcss";
 
+/* Satoshi font for logo */
+@font-face {
+  font-family: 'Satoshi';
+  src: url('./assets/fonts/Satoshi-Bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Typography scale - consistent sizes across the app */
+@theme {
+  /* Font sizes - using a consistent scale */
+  --font-size-xs: 11px;      /* Badges, captions */
+  --font-size-sm: 13px;      /* Body text, labels, buttons */
+  --font-size-base: 14px;    /* Standard text */
+  --font-size-lg: 16px;      /* Page titles, card titles */
+  --font-size-xl: 20px;      /* Hero headings */
+  --font-size-2xl: 24px;     /* Large stat numbers */
+  --font-size-3xl: 28px;     /* Hero stat numbers */
+}
+
 /* Tailwind v4 theme configuration */
 @theme {
   /* Status colors - subtle, muted */
-  --color-success: #4ADE80;
-  --color-success-muted: rgba(74, 222, 128, 0.1);
-  --color-warning: #FACC15;
-  --color-warning-muted: rgba(250, 204, 21, 0.1);
-  --color-error: #EF4444;
+  --color-success: var(--status-success);
+  --color-success-muted: var(--status-success-muted);
+  --color-warning: var(--status-warning);
+  --color-warning-muted: var(--status-warning-muted);
+  --color-orange: var(--status-orange);
+  --color-orange-muted: var(--status-orange-muted);
+  --color-error: var(--status-error);
 
   /* Medal colors */
   --color-gold: #FFD700;
@@ -21,20 +44,28 @@
   --color-card-hover: var(--bg-hover);
   --color-muted: var(--bg-elevated);
   --color-muted-foreground: var(--text-secondary);
+  --color-tertiary: var(--text-muted);
   --color-border: var(--border-default);
   --color-border-subtle: var(--border-subtle);
   --color-border-hover: var(--border-hover);
   --color-sidebar: var(--bg-base);
   --color-sidebar-active: transparent;
-  --color-text-secondary: var(--text-secondary);
-  --color-text-tertiary: var(--text-muted);
+
+  /* Icon colors */
+  --color-icon-muted: var(--text-muted);
+  --color-icon-secondary: var(--text-secondary);
+
+  /* Overlay colors */
+  --color-overlay: var(--overlay-bg);
+  --color-overlay-light: var(--overlay-light);
 
   /* Border radius */
   --radius-xl: 10px;
 }
 
 /* Premium minimal dark theme */
-:root {
+:root,
+:root.dark {
   /* Backgrounds */
   --bg-base: #0A0A0A;
   --bg-surface: #111111;
@@ -50,12 +81,81 @@
   --text-primary: #E8E8E8;
   --text-secondary: #888888;
   --text-muted: #555555;
+  --text-placeholder: #666666;
+  --text-initials: #444444;
 
-  /* Accent - emerald green */
-  --accent: #10B981;
-  --accent-hover: #34D399;
-  --accent-muted: rgba(16, 185, 129, 0.1);
-  --accent-glow: rgba(16, 185, 129, 0.3);
+  /* Accent - blue */
+  --accent: #60A5FA;
+  --accent-hover: #93C5FD;
+  --accent-muted: rgba(96, 165, 250, 0.15);
+  --accent-glow: rgba(96, 165, 250, 0.3);
+
+  /* Button text */
+  --btn-primary-text: #0A0A0A;
+
+  /* Status colors */
+  --status-success: #10B981;
+  --status-success-bright: #4ADE80;
+  --status-success-muted: rgba(16, 185, 129, 0.15);
+  --status-warning: #FACC15;
+  --status-warning-muted: rgba(250, 204, 21, 0.15);
+  --status-orange: #F59E0B;
+  --status-orange-muted: rgba(245, 158, 11, 0.15);
+  --status-error: #EF4444;
+
+  /* Overlays */
+  --overlay-bg: rgba(0, 0, 0, 0.8);
+  --overlay-light: rgba(0, 0, 0, 0.5);
+  --overlay-gradient: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+}
+
+/* Light theme */
+:root.light {
+  /* Backgrounds - neutral grays matching dark theme's gray family */
+  --bg-base: #EDEDEB;        /* Neutral warm gray - off-white canvas */
+  --bg-surface: #FFFFFF;     /* Pure white - cards and surfaces */
+  --bg-elevated: #F5F5F3;    /* Neutral light gray - elevated elements */
+  --bg-hover: #E5E5E3;       /* Neutral gray - hover state */
+
+  /* Borders - subtle for clean look */
+  --border-subtle: rgba(0, 0, 0, 0.04);
+  --border-default: rgba(0, 0, 0, 0.06);
+  --border-hover: rgba(0, 0, 0, 0.12);
+
+  /* Shadows - depth for light theme */
+  --shadow-card: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --shadow-elevated: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+
+  /* Text - neutral grays matching dark theme */
+  --text-primary: #111111;   /* Neutral black - matches dark theme surface */
+  --text-secondary: #6B6B6B; /* Neutral gray - matches dark theme secondary */
+  --text-muted: #999999;     /* Neutral muted */
+  --text-placeholder: #999999;
+  --text-initials: #CCCCCC;  /* Neutral light */
+
+  /* Accent - blue (darker for light theme) */
+  --accent: #2563EB;
+  --accent-hover: #1D4ED8;
+  --accent-muted: rgba(37, 99, 235, 0.1);
+  --accent-glow: rgba(37, 99, 235, 0.2);
+
+  /* Button text */
+  --btn-primary-text: #FFFFFF;
+
+  /* Status colors */
+  --status-success: #059669;
+  --status-success-bright: #10B981;
+  --status-success-muted: rgba(5, 150, 105, 0.1);
+  --status-warning: #D97706;
+  --status-warning-muted: rgba(217, 119, 6, 0.1);
+  --status-orange: #EA580C;
+  --status-orange-muted: rgba(234, 88, 12, 0.1);
+  --status-error: #DC2626;
+
+  /* Overlays */
+  --overlay-bg: rgba(0, 0, 0, 0.6);
+  --overlay-light: rgba(0, 0, 0, 0.3);
+  --overlay-gradient: linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent);
 }
 
 /* Base styles */
@@ -77,6 +177,23 @@
   h1, h2, h3, h4, h5, h6 {
     letter-spacing: -0.02em;
     line-height: 1.2;
+  }
+
+  /* Select styling - must be in base layer to override browser defaults */
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23888888' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 10px center;
+    background-repeat: no-repeat;
+    background-size: 16px;
+    padding-right: 36px !important;
+  }
+
+  :root.light select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236B7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
   }
 }
 
@@ -154,6 +271,41 @@
 
 /* Animation utilities */
 @layer utilities {
+  /* Typography utilities - consistent text sizes */
+  .text-caption {
+    font-size: var(--font-size-xs);  /* 11px - badges, captions */
+  }
+
+  .text-body {
+    font-size: var(--font-size-sm);  /* 13px - body text, labels */
+  }
+
+  .text-default {
+    font-size: var(--font-size-base); /* 14px - standard text */
+  }
+
+  .text-title {
+    font-size: var(--font-size-lg);  /* 16px - page titles, card titles */
+    letter-spacing: -0.02em;
+  }
+
+  .text-heading {
+    font-size: var(--font-size-xl);  /* 20px - hero headings */
+    letter-spacing: -0.02em;
+  }
+
+  .text-stat {
+    font-size: var(--font-size-2xl); /* 24px - stat numbers */
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .text-hero-stat {
+    font-size: var(--font-size-3xl); /* 28px - hero stat numbers */
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
   .animate-fade-in {
     animation: fade-in 0.2s ease-out forwards;
   }
@@ -197,31 +349,121 @@
 
 /* Component styles */
 @layer components {
-  /* Card hover effects - lift with glow */
-  .card-hover {
-    @apply transition-all duration-200;
+  /* Base card style - shadow-based depth for light theme */
+  .card {
+    @apply rounded-lg transition-all duration-200;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
   }
 
-  .card-hover:hover {
+  /* Dark theme: rely on borders */
+  :root.dark .card,
+  :root:not(.light) .card {
+    box-shadow: none;
+  }
+
+  /* Light theme: use soft shadows for depth */
+  :root.light .card {
+    box-shadow: var(--shadow-card);
+    border-color: transparent;
+  }
+
+  /* Card hover effects - theme-aware */
+  .card-hover {
+    @apply transition-all duration-200 cursor-pointer;
+  }
+
+  /* Dark theme hover: lift with glow */
+  :root.dark .card-hover:hover,
+  :root:not(.light) .card-hover:hover {
     border-color: var(--border-hover);
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 0 1px var(--border-hover);
   }
 
-  /* Card with accent glow on hover */
-  .card-hover-accent {
-    @apply transition-all duration-200;
+  /* Light theme hover: soft, diffuse shadow */
+  :root.light .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+    border-color: transparent;
   }
 
-  .card-hover-accent:hover {
+  /* Card with accent glow on hover */
+  .card-hover-accent {
+    @apply transition-all duration-200 cursor-pointer;
+  }
+
+  /* Dark theme: accent glow */
+  :root.dark .card-hover-accent:hover,
+  :root:not(.light) .card-hover-accent:hover {
     border-color: var(--accent);
     transform: translateY(-2px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 20px var(--accent-muted);
   }
 
+  /* Light theme: subtle accent shadow */
+  :root.light .card-hover-accent:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+    border-color: var(--accent-muted);
+  }
+
+  /* Input styling - theme-aware */
+  .input-base {
+    @apply rounded-md transition-all duration-150;
+    background: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+  }
+
+  .input-base::placeholder {
+    color: var(--text-placeholder);
+  }
+
+  /* Light theme inputs: white background for contrast */
+  :root.light .input-base {
+    background: var(--bg-surface);
+    border-color: var(--border-default);
+  }
+
+  :root.light .input-base:hover {
+    border-color: var(--border-hover);
+  }
+
+  /* Dropdown/Popover styling - theme-aware */
+  .autocomplete-popup,
+  .dropdown-menu,
+  [data-radix-popper-content-wrapper] > div {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border-default);
+    border-radius: 8px;
+  }
+
+  /* Light theme: add shadow for depth */
+  :root.light .autocomplete-popup,
+  :root.light .dropdown-menu,
+  :root.light [data-radix-popper-content-wrapper] > div {
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-elevated);
+  }
+
+  /* Dropdown item hover states */
+  .autocomplete-item:hover,
+  .dropdown-item:hover {
+    background: var(--bg-hover);
+  }
+
+  :root.light .autocomplete-item:hover,
+  :root.light .dropdown-item:hover {
+    background: var(--bg-elevated);
+  }
+
   /* Button press feedback */
   .btn-press {
-    @apply transition-all duration-150 active:scale-[0.98];
+    @apply transition-all duration-150 active:scale-[0.98] cursor-pointer;
   }
 
   /* Focus ring - subtle */
@@ -229,42 +471,59 @@
     @apply focus:outline-none focus:ring-1 focus:ring-white/10 focus:ring-offset-1 focus:ring-offset-background;
   }
 
-  /* SE (Personal Best) badge */
+  /* OE (Oma ennätys / Personal Best) badge */
   .badge-pb {
-    @apply px-1.5 py-0.5 text-[11px] font-semibold rounded;
-    background: rgba(255, 215, 0, 0.15);
-    color: var(--color-gold);
-    border: 1px solid rgba(255, 215, 0, 0.25);
-  }
-
-  /* KE (Season Best) badge */
-  .badge-sb {
-    @apply px-1.5 py-0.5 text-[11px] font-medium rounded;
-    background-color: var(--color-warning-muted);
-    color: var(--color-warning);
-    border: 1px solid rgba(250, 204, 21, 0.2);
-  }
-
-  /* Primary button - ghost style */
-  .btn-primary {
-    @apply flex items-center gap-2 px-3.5 py-2 text-[13px] font-medium rounded-md transition-all duration-150;
+    @apply px-1.5 py-0.5 font-medium rounded;
+    font-size: 11px;
     background: transparent;
-    color: var(--text-primary);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+    border: 1px solid var(--border-hover);
+  }
+
+  /* KE (Kauden ennätys / Season Best) badge */
+  .badge-sb {
+    @apply px-1.5 py-0.5 font-medium rounded;
+    font-size: 11px;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border-hover);
+  }
+
+  /* SE (Suomen ennätys / National Record) badge - same style as OE/KE */
+  .badge-nr {
+    @apply px-1.5 py-0.5 font-medium rounded;
+    font-size: 11px;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border-hover);
+  }
+
+  /* Primary button - accent color */
+  .btn-primary {
+    @apply flex items-center gap-2 px-3.5 py-2 font-medium rounded-md transition-all duration-150 cursor-pointer;
+    font-size: 13px;
+    background: var(--accent);
+    color: var(--btn-primary-text);
+    border: 1px solid transparent;
   }
 
   .btn-primary:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.15);
+    background: var(--accent-hover);
   }
 
   .btn-primary:disabled {
     @apply opacity-40 cursor-not-allowed;
   }
 
+  .btn-primary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
   /* Secondary button - even more subtle */
   .btn-secondary {
-    @apply flex items-center gap-2 px-3.5 py-2 text-[13px] font-medium rounded-md transition-all duration-150;
+    @apply flex items-center gap-2 px-3.5 py-2 font-medium rounded-md transition-all duration-150 cursor-pointer;
+    font-size: 13px;
     background: transparent;
     color: var(--text-secondary);
     border: 1px solid transparent;
@@ -272,27 +531,17 @@
 
   .btn-secondary:hover {
     color: var(--text-primary);
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(128, 128, 128, 0.1);
   }
 
-  /* Focus ring for inputs - subtle */
+  /* Focus ring for inputs - accent color */
   .input-focus {
     @apply focus:outline-none transition-all duration-150;
   }
 
   .input-focus:focus {
-    border-color: var(--border-hover);
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
-  }
-
-  /* Select styling */
-  select {
-    @apply appearance-none cursor-pointer;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%238B8B8D' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-    background-position: right 8px center;
-    background-repeat: no-repeat;
-    background-size: 16px;
-    padding-right: 32px;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px var(--accent-muted);
   }
 
   /* Scrollbar styling */
@@ -306,11 +555,43 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: var(--border-default);
+    background: var(--accent-muted);
     border-radius: 4px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: var(--border-hover);
+    background: var(--accent);
+  }
+
+  /* Photo viewer overlay - full screen, no scroll */
+  .photo-viewer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    background-color: rgba(0, 0, 0, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .photo-viewer-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-width: calc(100vw - 120px);
+    max-height: calc(100vh - 100px);
+  }
+
+  .photo-viewer-image {
+    max-width: 100%;
+    max-height: calc(100vh - 140px);
+    object-fit: contain;
   }
 }

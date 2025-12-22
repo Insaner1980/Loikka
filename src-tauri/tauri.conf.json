@@ -42,6 +42,9 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
+    "resources": [
+      "../google-credentials.json"
+    ],
     "shortDescription": "Nuorten yleisurheilutulosten seuranta",
     "longDescription": "Loikka on työpöytäsovellus nuorten yleisurheilutulosten seurantaan. Sovellus on suunnattu valmentajille ja vanhemmille, jotka haluavat seurata nuorten urheilijoiden kehitystä."
   },

@@ -6,6 +6,7 @@ import type {
   CompetitionParticipant,
   CompetitionWithParticipants,
 } from "../types";
+import { getErrorMessage } from "../lib";
 
 interface CompetitionStore {
   competitions: Competition[];
@@ -60,7 +61,7 @@ export const useCompetitionStore = create<CompetitionStore>((set, get) => ({
       }
       set({ competitions, participants: allParticipants, loading: false });
     } catch (error) {
-      set({ error: (error as Error).message || String(error), loading: false });
+      set({ error: getErrorMessage(error), loading: false });
     }
   },
 
@@ -77,6 +78,7 @@ export const useCompetitionStore = create<CompetitionStore>((set, get) => ({
           endDate: competitionData.endDate || null,
           location: competitionData.location || null,
           address: competitionData.address || null,
+          level: competitionData.level || null,
           notes: competitionData.notes || null,
           reminderEnabled: competitionData.reminderEnabled,
           reminderDaysBefore: competitionData.reminderDaysBefore || null,
@@ -102,7 +104,7 @@ export const useCompetitionStore = create<CompetitionStore>((set, get) => ({
 
       return newCompetition;
     } catch (error) {
-      set({ error: (error as Error).message || String(error), loading: false });
+      set({ error: getErrorMessage(error), loading: false });
       throw error;
     }
   },
@@ -118,6 +120,7 @@ export const useCompetitionStore = create<CompetitionStore>((set, get) => ({
           endDate: data.endDate,
           location: data.location,
           address: data.address,
+          level: data.level,
           notes: data.notes,
           reminderEnabled: data.reminderEnabled,
           reminderDaysBefore: data.reminderDaysBefore,
@@ -127,7 +130,7 @@ export const useCompetitionStore = create<CompetitionStore>((set, get) => ({
       const competitions = await invoke<Competition[]>("get_all_competitions");
       set((state) => ({ ...state, competitions, loading: false }));
     } catch (error) {
-      set({ error: (error as Error).message || String(error), loading: false });
+      set({ error: getErrorMessage(error), loading: false });
       throw error;
     }
   },
@@ -145,7 +148,7 @@ export const useCompetitionStore = create<CompetitionStore>((set, get) => ({
         loading: false,
       }));
     } catch (error) {
-      set({ error: (error as Error).message || String(error), loading: false });
+      set({ error: getErrorMessage(error), loading: false });
       throw error;
     }
   },

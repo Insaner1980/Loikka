@@ -159,7 +159,7 @@ export function Calendar() {
     <div className="p-6 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 pb-5 border-b border-border-subtle">
-        <h1 className="text-base font-medium text-foreground">Kalenteri</h1>
+        <h1 className="text-title font-medium text-foreground">Kalenteri</h1>
         <button
           onClick={() => setIsFormOpen(true)}
           className="btn-primary btn-press"
@@ -173,10 +173,10 @@ export function Calendar() {
       <div className="flex items-center gap-1 mb-6">
         <button
           onClick={() => setViewMode("list")}
-          className={`flex items-center gap-2 px-3 py-1.5 text-[13px] font-medium transition-colors duration-150 border-b ${
+          className={`flex items-center gap-2 px-3 py-1.5 text-body font-medium transition-colors duration-150 border-b cursor-pointer ${
             viewMode === "list"
               ? "text-foreground border-foreground"
-              : "text-[#666666] border-transparent hover:text-text-secondary"
+              : "text-muted-foreground border-transparent hover:text-foreground"
           }`}
         >
           <List size={15} />
@@ -184,10 +184,10 @@ export function Calendar() {
         </button>
         <button
           onClick={() => setViewMode("month")}
-          className={`flex items-center gap-2 px-3 py-1.5 text-[13px] font-medium transition-colors duration-150 border-b ${
+          className={`flex items-center gap-2 px-3 py-1.5 text-body font-medium transition-colors duration-150 border-b cursor-pointer ${
             viewMode === "month"
               ? "text-foreground border-foreground"
-              : "text-[#666666] border-transparent hover:text-text-secondary"
+              : "text-muted-foreground border-transparent hover:text-foreground"
           }`}
         >
           <CalendarDays size={15} />
@@ -201,15 +201,15 @@ export function Calendar() {
           // List view
           <div>
             {upcomingCompetitions.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-64 text-[#666666]">
-                <CalendarIcon size={48} className="mb-4 text-[#444444]" />
+              <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
+                <CalendarIcon size={48} className="mb-4 text-tertiary" />
                 <p className="text-sm font-medium">Ei tulevia kilpailuja</p>
-                <p className="text-[13px] text-[#555555] mt-1">
+                <p className="text-body text-tertiary mt-1">
                   Lisää ensimmäinen kilpailu painamalla yllä olevaa nappia
                 </p>
               </div>
             ) : (
-              <div className="space-y-3">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                 {upcomingCompetitions.map((competition) => (
                   <CompetitionCard
                     key={competition.id}
@@ -238,12 +238,12 @@ export function Calendar() {
               {selectedDate ? (
                 <>
                   <h3 className="text-sm font-medium mb-4 text-foreground">
-                    {format(selectedDate, "EEEE d. MMMM", { locale: fi })}
+                    {format(selectedDate, "EEEE d. MMMM yyyy", { locale: fi })}
                   </h3>
                   {selectedDateCompetitions.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-48 text-[#666666] bg-[#141414] rounded-lg">
-                      <CalendarIcon size={28} className="mb-2 text-[#444444]" />
-                      <p className="text-[13px]">Ei kilpailuja tänä päivänä</p>
+                    <div className="flex flex-col items-center justify-center h-48 text-muted-foreground bg-card rounded-lg">
+                      <CalendarIcon size={28} className="mb-2 text-tertiary" />
+                      <p className="text-body">Ei kilpailuja tänä päivänä</p>
                     </div>
                   ) : (
                     <div className="space-y-3">
@@ -261,9 +261,9 @@ export function Calendar() {
                   )}
                 </>
               ) : (
-                <div className="flex flex-col items-center justify-center h-48 text-[#666666] bg-[#141414] rounded-lg">
-                  <CalendarIcon size={28} className="mb-2 text-[#444444]" />
-                  <p className="text-[13px]">Valitse päivä nähdäksesi kilpailut</p>
+                <div className="flex flex-col items-center justify-center h-48 text-muted-foreground bg-card rounded-lg">
+                  <CalendarIcon size={28} className="mb-2 text-tertiary" />
+                  <p className="text-body">Valitse päivä nähdäksesi kilpailut</p>
                 </div>
               )}
             </div>

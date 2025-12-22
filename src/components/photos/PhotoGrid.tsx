@@ -36,9 +36,9 @@ export function PhotoGrid({
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         {emptyIcon && <div className="mb-4">{emptyIcon}</div>}
-        <h2 className="text-sm font-medium text-[#666666] mb-1.5">{emptyMessage}</h2>
+        <h2 className="text-sm font-medium text-muted-foreground mb-1.5">{emptyMessage}</h2>
         {emptySubMessage && (
-          <p className="text-[13px] text-[#555555]">{emptySubMessage}</p>
+          <p className="text-body text-tertiary">{emptySubMessage}</p>
         )}
       </div>
     );
@@ -70,13 +70,13 @@ interface PhotoThumbnailProps {
 }
 
 function PhotoThumbnail({ photo, thumbnailUrl, onClick }: PhotoThumbnailProps) {
-  const displayName = photo.athleteName || photo.competitionName || "";
+  const displayName = photo.athleteName || photo.competitionName || photo.eventName || "";
   const dateStr = formatDate(photo.createdAt);
 
   return (
     <div className="group cursor-pointer" onClick={onClick}>
       {/* Thumbnail container */}
-      <div className="relative aspect-square rounded-lg overflow-hidden bg-[#141414]">
+      <div className="relative aspect-square rounded-lg overflow-hidden bg-card">
         <img
           src={thumbnailUrl}
           alt={photo.originalName}
@@ -92,7 +92,7 @@ function PhotoThumbnail({ photo, thumbnailUrl, onClick }: PhotoThumbnailProps) {
 
       {/* Caption below */}
       <div className="mt-1.5 px-0.5">
-        <p className="text-xs text-[#666666] truncate">
+        <p className="text-xs text-muted-foreground truncate">
           {dateStr}
           {displayName && ` · ${displayName}`}
         </p>

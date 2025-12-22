@@ -9,6 +9,10 @@ interface PhotoGalleryProps {
   canAdd?: boolean;
   canDelete?: boolean;
   maxPhotos?: number;
+  /** Max photos to display in grid (rest hidden with "Kaikki" link) */
+  displayLimit?: number;
+  /** Callback to report total photo count to parent */
+  onPhotoCountChange?: (count: number) => void;
 }
 
 export function PhotoGallery({
@@ -17,6 +21,8 @@ export function PhotoGallery({
   canAdd = true,
   canDelete = true,
   maxPhotos = 20,
+  displayLimit,
+  onPhotoCountChange,
 }: PhotoGalleryProps) {
   const {
     photos,
@@ -36,6 +42,11 @@ export function PhotoGallery({
   useEffect(() => {
     fetchPhotos();
   }, [fetchPhotos]);
+
+  // Report photo count to parent
+  useEffect(() => {
+    onPhotoCountChange?.(photos.length);
+  }, [photos.length, onPhotoCountChange]);
 
   const handleAddPhoto = async () => {
     if (photos.length >= maxPhotos) {
@@ -82,16 +93,28 @@ export function PhotoGallery({
     );
   }
 
+  // Show add button if under maxPhotos limit
+  const canShowAddButton = canAdd && photos.length < maxPhotos;
+
+  // Calculate how many photos to display
+  // When displayLimit is set and add button is shown, show displayLimit-1 photos (to make room for button)
+  // When displayLimit is set and add button is hidden, show displayLimit photos
+  let photosToDisplay = photos;
+  if (displayLimit) {
+    const photoSlots = canShowAddButton ? displayLimit - 1 : displayLimit;
+    photosToDisplay = photos.slice(0, photoSlots);
+  }
+
   return (
     <div>
       {/* Photo grid */}
       <div className="grid grid-cols-4 gap-2">
         {/* Add button */}
-        {canAdd && photos.length < maxPhotos && (
+        {canShowAddButton && (
           <button
             onClick={handleAddPhoto}
             disabled={loading}
-            className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 flex flex-col items-center justify-center gap-1 transition-colors disabled:opacity-50"
+            className="aspect-square rounded-lg border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 flex flex-col items-center justify-center gap-1 transition-colors disabled:opacity-50 cursor-pointer"
           >
             {loading ? (
               <Loader2 size={24} className="text-muted-foreground animate-spin" />
@@ -105,7 +128,7 @@ export function PhotoGallery({
         )}
 
         {/* Photos */}
-        {photos.map((photo, index) => (
+        {photosToDisplay.map((photo, index) => (
           <div
             key={photo.id}
             className="relative aspect-square rounded-lg overflow-hidden cursor-pointer group"
@@ -130,8 +153,7 @@ export function PhotoGallery({
             {canDelete && hoveredId === photo.id && (
               <button
                 onClick={(e) => handleDeletePhoto(photo.id, e)}
-                className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                title="Poista kuva"
+                className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors cursor-pointer"
               >
                 <Trash2 size={14} />
               </button>

@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS results (
     value REAL NOT NULL,
     type TEXT NOT NULL CHECK (type IN ('competition', 'training')),
     competition_name TEXT,
+    competition_level TEXT CHECK (competition_level IS NULL OR competition_level IN ('seura', 'seuraottelu', 'piiri', 'pm', 'alue', 'sm', 'kll', 'muu')),
     location TEXT,
     placement INTEGER,
     notes TEXT,
@@ -48,6 +49,7 @@ CREATE TABLE IF NOT EXISTS competitions (
     end_date TEXT,
     location TEXT,
     address TEXT,
+    level TEXT CHECK (level IS NULL OR level IN ('seura', 'seuraottelu', 'piiri', 'pm', 'alue', 'sm', 'kll', 'muu')),
     notes TEXT,
     reminder_enabled INTEGER NOT NULL DEFAULT 0,
     reminder_days_before INTEGER,
@@ -134,4 +136,4 @@ CREATE INDEX IF NOT EXISTS idx_medals_athlete ON medals(athlete_id);
 CREATE INDEX IF NOT EXISTS idx_competitions_date ON competitions(date);
 
 CREATE INDEX IF NOT EXISTS idx_competition_participants_competition ON competition_participants(competition_id);
-CREATE INDEX IF NOT EXISTS idx_competition_participants_athlete ON competition_participants(athlete_id)
+CREATE INDEX IF NOT EXISTS idx_competition_participants_athlete ON competition_participants(athlete_id);

@@ -26,10 +26,10 @@ export function AthleteTabs({ activeTab, onTabChange }: AthleteTabsProps) {
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id)}
-            className={`px-4 py-2.5 text-[13px] font-medium border-b transition-colors duration-150 ${
+            className={`px-4 py-2.5 text-body font-medium border-b transition-colors duration-150 cursor-pointer ${
               activeTab === tab.id
                 ? "border-foreground text-foreground"
-                : "border-transparent text-[#666666] hover:text-[#888888]"
+                : "border-transparent text-tertiary hover:text-muted-foreground"
             }`}
           >
             {tab.label}

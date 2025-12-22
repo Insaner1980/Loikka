@@ -9,7 +9,7 @@ pub async fn export_data(app: AppHandle) -> Result<String, String> {
 
     // Fetch all athletes
     let athlete_rows = sqlx::query(
-        "SELECT id, first_name, last_name, birth_year, club_name, photo_path, created_at, updated_at FROM athletes"
+        "SELECT id, first_name, last_name, birth_year, gender, club_name, photo_path, created_at, updated_at FROM athletes"
     )
     .fetch_all(&pool)
     .await
@@ -20,6 +20,7 @@ pub async fn export_data(app: AppHandle) -> Result<String, String> {
         first_name: row.get("first_name"),
         last_name: row.get("last_name"),
         birth_year: row.get("birth_year"),
+        gender: row.get("gender"),
         club_name: row.get("club_name"),
         photo_path: row.get("photo_path"),
         created_at: row.get("created_at"),
@@ -28,7 +29,7 @@ pub async fn export_data(app: AppHandle) -> Result<String, String> {
 
     // Fetch all results
     let result_rows = sqlx::query(
-        "SELECT id, athlete_id, discipline_id, date, value, type, competition_name, location, placement, notes, is_personal_best, is_season_best, created_at FROM results"
+        "SELECT id, athlete_id, discipline_id, date, value, type, competition_name, competition_level, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing, created_at FROM results"
     )
     .fetch_all(&pool)
     .await
@@ -42,17 +43,24 @@ pub async fn export_data(app: AppHandle) -> Result<String, String> {
         value: row.get("value"),
         result_type: row.get("type"),
         competition_name: row.get("competition_name"),
+        competition_level: row.get("competition_level"),
         location: row.get("location"),
         placement: row.get("placement"),
         notes: row.get("notes"),
         is_personal_best: row.get::<i32, _>("is_personal_best") == 1,
         is_season_best: row.get::<i32, _>("is_season_best") == 1,
+        is_national_record: row.get::<i32, _>("is_national_record") == 1,
+        wind: row.get("wind"),
+        status: row.get("status"),
+        equipment_weight: row.get("equipment_weight"),
+        hurdle_height: row.get("hurdle_height"),
+        hurdle_spacing: row.get("hurdle_spacing"),
         created_at: row.get("created_at"),
     }).collect();
 
     // Fetch all competitions
     let competition_rows = sqlx::query(
-        "SELECT id, name, date, end_date, location, address, notes, reminder_enabled, reminder_days_before, created_at FROM competitions"
+        "SELECT id, name, date, end_date, location, address, level, notes, reminder_enabled, reminder_days_before, created_at FROM competitions"
     )
     .fetch_all(&pool)
     .await
@@ -65,6 +73,7 @@ pub async fn export_data(app: AppHandle) -> Result<String, String> {
         end_date: row.get("end_date"),
         location: row.get("location"),
         address: row.get("address"),
+        level: row.get("level"),
         notes: row.get("notes"),
         reminder_enabled: row.get::<i32, _>("reminder_enabled") == 1,
         reminder_days_before: row.get("reminder_days_before"),
@@ -104,6 +113,9 @@ pub async fn export_data(app: AppHandle) -> Result<String, String> {
         result_id: row.get("result_id"),
         medal_type: row.get("type"),
         competition_name: row.get("competition_name"),
+        competition_id: None,
+        location: None,
+        discipline_id: None,
         discipline_name: row.get("discipline_name"),
         date: row.get("date"),
         created_at: row.get("created_at"),
@@ -131,12 +143,13 @@ pub async fn import_data(app: AppHandle, json: String) -> Result<bool, String> {
     // Import athletes
     for athlete in data.athletes {
         sqlx::query(
-            "INSERT OR REPLACE INTO athletes (id, first_name, last_name, birth_year, club_name, photo_path, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+            "INSERT OR REPLACE INTO athletes (id, first_name, last_name, birth_year, gender, club_name, photo_path, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
         )
         .bind(athlete.id)
         .bind(&athlete.first_name)
         .bind(&athlete.last_name)
         .bind(athlete.birth_year)
+        .bind(&athlete.gender)
         .bind(&athlete.club_name)
         .bind(&athlete.photo_path)
         .bind(&athlete.created_at)
@@ -149,7 +162,7 @@ pub async fn import_data(app: AppHandle, json: String) -> Result<bool, String> {
     // Import results
     for result in data.results {
         sqlx::query(
-            "INSERT OR REPLACE INTO results (id, athlete_id, discipline_id, date, value, type, competition_name, location, placement, notes, is_personal_best, is_season_best, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            "INSERT OR REPLACE INTO results (id, athlete_id, discipline_id, date, value, type, competition_name, competition_level, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         )
         .bind(result.id)
         .bind(result.athlete_id)
@@ -158,11 +171,18 @@ pub async fn import_data(app: AppHandle, json: String) -> Result<bool, String> {
         .bind(result.value)
         .bind(&result.result_type)
         .bind(&result.competition_name)
+        .bind(&result.competition_level)
         .bind(&result.location)
         .bind(result.placement)
         .bind(&result.notes)
         .bind(result.is_personal_best as i32)
         .bind(result.is_season_best as i32)
+        .bind(result.is_national_record as i32)
+        .bind(result.wind)
+        .bind(&result.status)
+        .bind(result.equipment_weight)
+        .bind(result.hurdle_height)
+        .bind(result.hurdle_spacing)
         .bind(&result.created_at)
         .execute(&pool)
         .await
@@ -172,7 +192,7 @@ pub async fn import_data(app: AppHandle, json: String) -> Result<bool, String> {
     // Import competitions
     for competition in data.competitions {
         sqlx::query(
-            "INSERT OR REPLACE INTO competitions (id, name, date, end_date, location, address, notes, reminder_enabled, reminder_days_before, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            "INSERT OR REPLACE INTO competitions (id, name, date, end_date, location, address, level, notes, reminder_enabled, reminder_days_before, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         )
         .bind(competition.id)
         .bind(&competition.name)
@@ -180,6 +200,7 @@ pub async fn import_data(app: AppHandle, json: String) -> Result<bool, String> {
         .bind(&competition.end_date)
         .bind(&competition.location)
         .bind(&competition.address)
+        .bind(&competition.level)
         .bind(&competition.notes)
         .bind(competition.reminder_enabled as i32)
         .bind(competition.reminder_days_before)

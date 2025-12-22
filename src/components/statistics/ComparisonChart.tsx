@@ -141,7 +141,7 @@ export function ComparisonChart({ data, discipline }: ComparisonChartProps) {
                   fill={
                     entry.bestResult === bestValue
                       ? "var(--color-gold)"
-                      : "var(--color-primary)"
+                      : "var(--accent)"
                   }
                 />
               ))}

@@ -1,112 +1,204 @@
-use crate::types::{AuthStatus, CloudBackup, SyncResult};
+use crate::google_drive;
+use crate::types::{AuthStatus, CloudBackup, CloudPhoto, LocalPhoto, SyncOptions, SyncResult};
+use tauri::async_runtime;
 
 /// Check the current Google Drive authentication status
 #[tauri::command]
 pub async fn check_auth_status() -> Result<AuthStatus, String> {
-    // TODO: Implement actual OAuth2 check
-    // For now, return mock unauthenticated status
-    Ok(AuthStatus {
-        is_authenticated: false,
-        user_email: None,
-        expires_at: None,
-    })
+    match google_drive::load_tokens() {
+        Some(tokens) => {
+            // Check if token is expired and try to refresh
+            if google_drive::is_token_expired(&tokens) {
+                match google_drive::refresh_access_token(&tokens).await {
+                    Ok(new_tokens) => Ok(AuthStatus {
+                        is_authenticated: true,
+                        user_email: new_tokens.user_email,
+                        expires_at: Some(
+                            chrono::DateTime::from_timestamp(new_tokens.expires_at, 0)
+                                .map(|dt| dt.to_rfc3339())
+                                .unwrap_or_default(),
+                        ),
+                    }),
+                    Err(_) => {
+                        // Token refresh failed, user needs to re-authenticate
+                        Ok(AuthStatus {
+                            is_authenticated: false,
+                            user_email: None,
+                            expires_at: None,
+                        })
+                    }
+                }
+            } else {
+                Ok(AuthStatus {
+                    is_authenticated: true,
+                    user_email: tokens.user_email,
+                    expires_at: Some(
+                        chrono::DateTime::from_timestamp(tokens.expires_at, 0)
+                            .map(|dt| dt.to_rfc3339())
+                            .unwrap_or_default(),
+                    ),
+                })
+            }
+        }
+        None => Ok(AuthStatus {
+            is_authenticated: false,
+            user_email: None,
+            expires_at: None,
+        }),
+    }
 }
 
 /// Start the OAuth2 authentication flow
 /// Returns the authorization URL to open in browser
 #[tauri::command]
 pub async fn start_auth_flow() -> Result<String, String> {
-    // TODO: Implement actual OAuth2 flow
-    // This would:
-    // 1. Generate a random state token
-    // 2. Build the Google OAuth URL with client_id, redirect_uri, scope
-    // 3. Return the URL for the frontend to open
+    let auth_url = google_drive::generate_auth_url()?;
 
-    // For now, return a placeholder URL
-    Ok("https://accounts.google.com/o/oauth2/v2/auth?client_id=PLACEHOLDER&redirect_uri=PLACEHOLDER&response_type=code&scope=https://www.googleapis.com/auth/drive.file".to_string())
+    // Start a background task to wait for the callback
+    async_runtime::spawn(async {
+        match google_drive::wait_for_oauth_callback().await {
+            Ok(code) => {
+                if let Err(e) = google_drive::exchange_code_for_tokens(&code).await {
+                    eprintln!("Failed to exchange code for tokens: {}", e);
+                }
+            }
+            Err(e) => {
+                eprintln!("OAuth callback failed: {}", e);
+            }
+        }
+    });
+
+    Ok(auth_url)
 }
 
 /// Complete the OAuth2 flow with the authorization code
+/// This is called manually if automatic callback doesn't work
 #[tauri::command]
 pub async fn complete_auth(code: String) -> Result<bool, String> {
-    // TODO: Implement actual token exchange
-    // This would:
-    // 1. Exchange the code for access/refresh tokens
-    // 2. Store tokens securely (keyring or encrypted file)
-    // 3. Return success/failure
-
-    // Auth code received, but not implemented yet
-    let _ = code;
-
-    // For now, return false (not implemented)
-    Ok(false)
+    match google_drive::exchange_code_for_tokens(&code).await {
+        Ok(_) => Ok(true),
+        Err(e) => Err(e),
+    }
 }
 
 /// Disconnect from Google Drive (revoke tokens)
 #[tauri::command]
 pub async fn disconnect_drive() -> Result<bool, String> {
-    // TODO: Implement actual token revocation
-    // This would:
-    // 1. Revoke the access token with Google
-    // 2. Delete stored tokens
-    // 3. Return success/failure
-
+    google_drive::disconnect()?;
     Ok(true)
 }
 
 /// Sync local data to Google Drive
 #[tauri::command]
 pub async fn sync_to_drive() -> Result<SyncResult, String> {
-    // TODO: Implement actual sync
-    // This would:
-    // 1. Export current database to JSON
-    // 2. Upload to Google Drive (create or update file)
-    // 3. Return sync result
+    let access_token = google_drive::get_valid_token().await?;
 
-    Ok(SyncResult {
-        success: false,
-        message: "Google Drive -synkronointi ei ole vielä käytössä".to_string(),
-        synced_at: None,
-        items_synced: None,
-    })
+    match google_drive::sync_database_to_drive(&access_token).await {
+        Ok(items_synced) => Ok(SyncResult {
+            success: true,
+            message: format!("Synkronoitu {} kohdetta", items_synced),
+            synced_at: Some(chrono::Utc::now().to_rfc3339()),
+            items_synced: Some(items_synced),
+        }),
+        Err(e) => Ok(SyncResult {
+            success: false,
+            message: format!("Synkronointi epäonnistui: {}", e),
+            synced_at: None,
+            items_synced: None,
+        }),
+    }
 }
 
 /// Sync data from Google Drive to local
 #[tauri::command]
 pub async fn sync_from_drive(backup_id: Option<String>) -> Result<SyncResult, String> {
-    // TODO: Implement actual sync
-    // This would:
-    // 1. Download the backup file from Google Drive
-    // 2. Import data to local database
-    // 3. Return sync result
+    let access_token = google_drive::get_valid_token().await?;
 
-    let _ = backup_id; // Suppress unused warning
-
-    Ok(SyncResult {
-        success: false,
-        message: "Google Drive -synkronointi ei ole vielä käytössä".to_string(),
-        synced_at: None,
-        items_synced: None,
-    })
+    match google_drive::restore_from_drive(&access_token, backup_id).await {
+        Ok(items_restored) => Ok(SyncResult {
+            success: true,
+            message: format!("Palautettu {} kohdetta", items_restored),
+            synced_at: Some(chrono::Utc::now().to_rfc3339()),
+            items_synced: Some(items_restored),
+        }),
+        Err(e) => Ok(SyncResult {
+            success: false,
+            message: format!("Palautus epäonnistui: {}", e),
+            synced_at: None,
+            items_synced: None,
+        }),
+    }
 }
 
 /// Get list of available backups from Google Drive
 #[tauri::command]
 pub async fn get_cloud_backups() -> Result<Vec<CloudBackup>, String> {
-    // TODO: Implement actual backup listing
-    // This would:
-    // 1. Query Google Drive for backup files
-    // 2. Return list of available backups
-
-    // For now, return empty list
-    Ok(vec![])
+    let access_token = google_drive::get_valid_token().await?;
+    google_drive::list_backups(&access_token).await
 }
 
 /// Delete a backup from Google Drive
 #[tauri::command]
 pub async fn delete_cloud_backup(backup_id: String) -> Result<bool, String> {
-    // TODO: Implement actual backup deletion
-    let _ = backup_id; // Suppress unused warning
+    let access_token = google_drive::get_valid_token().await?;
+    google_drive::delete_file(&access_token, &backup_id).await?;
+    Ok(true)
+}
 
-    Ok(false)
+/// List all photos stored in Google Drive
+#[tauri::command]
+pub async fn list_cloud_photos() -> Result<Vec<CloudPhoto>, String> {
+    let access_token = google_drive::get_valid_token().await?;
+    google_drive::list_cloud_photos(&access_token).await
+}
+
+/// List all local photos
+#[tauri::command]
+pub fn list_local_photos() -> Result<Vec<LocalPhoto>, String> {
+    google_drive::list_local_photos()
+}
+
+/// Sync to drive with options (selective sync)
+#[tauri::command]
+pub async fn sync_to_drive_with_options(options: SyncOptions) -> Result<SyncResult, String> {
+    let access_token = google_drive::get_valid_token().await?;
+
+    match google_drive::sync_with_options(&access_token, &options).await {
+        Ok(items_synced) => Ok(SyncResult {
+            success: true,
+            message: format!("Synkronoitu {} kohdetta", items_synced),
+            synced_at: Some(chrono::Utc::now().to_rfc3339()),
+            items_synced: Some(items_synced),
+        }),
+        Err(e) => Ok(SyncResult {
+            success: false,
+            message: format!("Synkronointi epäonnistui: {}", e),
+            synced_at: None,
+            items_synced: None,
+        }),
+    }
+}
+
+/// Restore from drive with options (selective restore)
+#[tauri::command]
+pub async fn restore_from_drive_with_options(
+    backup_id: Option<String>,
+    options: SyncOptions,
+) -> Result<SyncResult, String> {
+    let access_token = google_drive::get_valid_token().await?;
+
+    match google_drive::restore_with_options(&access_token, backup_id, &options).await {
+        Ok(items_restored) => Ok(SyncResult {
+            success: true,
+            message: format!("Palautettu {} kohdetta", items_restored),
+            synced_at: Some(chrono::Utc::now().to_rfc3339()),
+            items_synced: Some(items_restored),
+        }),
+        Err(e) => Ok(SyncResult {
+            success: false,
+            message: format!("Palautus epäonnistui: {}", e),
+            synced_at: None,
+            items_synced: None,
+        }),
+    }
 }

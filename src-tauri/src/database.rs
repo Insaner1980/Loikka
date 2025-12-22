@@ -70,6 +70,30 @@ async fn run_migrations(pool: &DbPool) -> Result<(), String> {
         run_migration_v3(pool).await?;
     }
 
+    if current_version < 4 {
+        run_migration_v4(pool).await?;
+    }
+
+    if current_version < 5 {
+        run_migration_v5(pool).await?;
+    }
+
+    if current_version < 6 {
+        run_migration_v6(pool).await?;
+    }
+
+    if current_version < 7 {
+        run_migration_v7(pool).await?;
+    }
+
+    if current_version < 8 {
+        run_migration_v8(pool).await?;
+    }
+
+    if current_version < 9 {
+        run_migration_v9(pool).await?;
+    }
+
     Ok(())
 }
 
@@ -198,6 +222,211 @@ async fn run_migration_v3(pool: &DbPool) -> Result<(), String> {
         .execute(pool)
         .await
         .map_err(|e| format!("Failed to record migration v3: {}", e))?;
+
+    Ok(())
+}
+
+async fn run_migration_v4(pool: &DbPool) -> Result<(), String> {
+    // Add level column to competitions table
+    let has_level: bool = sqlx::query_scalar(
+        "SELECT COUNT(*) > 0 FROM pragma_table_info('competitions') WHERE name = 'level'"
+    )
+    .fetch_one(pool)
+    .await
+    .unwrap_or(false);
+
+    if !has_level {
+        sqlx::query("ALTER TABLE competitions ADD COLUMN level TEXT")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v4 failed adding level column: {}", e))?;
+    }
+
+    sqlx::query("INSERT INTO _migrations (version, description) VALUES (4, 'add_competition_level')")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Failed to record migration v4: {}", e))?;
+
+    Ok(())
+}
+
+async fn run_migration_v5(pool: &DbPool) -> Result<(), String> {
+    // Add competition_level column to results table
+    let has_level: bool = sqlx::query_scalar(
+        "SELECT COUNT(*) > 0 FROM pragma_table_info('results') WHERE name = 'competition_level'"
+    )
+    .fetch_one(pool)
+    .await
+    .unwrap_or(false);
+
+    if !has_level {
+        sqlx::query("ALTER TABLE results ADD COLUMN competition_level TEXT")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v5 failed adding competition_level column: {}", e))?;
+    }
+
+    sqlx::query("INSERT INTO _migrations (version, description) VALUES (5, 'add_result_competition_level')")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Failed to record migration v5: {}", e))?;
+
+    Ok(())
+}
+
+async fn run_migration_v6(pool: &DbPool) -> Result<(), String> {
+    // Add wind column to results table
+    let has_wind: bool = sqlx::query_scalar(
+        "SELECT COUNT(*) > 0 FROM pragma_table_info('results') WHERE name = 'wind'"
+    )
+    .fetch_one(pool)
+    .await
+    .unwrap_or(false);
+
+    if !has_wind {
+        sqlx::query("ALTER TABLE results ADD COLUMN wind REAL")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v6 failed adding wind column: {}", e))?;
+    }
+
+    // Add status column to results table
+    let has_status: bool = sqlx::query_scalar(
+        "SELECT COUNT(*) > 0 FROM pragma_table_info('results') WHERE name = 'status'"
+    )
+    .fetch_one(pool)
+    .await
+    .unwrap_or(false);
+
+    if !has_status {
+        sqlx::query("ALTER TABLE results ADD COLUMN status TEXT DEFAULT 'valid'")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v6 failed adding status column: {}", e))?;
+    }
+
+    // Add equipment_weight column to results table (for throws)
+    let has_weight: bool = sqlx::query_scalar(
+        "SELECT COUNT(*) > 0 FROM pragma_table_info('results') WHERE name = 'equipment_weight'"
+    )
+    .fetch_one(pool)
+    .await
+    .unwrap_or(false);
+
+    if !has_weight {
+        sqlx::query("ALTER TABLE results ADD COLUMN equipment_weight REAL")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v6 failed adding equipment_weight column: {}", e))?;
+    }
+
+    // Add hurdle_height column to results table (for hurdles)
+    let has_height: bool = sqlx::query_scalar(
+        "SELECT COUNT(*) > 0 FROM pragma_table_info('results') WHERE name = 'hurdle_height'"
+    )
+    .fetch_one(pool)
+    .await
+    .unwrap_or(false);
+
+    if !has_height {
+        sqlx::query("ALTER TABLE results ADD COLUMN hurdle_height INTEGER")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v6 failed adding hurdle_height column: {}", e))?;
+    }
+
+    // Add hurdle_spacing column to results table (for hurdles)
+    let has_spacing: bool = sqlx::query_scalar(
+        "SELECT COUNT(*) > 0 FROM pragma_table_info('results') WHERE name = 'hurdle_spacing'"
+    )
+    .fetch_one(pool)
+    .await
+    .unwrap_or(false);
+
+    if !has_spacing {
+        sqlx::query("ALTER TABLE results ADD COLUMN hurdle_spacing REAL")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v6 failed adding hurdle_spacing column: {}", e))?;
+    }
+
+    sqlx::query("INSERT INTO _migrations (version, description) VALUES (6, 'add_result_details_wind_status_equipment')")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Failed to record migration v6: {}", e))?;
+
+    Ok(())
+}
+
+async fn run_migration_v7(pool: &DbPool) -> Result<(), String> {
+    // Add gender column to athletes table
+    let has_gender: bool = sqlx::query_scalar(
+        "SELECT COUNT(*) > 0 FROM pragma_table_info('athletes') WHERE name = 'gender'"
+    )
+    .fetch_one(pool)
+    .await
+    .unwrap_or(false);
+
+    if !has_gender {
+        // Default to 'T' (tytöt/girls) for existing athletes
+        sqlx::query("ALTER TABLE athletes ADD COLUMN gender TEXT NOT NULL DEFAULT 'T'")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v7 failed adding gender column: {}", e))?;
+    }
+
+    sqlx::query("INSERT INTO _migrations (version, description) VALUES (7, 'add_athlete_gender')")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Failed to record migration v7: {}", e))?;
+
+    Ok(())
+}
+
+async fn run_migration_v8(pool: &DbPool) -> Result<(), String> {
+    // Add event_name column to photos table for free-text event/competition names
+    let has_event_name: bool = sqlx::query_scalar(
+        "SELECT COUNT(*) > 0 FROM pragma_table_info('photos') WHERE name = 'event_name'"
+    )
+    .fetch_one(pool)
+    .await
+    .unwrap_or(false);
+
+    if !has_event_name {
+        sqlx::query("ALTER TABLE photos ADD COLUMN event_name TEXT")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v8 failed adding event_name column: {}", e))?;
+    }
+
+    sqlx::query("INSERT INTO _migrations (version, description) VALUES (8, 'add_photo_event_name')")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Failed to record migration v8: {}", e))?;
+
+    Ok(())
+}
+
+async fn run_migration_v9(pool: &DbPool) -> Result<(), String> {
+    // Add is_national_record column to results table
+    let has_national_record: bool = sqlx::query_scalar(
+        "SELECT COUNT(*) > 0 FROM pragma_table_info('results') WHERE name = 'is_national_record'"
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(|e| format!("Failed to check is_national_record column: {}", e))?;
+
+    if !has_national_record {
+        sqlx::query("ALTER TABLE results ADD COLUMN is_national_record INTEGER NOT NULL DEFAULT 0")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v9 failed adding is_national_record column: {}", e))?;
+    }
+
+    sqlx::query("INSERT INTO _migrations (version, description) VALUES (9, 'add_result_national_record')")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Failed to record migration v9: {}", e))?;
 
     Ok(())
 }

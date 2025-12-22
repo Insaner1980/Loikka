@@ -2,10 +2,11 @@ import { useState, useEffect, useMemo } from "react";
 import { BarChart3 } from "lucide-react";
 import { useResultStore } from "../stores/useResultStore";
 import { useAthleteStore } from "../stores/useAthleteStore";
-import { getDisciplineById } from "../data/disciplines";
+import { getDisciplineById, categoryLabels, categoryOrder } from "../data/disciplines";
 import { ProgressChart } from "../components/statistics/ProgressChart";
 import { SeasonStats } from "../components/statistics/SeasonStats";
 import { ComparisonChart } from "../components/statistics/ComparisonChart";
+import { YEAR_RANGE } from "../lib/constants";
 
 export function Statistics() {
   const {
@@ -39,12 +40,15 @@ export function Statistics() {
     }
   }, [athletes, selectedAthleteId]);
 
-  // Get available disciplines for the selected athlete
+  // Get available disciplines for the selected athlete (only valid results)
+  // Note: undefined/null status is treated as valid for backwards compatibility
   const availableDisciplines = useMemo(() => {
     if (selectedAthleteId === null) return [];
 
     const athleteResults = results.filter(
-      (r) => r.athleteId === selectedAthleteId
+      (r) =>
+        r.athleteId === selectedAthleteId &&
+        (r.status === "valid" || r.status === undefined || r.status === null)
     );
     const disciplineIds = [...new Set(athleteResults.map((r) => r.disciplineId))];
 
@@ -66,29 +70,17 @@ export function Statistics() {
     }
   }, [availableDisciplines, selectedDisciplineId]);
 
-  // Get available years for the selected athlete and discipline
-  const availableYears = useMemo(() => {
-    if (selectedAthleteId === null || selectedDisciplineId === null) return [];
-
-    const relevantResults = results.filter(
-      (r) =>
-        r.athleteId === selectedAthleteId &&
-        r.disciplineId === selectedDisciplineId
-    );
-
-    const years = [
-      ...new Set(relevantResults.map((r) => new Date(r.date).getFullYear())),
-    ].sort((a, b) => b - a);
-
-    return years;
-  }, [selectedAthleteId, selectedDisciplineId, results]);
-
-  // Auto-select most recent year
-  useEffect(() => {
-    if (availableYears.length > 0 && !availableYears.includes(selectedYear)) {
-      setSelectedYear(availableYears[0]);
+  // Generate fixed year options from START_YEAR to next year
+  const yearOptions = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const startYear = YEAR_RANGE.START_YEAR;
+    const endYear = currentYear + YEAR_RANGE.YEARS_AHEAD;
+    const years: number[] = [];
+    for (let y = endYear; y >= startYear; y--) {
+      years.push(y);
     }
-  }, [availableYears, selectedYear]);
+    return years;
+  }, []);
 
   // Get data for charts
   const chartData = useMemo(() => {
@@ -126,14 +118,14 @@ export function Statistics() {
     <div className="p-6 h-full flex flex-col">
       {/* Header */}
       <div className="mb-6 pb-5 border-b border-border-subtle">
-        <h1 className="text-base font-medium text-foreground">Tilastot</h1>
+        <h1 className="text-title font-medium text-foreground">Tilastot</h1>
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
         {/* Athlete selector */}
         <select
-          className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
+          className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
           value={selectedAthleteId ?? ""}
           onChange={(e) =>
             setSelectedAthleteId(
@@ -151,7 +143,7 @@ export function Statistics() {
 
         {/* Discipline selector */}
         <select
-          className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
+          className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
           value={selectedDisciplineId ?? ""}
           onChange={(e) =>
             setSelectedDisciplineId(
@@ -162,14 +154,24 @@ export function Statistics() {
         >
           <option value="">Valitse laji</option>
           {availableDisciplines.length > 0 ? (
-            availableDisciplines.map(
-              (discipline) =>
-                discipline && (
-                  <option key={discipline.id} value={discipline.id}>
-                    {discipline.fullName}
-                  </option>
-                )
-            )
+            categoryOrder.map((category) => {
+              const categoryDisciplines = availableDisciplines.filter(
+                (d) => d && d.category === category
+              );
+              if (categoryDisciplines.length === 0) return null;
+              return (
+                <optgroup key={category} label={categoryLabels[category]}>
+                  {categoryDisciplines.map(
+                    (discipline) =>
+                      discipline && (
+                        <option key={discipline.id} value={discipline.id}>
+                          {discipline.fullName}
+                        </option>
+                      )
+                  )}
+                </optgroup>
+              );
+            })
           ) : (
             <option disabled>Ei tuloksia</option>
           )}
@@ -177,20 +179,15 @@ export function Statistics() {
 
         {/* Year selector */}
         <select
-          className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
+          className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
           value={selectedYear}
           onChange={(e) => setSelectedYear(Number(e.target.value))}
-          disabled={availableYears.length === 0}
         >
-          {availableYears.length > 0 ? (
-            availableYears.map((year) => (
-              <option key={year} value={year}>
-                Kausi {year}
-              </option>
-            ))
-          ) : (
-            <option>{new Date().getFullYear()}</option>
-          )}
+          {yearOptions.map((year) => (
+            <option key={year} value={year}>
+              Kausi {year}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -211,7 +208,7 @@ export function Statistics() {
             </p>
           </div>
         ) : (
-          <div className="space-y-6 pb-4">
+          <div className="space-y-6">
             {/* Progress Chart */}
             {selectedDiscipline && (
               <ProgressChart data={chartData} discipline={selectedDiscipline} />

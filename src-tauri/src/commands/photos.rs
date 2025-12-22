@@ -61,6 +61,7 @@ pub async fn save_photo(
     source_path: String,
     entity_type: String,
     entity_id: i64,
+    event_name: Option<String>,
 ) -> Result<Photo, String> {
     let pool = get_pool(&app).await?;
 
@@ -133,8 +134,8 @@ pub async fn save_photo(
 
     // Save to database
     let result = sqlx::query(
-        r#"INSERT INTO photos (entity_type, entity_id, file_path, thumbnail_path, original_name, width, height, size_bytes)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)"#
+        r#"INSERT INTO photos (entity_type, entity_id, file_path, thumbnail_path, original_name, width, height, size_bytes, event_name)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"#
     )
     .bind(&entity_type)
     .bind(entity_id)
@@ -144,6 +145,7 @@ pub async fn save_photo(
     .bind(width)
     .bind(height)
     .bind(size_bytes)
+    .bind(&event_name)
     .execute(&pool)
     .await
     .map_err(|e| e.to_string())?;
@@ -152,7 +154,7 @@ pub async fn save_photo(
 
     // Fetch the created photo
     let row = sqlx::query(
-        r#"SELECT id, entity_type, entity_id, file_path, thumbnail_path, original_name, width, height, size_bytes, created_at
+        r#"SELECT id, entity_type, entity_id, file_path, thumbnail_path, original_name, width, height, size_bytes, event_name, created_at
            FROM photos WHERE id = ?"#
     )
     .bind(id)
@@ -170,6 +172,7 @@ pub async fn save_photo(
         width: row.get("width"),
         height: row.get("height"),
         size_bytes: row.get("size_bytes"),
+        event_name: row.get("event_name"),
         created_at: row.get("created_at"),
     })
 }
@@ -184,7 +187,7 @@ pub async fn get_photos(
     let pool = get_pool(&app).await?;
 
     let rows = sqlx::query(
-        r#"SELECT id, entity_type, entity_id, file_path, thumbnail_path, original_name, width, height, size_bytes, created_at
+        r#"SELECT id, entity_type, entity_id, file_path, thumbnail_path, original_name, width, height, size_bytes, event_name, created_at
            FROM photos WHERE entity_type = ? AND entity_id = ? ORDER BY created_at DESC"#
     )
     .bind(&entity_type)
@@ -205,6 +208,7 @@ pub async fn get_photos(
             width: row.get("width"),
             height: row.get("height"),
             size_bytes: row.get("size_bytes"),
+            event_name: row.get("event_name"),
             created_at: row.get("created_at"),
         })
         .collect())
@@ -293,6 +297,7 @@ pub struct PhotoWithDetails {
     pub width: Option<i32>,
     pub height: Option<i32>,
     pub size_bytes: i64,
+    pub event_name: Option<String>,
     pub created_at: String,
     // Related entity info
     pub athlete_name: Option<String>,
@@ -309,48 +314,114 @@ pub async fn get_all_photos(
 ) -> Result<Vec<PhotoWithDetails>, String> {
     let pool = get_pool(&app).await?;
 
-    // Build dynamic query based on filters
-    let mut query = String::from(
-        r#"SELECT p.id, p.entity_type, p.entity_id, p.file_path, p.thumbnail_path,
-                  p.original_name, p.width, p.height, p.size_bytes, p.created_at,
-                  a.first_name || ' ' || a.last_name as athlete_name,
-                  c.name as competition_name
-           FROM photos p
-           LEFT JOIN athletes a ON p.entity_type = 'athletes' AND p.entity_id = a.id
-           LEFT JOIN competitions c ON p.entity_type = 'competitions' AND p.entity_id = c.id
-           WHERE 1=1"#
-    );
-
-    // Add athlete filter - photos directly linked to athlete
-    if let Some(aid) = athlete_id {
-        query.push_str(&format!(
-            " AND (p.entity_type = 'athletes' AND p.entity_id = {})",
-            aid
-        ));
-    }
-
-    // Add competition filter
-    if let Some(cid) = competition_id {
-        query.push_str(&format!(
-            " AND (p.entity_type = 'competitions' AND p.entity_id = {})",
-            cid
-        ));
-    }
-
-    // Add year filter
-    if let Some(y) = year {
-        query.push_str(&format!(
-            " AND strftime('%Y', p.created_at) = '{}'",
-            y
-        ));
-    }
-
-    query.push_str(" ORDER BY p.created_at DESC");
-
-    let rows = sqlx::query(&query)
-        .fetch_all(&pool)
-        .await
-        .map_err(|e| e.to_string())?;
+    // Use parameterized queries to prevent SQL injection
+    let rows = match (athlete_id, competition_id, year) {
+        (Some(aid), None, None) => {
+            sqlx::query(
+                r#"SELECT p.id, p.entity_type, p.entity_id, p.file_path, p.thumbnail_path,
+                          p.original_name, p.width, p.height, p.size_bytes, p.event_name, p.created_at,
+                          a.first_name || ' ' || a.last_name as athlete_name,
+                          c.name as competition_name
+                   FROM photos p
+                   LEFT JOIN athletes a ON p.entity_type = 'athletes' AND p.entity_id = a.id
+                   LEFT JOIN competitions c ON p.entity_type = 'competitions' AND p.entity_id = c.id
+                   WHERE (p.entity_type = 'athletes' AND p.entity_id = ?)
+                      OR (p.entity_type = 'competitions' AND p.entity_id IN
+                          (SELECT competition_id FROM competition_participants WHERE athlete_id = ?))
+                   ORDER BY p.created_at DESC"#
+            )
+            .bind(aid)
+            .bind(aid)
+            .fetch_all(&pool)
+            .await
+        }
+        (None, Some(cid), None) => {
+            sqlx::query(
+                r#"SELECT p.id, p.entity_type, p.entity_id, p.file_path, p.thumbnail_path,
+                          p.original_name, p.width, p.height, p.size_bytes, p.event_name, p.created_at,
+                          a.first_name || ' ' || a.last_name as athlete_name,
+                          c.name as competition_name
+                   FROM photos p
+                   LEFT JOIN athletes a ON p.entity_type = 'athletes' AND p.entity_id = a.id
+                   LEFT JOIN competitions c ON p.entity_type = 'competitions' AND p.entity_id = c.id
+                   WHERE p.entity_type = 'competitions' AND p.entity_id = ?
+                   ORDER BY p.created_at DESC"#
+            )
+            .bind(cid)
+            .fetch_all(&pool)
+            .await
+        }
+        (None, None, Some(y)) => {
+            sqlx::query(
+                r#"SELECT p.id, p.entity_type, p.entity_id, p.file_path, p.thumbnail_path,
+                          p.original_name, p.width, p.height, p.size_bytes, p.event_name, p.created_at,
+                          a.first_name || ' ' || a.last_name as athlete_name,
+                          c.name as competition_name
+                   FROM photos p
+                   LEFT JOIN athletes a ON p.entity_type = 'athletes' AND p.entity_id = a.id
+                   LEFT JOIN competitions c ON p.entity_type = 'competitions' AND p.entity_id = c.id
+                   WHERE CAST(strftime('%Y', p.created_at) AS INTEGER) = ?
+                   ORDER BY p.created_at DESC"#
+            )
+            .bind(y)
+            .fetch_all(&pool)
+            .await
+        }
+        (Some(aid), None, Some(y)) => {
+            sqlx::query(
+                r#"SELECT p.id, p.entity_type, p.entity_id, p.file_path, p.thumbnail_path,
+                          p.original_name, p.width, p.height, p.size_bytes, p.event_name, p.created_at,
+                          a.first_name || ' ' || a.last_name as athlete_name,
+                          c.name as competition_name
+                   FROM photos p
+                   LEFT JOIN athletes a ON p.entity_type = 'athletes' AND p.entity_id = a.id
+                   LEFT JOIN competitions c ON p.entity_type = 'competitions' AND p.entity_id = c.id
+                   WHERE ((p.entity_type = 'athletes' AND p.entity_id = ?)
+                      OR (p.entity_type = 'competitions' AND p.entity_id IN
+                          (SELECT competition_id FROM competition_participants WHERE athlete_id = ?)))
+                      AND CAST(strftime('%Y', p.created_at) AS INTEGER) = ?
+                   ORDER BY p.created_at DESC"#
+            )
+            .bind(aid)
+            .bind(aid)
+            .bind(y)
+            .fetch_all(&pool)
+            .await
+        }
+        (None, Some(cid), Some(y)) => {
+            sqlx::query(
+                r#"SELECT p.id, p.entity_type, p.entity_id, p.file_path, p.thumbnail_path,
+                          p.original_name, p.width, p.height, p.size_bytes, p.event_name, p.created_at,
+                          a.first_name || ' ' || a.last_name as athlete_name,
+                          c.name as competition_name
+                   FROM photos p
+                   LEFT JOIN athletes a ON p.entity_type = 'athletes' AND p.entity_id = a.id
+                   LEFT JOIN competitions c ON p.entity_type = 'competitions' AND p.entity_id = c.id
+                   WHERE p.entity_type = 'competitions' AND p.entity_id = ?
+                      AND CAST(strftime('%Y', p.created_at) AS INTEGER) = ?
+                   ORDER BY p.created_at DESC"#
+            )
+            .bind(cid)
+            .bind(y)
+            .fetch_all(&pool)
+            .await
+        }
+        _ => {
+            // No filters or unsupported combination - return all photos
+            sqlx::query(
+                r#"SELECT p.id, p.entity_type, p.entity_id, p.file_path, p.thumbnail_path,
+                          p.original_name, p.width, p.height, p.size_bytes, p.event_name, p.created_at,
+                          a.first_name || ' ' || a.last_name as athlete_name,
+                          c.name as competition_name
+                   FROM photos p
+                   LEFT JOIN athletes a ON p.entity_type = 'athletes' AND p.entity_id = a.id
+                   LEFT JOIN competitions c ON p.entity_type = 'competitions' AND p.entity_id = c.id
+                   ORDER BY p.created_at DESC"#
+            )
+            .fetch_all(&pool)
+            .await
+        }
+    }.map_err(|e| e.to_string())?;
 
     Ok(rows
         .iter()
@@ -364,6 +435,7 @@ pub async fn get_all_photos(
             width: row.get("width"),
             height: row.get("height"),
             size_bytes: row.get("size_bytes"),
+            event_name: row.get("event_name"),
             created_at: row.get("created_at"),
             athlete_name: row.get("athlete_name"),
             competition_name: row.get("competition_name"),

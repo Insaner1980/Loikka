@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { CheckCircle, XCircle, AlertCircle, X, Info } from "lucide-react";
+import { TOAST } from "../../lib/constants";
 
 export type ToastType = "success" | "error" | "warning" | "info";
 
@@ -18,21 +19,22 @@ const icons = {
   info: Info,
 };
 
-const styles = {
-  success: "bg-green-500/10 border-green-500/30 text-green-600 dark:text-green-400",
-  error: "bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400",
-  warning: "bg-yellow-500/10 border-yellow-500/30 text-yellow-600 dark:text-yellow-400",
-  info: "bg-blue-500/10 border-blue-500/30 text-blue-600 dark:text-blue-400",
+// Neutral dark background for all toasts, colored icon only
+const iconColors = {
+  success: "text-success",
+  error: "text-error",
+  warning: "text-warning",
+  info: "text-[var(--accent)]",
 };
 
-function Toast({ id, type, message, duration = 4000, onClose }: ToastProps) {
+function Toast({ id, type, message, duration = TOAST.DURATION_MS, onClose }: ToastProps) {
   const [isExiting, setIsExiting] = useState(false);
   const Icon = icons[type];
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsExiting(true);
-      setTimeout(() => onClose(id), 200);
+      setTimeout(() => onClose(id), TOAST.EXIT_ANIMATION_MS);
     }, duration);
 
     return () => clearTimeout(timer);
@@ -40,20 +42,20 @@ function Toast({ id, type, message, duration = 4000, onClose }: ToastProps) {
 
   const handleClose = () => {
     setIsExiting(true);
-    setTimeout(() => onClose(id), 200);
+    setTimeout(() => onClose(id), TOAST.EXIT_ANIMATION_MS);
   };
 
   return (
     <div
-      className={`flex items-center gap-3 px-4 py-3 rounded-xl border shadow-lg backdrop-blur-sm transition-all duration-200 ${
-        styles[type]
-      } ${isExiting ? "opacity-0 translate-x-4" : "opacity-100 translate-x-0"}`}
+      className={`flex items-center gap-3 px-4 py-3 rounded-xl bg-elevated shadow-lg backdrop-blur-sm transition-all duration-200 ${
+        isExiting ? "opacity-0 translate-x-4" : "opacity-100 translate-x-0"
+      }`}
     >
-      <Icon size={20} className="shrink-0" />
-      <span className="flex-1 text-sm font-medium">{message}</span>
+      <Icon size={20} className={`shrink-0 ${iconColors[type]}`} />
+      <span className="flex-1 text-sm font-medium text-foreground">{message}</span>
       <button
         onClick={handleClose}
-        className="shrink-0 p-1 rounded-lg hover:bg-black/10 dark:hover:bg-white/10 transition-colors"
+        className="shrink-0 p-1 rounded-lg hover:bg-border-hover transition-colors"
       >
         <X size={16} />
       </button>

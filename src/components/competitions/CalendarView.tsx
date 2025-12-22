@@ -77,12 +77,12 @@ export function CalendarView({
     monthYearLabel.charAt(0).toUpperCase() + monthYearLabel.slice(1);
 
   return (
-    <div className="bg-[#141414] rounded-lg p-4">
+    <div className="bg-card rounded-lg p-4">
       {/* Month navigation header */}
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={goToPreviousMonth}
-          className="p-1.5 rounded-md text-[#555555] hover:text-foreground hover:bg-white/5 transition-colors duration-150"
+          className="p-1.5 rounded-md text-tertiary hover:text-foreground hover:bg-muted transition-colors duration-150 cursor-pointer"
           aria-label="Edellinen kuukausi"
         >
           <ChevronLeft size={18} />
@@ -90,7 +90,7 @@ export function CalendarView({
         <h2 className="text-sm font-medium text-foreground">{capitalizedLabel}</h2>
         <button
           onClick={goToNextMonth}
-          className="p-1.5 rounded-md text-[#555555] hover:text-foreground hover:bg-white/5 transition-colors duration-150"
+          className="p-1.5 rounded-md text-tertiary hover:text-foreground hover:bg-muted transition-colors duration-150 cursor-pointer"
           aria-label="Seuraava kuukausi"
         >
           <ChevronRight size={18} />
@@ -102,7 +102,7 @@ export function CalendarView({
         {weekDays.map((day) => (
           <div
             key={day}
-            className="text-center text-[11px] font-medium text-[#555555] py-2"
+            className="text-center text-caption font-medium text-tertiary py-2"
           >
             {day}
           </div>
@@ -124,10 +124,10 @@ export function CalendarView({
               onClick={() => onDayClick(day)}
               className={`
                 relative aspect-square flex flex-col items-center justify-center
-                rounded-md text-[13px] transition-colors duration-150
-                ${isCurrentMonth ? "text-foreground" : "text-[#444444]"}
-                ${isSelected ? "bg-white/10 text-white font-medium" : "hover:bg-white/5"}
-                ${isTodayDate && !isSelected ? "ring-1 ring-white/20 ring-inset" : ""}
+                rounded-md text-body transition-colors duration-150 cursor-pointer
+                ${isCurrentMonth ? "text-foreground" : "text-[var(--text-initials)]"}
+                ${isSelected ? "bg-muted text-foreground font-medium" : "hover:bg-muted"}
+                ${isTodayDate && !isSelected ? "ring-1 ring-[var(--accent)] ring-inset" : ""}
               `}
             >
               <span>{format(day, "d")}</span>
@@ -135,7 +135,7 @@ export function CalendarView({
               {hasCompetition && (
                 <span
                   className={`absolute bottom-1.5 w-1.5 h-1.5 rounded-full ${
-                    isSelected ? "bg-white" : "bg-white/60"
+                    isSelected ? "bg-[var(--accent)]" : "bg-[var(--accent)]/60"
                   }`}
                 />
               )}

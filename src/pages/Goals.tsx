@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Plus, Target, ChevronDown, ChevronUp, Check } from "lucide-react";
 import { useGoalStore } from "../stores/useGoalStore";
 import { useAthleteStore } from "../stores/useAthleteStore";
@@ -6,10 +6,23 @@ import { useResultStore } from "../stores/useResultStore";
 import { getDisciplineById } from "../data/disciplines";
 import { GoalCard } from "../components/goals/GoalCard";
 import { GoalForm } from "../components/goals/GoalForm";
-import { Dialog } from "../components/ui/Dialog";
-import type { NewGoal } from "../types";
+import { GoalCelebrationModal } from "../components/goals/GoalCelebrationModal";
+import { Dialog, Confetti } from "../components/ui";
+import type { Goal, NewGoal, Athlete, Discipline } from "../types";
+
+interface CelebrationGoalData {
+  goal: Goal;
+  currentBest: number | null;
+  progress: number;
+  remaining: number | null;
+  athlete?: Athlete;
+  discipline?: Discipline;
+}
 
 type StatusFilter = "active" | "achieved" | "all";
+
+// Key for storing celebrated goal IDs in localStorage
+const CELEBRATED_GOALS_KEY = "loikka-celebrated-goals";
 
 export function Goals() {
   const {
@@ -27,12 +40,74 @@ export function Goals() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
   const [showAchieved, setShowAchieved] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showCelebrationModal, setShowCelebrationModal] = useState(false);
+  const [celebrationGoals, setCelebrationGoals] = useState<CelebrationGoalData[]>([]);
 
   useEffect(() => {
     fetchGoals();
     fetchAthletes();
     fetchResults();
   }, [fetchGoals, fetchAthletes, fetchResults]);
+
+  // Get celebrated goal IDs from localStorage
+  const getCelebratedGoals = useCallback((): Set<number> => {
+    try {
+      const stored = localStorage.getItem(CELEBRATED_GOALS_KEY);
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  }, []);
+
+  // Save celebrated goal ID to localStorage
+  const markGoalAsCelebrated = useCallback((goalId: number) => {
+    const celebrated = getCelebratedGoals();
+    celebrated.add(goalId);
+    localStorage.setItem(CELEBRATED_GOALS_KEY, JSON.stringify([...celebrated]));
+  }, [getCelebratedGoals]);
+
+  // Check for newly completed goals that haven't been celebrated yet
+  useEffect(() => {
+    if (goals.length === 0 || athletes.length === 0) return;
+
+    const celebrated = getCelebratedGoals();
+    const athleteMapLocal = new Map(athletes.map((a) => [a.athlete.id, a.athlete]));
+
+    // Find goals that are completed (status = achieved OR progress >= 100) but not yet celebrated
+    const newlyCompleted = goals.filter((goal) => {
+      if (celebrated.has(goal.id)) return false;
+
+      // Check if goal is achieved by status
+      if (goal.status === "achieved") return true;
+
+      // Check if goal is achieved by progress (100%)
+      const goalWithProgress = getGoalWithProgress(goal);
+      return goalWithProgress.progress >= 100;
+    });
+
+    if (newlyCompleted.length > 0) {
+      // Prepare data for celebration modal
+      const celebrationData: CelebrationGoalData[] = newlyCompleted.map((goal) => {
+        const goalWithProgress = getGoalWithProgress(goal);
+        return {
+          goal,
+          currentBest: goalWithProgress.currentBest,
+          progress: goalWithProgress.progress,
+          remaining: goalWithProgress.remaining,
+          athlete: athleteMapLocal.get(goal.athleteId),
+          discipline: getDisciplineById(goal.disciplineId),
+        };
+      });
+
+      setCelebrationGoals(celebrationData);
+      setShowCelebrationModal(true);
+      setShowConfetti(true);
+
+      // Mark all newly completed goals as celebrated
+      newlyCompleted.forEach((goal) => markGoalAsCelebrated(goal.id));
+    }
+  }, [goals, athletes, getCelebratedGoals, markGoalAsCelebrated, getGoalWithProgress]);
 
   // Map athlete ID to athlete data
   const athleteMap = useMemo(() => {
@@ -84,7 +159,7 @@ export function Goals() {
     <div className="p-6 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 pb-5 border-b border-border-subtle">
-        <h1 className="text-base font-medium text-foreground">Tavoitteet</h1>
+        <h1 className="text-title font-medium text-foreground">Tavoitteet</h1>
         <button
           onClick={() => setIsFormOpen(true)}
           className="btn-primary btn-press"
@@ -98,7 +173,7 @@ export function Goals() {
       <div className="flex flex-wrap items-center gap-3 mb-6">
         {/* Athlete filter */}
         <select
-          className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
+          className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
           value={athleteFilter ?? ""}
           onChange={(e) =>
             setAthleteFilter(e.target.value ? Number(e.target.value) : null)
@@ -114,7 +189,7 @@ export function Goals() {
 
         {/* Status filter */}
         <select
-          className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
+          className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
         >
@@ -130,10 +205,10 @@ export function Goals() {
         {(statusFilter === "active" || statusFilter === "all") && (
           <div className="mb-8">
             {displayGoals.active.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-48 text-[#666666]">
-                <Target size={48} className="mb-4 text-[#444444]" />
+              <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
+                <Target size={48} className="mb-4 text-tertiary" />
                 <p className="text-sm font-medium">Ei aktiivisia tavoitteita</p>
-                <p className="text-[13px] text-[#555555] mt-1">
+                <p className="text-body text-tertiary mt-1">
                   {athleteFilter !== null
                     ? "Ei tavoitteita tälle urheilijalle"
                     : "Lisää ensimmäinen tavoite painamalla yllä olevaa nappia"}
@@ -165,7 +240,7 @@ export function Goals() {
               {statusFilter === "all" && (
                 <button
                   onClick={() => setShowAchieved(!showAchieved)}
-                  className="flex items-center gap-2 mb-4 text-sm font-medium text-text-secondary hover:text-foreground transition-colors duration-150"
+                  className="flex items-center gap-2 mb-4 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-150 cursor-pointer"
                 >
                   {showAchieved ? (
                     <ChevronDown size={16} />
@@ -173,7 +248,7 @@ export function Goals() {
                     <ChevronUp size={16} />
                   )}
                   <span>Saavutetut tavoitteet</span>
-                  <span className="text-[13px] font-normal text-text-tertiary">
+                  <span className="text-body font-normal text-tertiary">
                     ({displayGoals.achieved.length})
                   </span>
                 </button>
@@ -189,8 +264,8 @@ export function Goals() {
                   )}
 
                   {displayGoals.achieved.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-32 text-[#666666] bg-[#141414] rounded-lg">
-                      <p className="text-[13px]">
+                    <div className="flex flex-col items-center justify-center h-32 text-muted-foreground bg-card rounded-lg">
+                      <p className="text-body">
                         Ei vielä saavutettuja tavoitteita
                       </p>
                     </div>
@@ -218,12 +293,12 @@ export function Goals() {
 
         {/* Empty state for achieved filter */}
         {statusFilter === "achieved" && displayGoals.achieved.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-48 text-[#666666]">
-            <Check size={48} className="mb-4 text-[#444444]" />
+          <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
+            <Check size={48} className="mb-4 text-tertiary" />
             <p className="text-sm font-medium">
               Ei saavutettuja tavoitteita
             </p>
-            <p className="text-[13px] text-[#555555] mt-1">
+            <p className="text-body text-tertiary mt-1">
               Saavutetut tavoitteet näkyvät täällä
             </p>
           </div>
@@ -241,6 +316,19 @@ export function Goals() {
           onCancel={() => setIsFormOpen(false)}
         />
       </Dialog>
+
+      {/* Celebration modal for achieved goals */}
+      <GoalCelebrationModal
+        open={showCelebrationModal}
+        onClose={() => setShowCelebrationModal(false)}
+        achievedGoals={celebrationGoals}
+      />
+
+      {/* Confetti celebration for achieved goals */}
+      <Confetti
+        active={showConfetti}
+        onComplete={() => setShowConfetti(false)}
+      />
     </div>
   );
 }

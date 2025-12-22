@@ -1,14 +1,15 @@
 import { X } from "lucide-react";
 import type { Athlete, ResultType } from "../../types";
 import { disciplines, categoryLabels, categoryOrder } from "../../data/disciplines";
+import { getAgeCategory } from "../../lib/formatters";
+import { YEAR_RANGE } from "../../lib/constants";
 
 export interface ResultFiltersState {
   athleteId: number | null;
   disciplineId: number | null;
   type: ResultType | null;
-  timeRange: "all" | "thisYear" | "lastYear" | "custom";
-  startDate?: string;
-  endDate?: string;
+  year: number | null; // null = all years
+  ageCategory: string | null; // null = all categories
 }
 
 interface ResultFiltersProps {
@@ -26,22 +27,36 @@ export function ResultFilters({
     filters.athleteId !== null ||
     filters.disciplineId !== null ||
     filters.type !== null ||
-    filters.timeRange !== "all";
+    filters.year !== null ||
+    filters.ageCategory !== null;
 
   const clearFilters = () => {
     onFilterChange({
       athleteId: null,
       disciplineId: null,
       type: null,
-      timeRange: "all",
+      year: null,
+      ageCategory: null,
     });
   };
+
+  // Get unique age categories from athletes
+  const ageCategories = [...new Set(athletes.map((a) => getAgeCategory(a.birthYear)))].sort();
+
+  // Generate year options (fixed range)
+  const currentYear = new Date().getFullYear();
+  const startYear = YEAR_RANGE.START_YEAR;
+  const endYear = currentYear + YEAR_RANGE.YEARS_AHEAD;
+  const yearOptions: number[] = [];
+  for (let y = endYear; y >= startYear; y--) {
+    yearOptions.push(y);
+  }
 
   return (
     <div className="flex flex-wrap items-center gap-3">
       {/* Athlete filter */}
       <select
-        className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
+        className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
         value={filters.athleteId ?? ""}
         onChange={(e) =>
           onFilterChange({
@@ -60,7 +75,7 @@ export function ResultFilters({
 
       {/* Discipline filter */}
       <select
-        className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
+        className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
         value={filters.disciplineId ?? ""}
         onChange={(e) =>
           onFilterChange({
@@ -85,7 +100,7 @@ export function ResultFilters({
 
       {/* Type filter */}
       <select
-        className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
+        className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
         value={filters.type ?? ""}
         onChange={(e) =>
           onFilterChange({
@@ -99,59 +114,51 @@ export function ResultFilters({
         <option value="training">Harjoitus</option>
       </select>
 
-      {/* Time range filter */}
+      {/* Year filter */}
       <select
-        className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
-        value={filters.timeRange}
+        className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
+        value={filters.year ?? ""}
         onChange={(e) =>
           onFilterChange({
             ...filters,
-            timeRange: e.target.value as ResultFiltersState["timeRange"],
-            startDate: undefined,
-            endDate: undefined,
+            year: e.target.value ? Number(e.target.value) : null,
           })
         }
       >
-        <option value="all">Kaikki ajat</option>
-        <option value="thisYear">Tämä kausi</option>
-        <option value="lastYear">Viime kausi</option>
-        <option value="custom">Mukautettu</option>
+        <option value="">Kaikki vuodet</option>
+        {yearOptions.map((year) => (
+          <option key={year} value={year}>
+            {year}
+          </option>
+        ))}
       </select>
 
-      {/* Custom date range inputs */}
-      {filters.timeRange === "custom" && (
-        <>
-          <input
-            type="date"
-            className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
-            value={filters.startDate ?? ""}
-            onChange={(e) =>
-              onFilterChange({
-                ...filters,
-                startDate: e.target.value || undefined,
-              })
-            }
-          />
-          <span className="text-[#555555]">–</span>
-          <input
-            type="date"
-            className="bg-[#141414] rounded-md px-3 py-2 text-[13px] input-focus"
-            value={filters.endDate ?? ""}
-            onChange={(e) =>
-              onFilterChange({
-                ...filters,
-                endDate: e.target.value || undefined,
-              })
-            }
-          />
-        </>
+      {/* Age category filter */}
+      {ageCategories.length > 0 && (
+        <select
+          className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
+          value={filters.ageCategory ?? ""}
+          onChange={(e) =>
+            onFilterChange({
+              ...filters,
+              ageCategory: e.target.value || null,
+            })
+          }
+        >
+          <option value="">Kaikki ikäsarjat</option>
+          {ageCategories.map((category) => (
+            <option key={category} value={category}>
+              {category}
+            </option>
+          ))}
+        </select>
       )}
 
       {/* Clear filters button */}
       {hasActiveFilters && (
         <button
           onClick={clearFilters}
-          className="flex items-center gap-1 px-3 py-2 text-[13px] text-[#555555] hover:text-foreground transition-colors duration-150"
+          className="flex items-center gap-1 px-3 py-2 text-body text-tertiary hover:text-foreground transition-colors duration-150 cursor-pointer"
         >
           <X size={14} />
           Tyhjennä

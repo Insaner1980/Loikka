@@ -19,22 +19,22 @@ export function AthleteStats({
       <StatCard
         icon={<TrendingUp size={20} />}
         value={resultsCount}
-        label="Tuloksia"
+        label={resultsCount === 1 ? "Tulos" : "Tulosta"}
       />
       <StatCard
         icon={<Trophy size={20} />}
         value={personalBestsCount}
-        label="Ennätyksiä"
+        label={personalBestsCount === 1 ? "Ennätys" : "Ennätystä"}
       />
       <StatCard
         icon={<Medal size={20} />}
         value={medalsCount}
-        label="Mitaleita"
+        label={medalsCount === 1 ? "Mitali" : "Mitalia"}
       />
       <StatCard
         icon={<Target size={20} />}
         value={`${goalsProgress.achieved}/${goalsProgress.total}`}
-        label="Tavoitteita"
+        label={goalsProgress.total === 1 ? "Tavoite" : "Tavoitetta"}
       />
     </div>
   );

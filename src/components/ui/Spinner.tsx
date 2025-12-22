@@ -9,7 +9,7 @@ export function Spinner({ size = 20, className = "" }: SpinnerProps) {
   return (
     <Loader2
       size={size}
-      className={`animate-spin text-[#555555] ${className}`}
+      className={`animate-spin text-tertiary ${className}`}
     />
   );
 }
@@ -22,7 +22,7 @@ export function PageLoader({ message = "Ladataan..." }: PageLoaderProps) {
   return (
     <div className="flex flex-col items-center justify-center py-16">
       <Spinner size={24} />
-      <p className="mt-4 text-[13px] text-[#666666]">{message}</p>
+      <p className="mt-4 text-body text-muted-foreground">{message}</p>
     </div>
   );
 }

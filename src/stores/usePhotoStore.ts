@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc } from "@tauri-apps/api/core";
+import { getErrorMessage } from "../lib";
 
 export interface PhotoWithDetails {
   id: number;
@@ -13,6 +14,7 @@ export interface PhotoWithDetails {
   width: number | null;
   height: number | null;
   sizeBytes: number;
+  eventName: string | null;
   createdAt: string;
   athleteName: string | null;
   competitionName: string | null;
@@ -35,7 +37,7 @@ interface PhotoStore {
   fetchPhotos: (filters?: PhotoFilters) => Promise<void>;
   fetchYears: () => Promise<void>;
   setFilters: (filters: PhotoFilters) => void;
-  addPhoto: (entityType: string, entityId: number) => Promise<PhotoWithDetails | null>;
+  addPhoto: (entityType: string, entityId: number, eventName?: string) => Promise<PhotoWithDetails | null>;
   deletePhoto: (id: number) => Promise<boolean>;
 
   // Helpers
@@ -62,7 +64,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
       });
       set({ photos, loading: false, filters: effectiveFilters });
     } catch (error) {
-      set({ error: (error as Error).message || String(error), loading: false });
+      set({ error: getErrorMessage(error), loading: false });
     }
   },
 
@@ -80,7 +82,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
     get().fetchPhotos(filters);
   },
 
-  addPhoto: async (entityType: string, entityId: number): Promise<PhotoWithDetails | null> => {
+  addPhoto: async (entityType: string, entityId: number, eventName?: string): Promise<PhotoWithDetails | null> => {
     try {
       // Open file picker
       const selected = await open({
@@ -104,14 +106,20 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
         sourcePath: selected,
         entityType,
         entityId,
+        eventName: eventName || null,
       });
 
       // Refetch photos to get the updated list with details
-      await get().fetchPhotos();
+      const photos = await invoke<PhotoWithDetails[]>("get_all_photos", {
+        athleteId: get().filters.athleteId || null,
+        competitionId: get().filters.competitionId || null,
+        year: get().filters.year || null,
+      });
+      set({ photos, loading: false });
 
       return photo;
     } catch (error) {
-      set({ error: (error as Error).message || String(error), loading: false });
+      set({ error: getErrorMessage(error), loading: false });
       return null;
     }
   },
@@ -128,7 +136,7 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
       }
       return success;
     } catch (error) {
-      set({ error: (error as Error).message || String(error), loading: false });
+      set({ error: getErrorMessage(error), loading: false });
       return false;
     }
   },

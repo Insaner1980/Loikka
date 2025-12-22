@@ -4,7 +4,7 @@ Tämä tiedosto sisältää ohjeistuksen Claude Code -avustajalle Loikka-projekt
 
 ## Projektin yleiskuvaus
 
-**Loikka** on Tauri v2 -pohjainen työpöytäsovellus nuorten yleisurheilutulosten seurantaan. Sovellus on suunnattu valmentajille ja vanhemmille, jotka haluavat seurata nuorten urheilijoiden kehitystä.
+**Loikka** on Tauri v2 -pohjainen työpöytäsovellus nuorten yleisurheilutulosten seurantaan. Sovellus on suunnattu kehittäjän sisarta varten, joka haluaa seurata tytärtensä kehitystä.
 
 ### Teknologiapino
 
@@ -24,6 +24,7 @@ Tämä tiedosto sisältää ohjeistuksen Claude Code -avustajalle Loikka-projekt
 - `tauri-plugin-fs` - Tiedostojärjestelmä
 - `tauri-plugin-notification` - Ilmoitukset (kilpailumuistutukset)
 - `tauri-plugin-opener` - Linkkien avaus
+- `tauri-plugin-sql` - SQLite-tietokanta
 - `tauri-plugin-mcp-bridge` - MCP-integraatio (vain dev-buildissa)
 
 ## Kielivalinnat
@@ -36,7 +37,7 @@ Tämä tiedosto sisältää ohjeistuksen Claude Code -avustajalle Loikka-projekt
 
 | Englanti | Suomi |
 |----------|-------|
-| Dashboard | Etusivu |
+| Dashboard | Lähtöviiva |
 | Athletes | Urheilijat |
 | Results | Tulokset |
 | Calendar | Kalenteri |
@@ -44,7 +45,7 @@ Tämä tiedosto sisältää ohjeistuksen Claude Code -avustajalle Loikka-projekt
 | Goals | Tavoitteet |
 | Photos | Kuvat |
 | Settings | Asetukset |
-| Personal Best (PB) | SE (Ennätys) |
+| Personal Best (PB) | OE (Oma ennätys) |
 | Season Best (SB) | KE (Kauden ennätys) |
 | Save | Tallenna |
 | Cancel | Peruuta |
@@ -84,8 +85,22 @@ C:\dev\Loikka\
 │   │   └── disciplines.ts  # Lajitiedot
 │   ├── hooks/              # Custom React hooks
 │   ├── lib/
-│   │   └── formatters.ts   # Muotoilufunktiot (aika, matka, päivämäärä, asset URL)
+│   │   ├── constants.ts    # Sovelluksen vakiot
+│   │   ├── database.ts     # Tietokantaoperaatiot
+│   │   ├── exportImport.ts # Vienti/tuonti
+│   │   ├── formatters.ts   # Muotoilufunktiot
+│   │   ├── googleDrive.ts  # Google Drive -integraatio
+│   │   └── index.ts        # Exportit
 │   ├── pages/              # Sivukomponentit
+│   │   ├── AthleteDetail.tsx # Urheilijan yksityiskohtasivu
+│   │   ├── Athletes.tsx
+│   │   ├── Calendar.tsx
+│   │   ├── Dashboard.tsx
+│   │   ├── Goals.tsx
+│   │   ├── Photos.tsx
+│   │   ├── Results.tsx
+│   │   ├── Settings.tsx
+│   │   └── Statistics.tsx
 │   ├── stores/             # Zustand-storet
 │   ├── types/              # TypeScript-tyypit
 │   ├── App.tsx             # Reititys
@@ -93,7 +108,14 @@ C:\dev\Loikka\
 │   └── main.tsx
 ├── src-tauri/
 │   ├── src/
-│   │   ├── commands/       # Tauri-komennot (athletes, results, photos, ym.)
+│   │   ├── commands/       # Tauri-komennot
+│   │   │   ├── athletes.rs
+│   │   │   ├── competitions.rs
+│   │   │   ├── goals.rs
+│   │   │   ├── google_drive.rs
+│   │   │   ├── photos.rs
+│   │   │   ├── results.rs
+│   │   │   └── sync.rs
 │   │   ├── db/             # Tietokantaskeema ja seed
 │   │   │   ├── schema.sql
 │   │   │   └── seed_disciplines.sql
@@ -104,12 +126,62 @@ C:\dev\Loikka\
 │   │   └── default.json    # Tauri-oikeudet
 │   ├── Cargo.toml
 │   └── tauri.conf.json
+├── UI_SPEC.md              # Käyttöliittymän spesifikaatio
+├── CLAUDE.md               # Tämä tiedosto
 ├── package.json
 ├── tsconfig.json
 └── vite.config.ts
 ```
 
-## Väripaletti (Premium Dark Theme)
+## Vakiot (constants.ts)
+
+Kaikki tärkeät numeeriset arvot on keskitetty `src/lib/constants.ts` -tiedostoon:
+
+```typescript
+// Dashboard-rajoitukset
+export const DASHBOARD = {
+  MAX_COMPETITIONS: 5,
+  MAX_RESULTS: 5,
+  MAX_ATHLETES: 2,
+} as const;
+
+// Kilpailun kiireellisyys (värikoodaus)
+export const COMPETITION_URGENCY = {
+  IMMINENT: 3,   // Vihreä - 0-3 päivää
+  SOON: 7,       // Keltainen - 4-7 päivää
+  UPCOMING: 14,  // Oranssi - 8-14 päivää
+} as const;
+
+// Sivutus
+export const PAGINATION = {
+  DEFAULT_PAGE_SIZE: 20,
+  RESULTS_PER_PAGE: 10,
+} as const;
+
+// Vuosivalitsin
+export const YEAR_RANGE = {
+  START_YEAR: 2021,
+  YEARS_AHEAD: 1,
+} as const;
+
+// Urheilijan syntymävuosi
+export const ATHLETE_BIRTH_YEAR = {
+  MIN: 2005,
+  MAX: 2022,
+} as const;
+
+// Toast-ilmoitukset
+export const TOAST = {
+  DURATION_MS: 4000,
+  EXIT_ANIMATION_MS: 200,
+} as const;
+```
+
+## Väripaletti
+
+Sovellus tukee sekä tummaa (oletus) että vaaleaa teemaa. Kaikki värit määritellään CSS-muuttujina `index.css`:ssä.
+
+### Dark Theme (oletus)
 
 ```css
 /* Taustat */
@@ -127,21 +199,65 @@ C:\dev\Loikka\
 --text-primary: #E8E8E8;      /* Pääasiallinen teksti */
 --text-secondary: #888888;    /* Toissijainen teksti */
 --text-muted: #555555;        /* Himmennetty teksti */
+--text-placeholder: #666666;  /* Placeholder-teksti */
+--text-initials: #444444;     /* Nimikirjaimet avatarissa */
 
-/* Aksentti - neutraali */
---accent: #7C7C7C;
---accent-hover: #999999;
+/* Aksentti - sininen */
+--accent: #60A5FA;            /* Pääkorostusväri */
+--accent-hover: #93C5FD;      /* Hover-tila */
+--accent-muted: rgba(96, 165, 250, 0.15);
+--btn-primary-text: #0A0A0A;  /* Primary-napin teksti */
 
 /* Tilat */
---color-success: #4ADE80;     /* Vihreä - onnistuminen, SE */
---color-warning: #FACC15;     /* Keltainen - varoitus, KE */
---color-error: #EF4444;       /* Punainen - virhe */
+--status-success: #10B981;    /* Vihreä - onnistuminen */
+--status-warning: #FACC15;    /* Keltainen - varoitus */
+--status-orange: #F59E0B;     /* Oranssi - 8-14pv kilpailuun */
+--status-error: #EF4444;      /* Punainen - virhe */
 
 /* Mitalit */
 --color-gold: #FFD700;
 --color-silver: #C0C0C0;
 --color-bronze: #CD7F32;
+
+/* Overlay */
+--overlay-bg: rgba(0, 0, 0, 0.8);
+--overlay-gradient: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
 ```
+
+### Light Theme
+
+```css
+/* Taustat */
+--bg-base: #FFFFFF;
+--bg-surface: #F9FAFB;
+--bg-elevated: #F3F4F6;
+--bg-hover: #E5E7EB;
+
+/* Reunat */
+--border-subtle: rgba(0, 0, 0, 0.04);
+--border-default: rgba(0, 0, 0, 0.08);
+--border-hover: rgba(0, 0, 0, 0.15);
+
+/* Teksti */
+--text-primary: #111827;
+--text-secondary: #6B7280;
+--text-muted: #9CA3AF;
+
+/* Aksentti - tumma sininen */
+--accent: #2563EB;
+--accent-hover: #1D4ED8;
+--btn-primary-text: #FFFFFF;
+```
+
+### Teeman vaihtaminen
+
+```typescript
+// useTheme hook
+const { theme, setTheme } = useTheme();
+// theme: 'light' | 'dark' (oletus: 'dark')
+```
+
+Teema tallennetaan `localStorage`-avaimeen `loikka-theme`.
 
 ## Tietokantarakenne
 
@@ -257,16 +373,69 @@ export const useMyStore = create<MyStore>((set, get) => ({
 | Hook | Kuvaus |
 |------|--------|
 | `useReminders` | Kilpailumuistutukset ja notifikaatiot |
-| `useKeyboardShortcuts` | Pikanäppäimet (Ctrl+N lisää uusi) |
+| `useKeyboardShortcuts` | Pikanäppäimet (Ctrl+N lisää uusi, 1-8 navigointi) |
+| `useCalendarKeyboard` | Kalenterin näppäinohjaus (←/→ kuukaudet, T tänään) |
 | `usePhotos` | Kuvien hallinta entity-pohjaisesti |
-| `useTheme` | Teeman hallinta |
+| `usePhotoCount` | Kuvien lukumäärä entitylle |
+| `useTheme` | Teeman hallinta (dark/light) |
+
+### Muotoilufunktiot (formatters.ts)
+
+| Funktio | Kuvaus |
+|---------|--------|
+| `formatTime(seconds)` | Sekunnit → "12.34" / "1:23.45" / "1:02:34.56" |
+| `formatDistance(meters)` | Metrit → "4.56 m" |
+| `formatDate(dateString)` | ISO-päivämäärä → "21.12.2025" (fi-FI) |
+| `toISODate(date)` | Date → "2025-12-21" |
+| `getTodayISO()` | Tämän päivän ISO-muoto |
+| `toAssetUrl(filePath)` | Tiedostopolku → Tauri asset URL |
+| `getAgeCategory(birthYear)` | Syntymävuosi → "T7"/"T9"/.../N" |
+| `formatWind(wind, birthYear?, year?)` | Tuuli → "+1.8" / "+2.3w" |
+| `formatResultWithWind(value, unit, wind?, ...)` | Tulos tuulen kanssa |
+| `getStatusLabel(status)` | Status → "Hyväksytty" / "NM - Ei tulosta" |
+| `getInitials(firstName, lastName)` | Nimet → "EK" |
+| `getDaysUntil(dateStr)` | Päivämäärä → päivien lukumäärä tähän päivään |
 
 ### Tyylit (Tailwind v4)
 
-- Käytä Tailwind-luokkia inline
-- Teemavärit CSS-muuttujina (esim. `bg-[#141414]`, `text-[#888888]`)
-- Komponenttiluokat `index.css`:ssä (`btn-primary`, `btn-secondary`, `card-hover`, ym.)
-- Animaatiot: `animate-fade-in`, `animate-slide-up`, `animate-scale-in`
+**TÄRKEÄÄ:** Älä käytä kovakoodattuja väri- tai fonttikoko-arvoja komponenteissa!
+
+❌ Väärin:
+```tsx
+<div className="bg-[#141414] text-[#888888] text-[13px]">
+```
+
+✅ Oikein:
+```tsx
+<div className="bg-card text-muted-foreground text-body">
+```
+
+**Poikkeukset** (kovakoodaus sallittu):
+1. Kuvien päällä olevat overlayt: `bg-black/50 text-white`
+2. CSS-muuttujat opacityllä: `bg-[var(--accent)]/10`
+
+**Typografia-luokat:**
+```tsx
+text-caption    // 11px - badget, kuvatekstit
+text-body       // 13px - body-teksti, labelit, napit
+text-default    // 14px - standardi teksti
+text-title      // 16px - sivuotsikot, korttiotsikot
+text-heading    // 20px - hero-otsikot
+text-stat       // 24px - tilastonumerot
+text-hero-stat  // 28px - hero-tilastonumerot
+```
+
+**Korttien hover-malli:**
+```tsx
+// Kaikki kortit käyttävät samaa mallia
+className="bg-card border border-border-subtle hover:border-border-hover transition-colors duration-150"
+```
+
+**Lista/taulukkorivit:**
+```tsx
+// Rivit käyttävät taustavärin vaihtoa
+className="hover:bg-card-hover transition-colors duration-150"
+```
 
 ### Tiedostopolut
 
@@ -280,12 +449,15 @@ export const useMyStore = create<MyStore>((set, get) => ({
 |----------|--------|
 | `src/types/index.ts` | Kaikki TypeScript-tyypit |
 | `src/data/disciplines.ts` | Lajitiedot ja kategorialabelit |
-| `src/lib/formatters.ts` | Aika, matka, päivämäärä, asset URL -muotoilu |
+| `src/lib/constants.ts` | Sovelluksen vakiot |
+| `src/lib/formatters.ts` | Aika, matka, päivämäärä, asset URL, nimikirjaimet, päivälaskuri |
+| `src/lib/googleDrive.ts` | Google Drive -autentikointi ja API |
 | `src/index.css` | Tailwind v4 -konfiguraatio ja teemat |
 | `src-tauri/src/db/schema.sql` | Tietokantaskeema |
 | `src-tauri/src/db/seed_disciplines.sql` | Lajien seed-data |
 | `src-tauri/src/commands/*.rs` | Tauri-komennot |
 | `src-tauri/capabilities/default.json` | Tauri-oikeudet ja -rajoitukset |
+| `UI_SPEC.md` | Käyttöliittymän spesifikaatio |
 
 ## Toteutetut ominaisuudet
 
@@ -299,11 +471,13 @@ export const useMyStore = create<MyStore>((set, get) => ({
 - [x] Profiilikuvat urheilijoille
 - [x] Tilastokaaviot (Recharts)
 - [x] Oma otsikkopalkki (decorations: false)
-- [x] Tumma teema (Linear-tyylinen)
+- [x] Tumma teema
+- [x] Vaalea teema
+- [x] Tietojen vienti/tuonti (JSON)
 
 ## Keskeneräiset ominaisuudet
 
-1. **Google Drive -synkronointi:** Tietokanta paikallisesti, pilvivarmuuskopiointi TODO
+1. **Google Drive -synkronointi:** UI valmis, backend (OAuth2, tiedostosynkronointi) keskeneräinen
 2. **Kehityskaaviot:** Tilastot-sivu osittain toteutettu
 3. **Testaus:** Ei testejä vielä (Vitest + Playwright suositus)
 
@@ -316,6 +490,8 @@ Migraatiot ajetaan automaattisesti sovelluksen käynnistyksessä (`database.rs`)
 | v1 | Alkuperäinen skeema (schema.sql) |
 | v2 | Lajien seed-data (seed_disciplines.sql) |
 | v3 | Photos-taulun uudelleenluonti (entity-pohjainen) |
+| v4 | Lisää `level`-sarake competitions-tauluun |
+| v5 | Lisää `competition_level`-sarake results-tauluun |
 
 ## Muuta
 
@@ -323,3 +499,4 @@ Migraatiot ajetaan automaattisesti sovelluksen käynnistyksessä (`database.rs`)
 - Kuvat tallennetaan `%APPDATA%/com.loikka.app/photos/` ja `profile_photos/`
 - Thumbnailit generoidaan automaattisesti (300px)
 - Lazy loading käytössä sivuille (`React.lazy` + `Suspense`)
+- Katso `UI_SPEC.md` yksityiskohtaiselle käyttöliittymädokumentaatiolle

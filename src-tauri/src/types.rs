@@ -8,6 +8,7 @@ pub struct Athlete {
     pub first_name: String,
     pub last_name: String,
     pub birth_year: i32,
+    pub gender: String, // "T" = Tytöt (girls), "P" = Pojat (boys)
     pub club_name: Option<String>,
     pub photo_path: Option<String>,
     pub created_at: String,
@@ -20,6 +21,7 @@ pub struct CreateAthlete {
     pub first_name: String,
     pub last_name: String,
     pub birth_year: i32,
+    pub gender: String,
     pub club_name: Option<String>,
     pub photo_path: Option<String>,
 }
@@ -30,6 +32,7 @@ pub struct UpdateAthlete {
     pub first_name: Option<String>,
     pub last_name: Option<String>,
     pub birth_year: Option<i32>,
+    pub gender: Option<String>,
     pub club_name: Option<String>,
     pub photo_path: Option<String>,
 }
@@ -59,11 +62,18 @@ pub struct Result {
     #[serde(rename = "type")]
     pub result_type: String,
     pub competition_name: Option<String>,
+    pub competition_level: Option<String>,
     pub location: Option<String>,
     pub placement: Option<i32>,
     pub notes: Option<String>,
     pub is_personal_best: bool,
     pub is_season_best: bool,
+    pub is_national_record: bool,
+    pub wind: Option<f64>,
+    pub status: Option<String>,
+    pub equipment_weight: Option<f64>,
+    pub hurdle_height: Option<i32>,
+    pub hurdle_spacing: Option<f64>,
     pub created_at: String,
 }
 
@@ -77,9 +87,16 @@ pub struct CreateResult {
     #[serde(rename = "type")]
     pub result_type: String,
     pub competition_name: Option<String>,
+    pub competition_level: Option<String>,
     pub location: Option<String>,
     pub placement: Option<i32>,
     pub notes: Option<String>,
+    pub wind: Option<f64>,
+    pub status: Option<String>,
+    pub equipment_weight: Option<f64>,
+    pub hurdle_height: Option<i32>,
+    pub hurdle_spacing: Option<f64>,
+    pub is_national_record: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -92,9 +109,16 @@ pub struct UpdateResult {
     #[serde(rename = "type")]
     pub result_type: Option<String>,
     pub competition_name: Option<String>,
+    pub competition_level: Option<String>,
     pub location: Option<String>,
     pub placement: Option<i32>,
     pub notes: Option<String>,
+    pub wind: Option<f64>,
+    pub status: Option<String>,
+    pub equipment_weight: Option<f64>,
+    pub hurdle_height: Option<i32>,
+    pub hurdle_spacing: Option<f64>,
+    pub is_national_record: Option<bool>,
 }
 
 // Competition types
@@ -107,6 +131,7 @@ pub struct Competition {
     pub end_date: Option<String>,
     pub location: Option<String>,
     pub address: Option<String>,
+    pub level: Option<String>,
     pub notes: Option<String>,
     pub reminder_enabled: bool,
     pub reminder_days_before: Option<i32>,
@@ -121,6 +146,7 @@ pub struct CreateCompetition {
     pub end_date: Option<String>,
     pub location: Option<String>,
     pub address: Option<String>,
+    pub level: Option<String>,
     pub notes: Option<String>,
     pub reminder_enabled: bool,
     pub reminder_days_before: Option<i32>,
@@ -134,6 +160,7 @@ pub struct UpdateCompetition {
     pub end_date: Option<String>,
     pub location: Option<String>,
     pub address: Option<String>,
+    pub level: Option<String>,
     pub notes: Option<String>,
     pub reminder_enabled: Option<bool>,
     pub reminder_days_before: Option<i32>,
@@ -198,6 +225,9 @@ pub struct Medal {
     #[serde(rename = "type")]
     pub medal_type: String,
     pub competition_name: String,
+    pub competition_id: Option<i64>,
+    pub location: Option<String>,
+    pub discipline_id: Option<i64>,
     pub discipline_name: Option<String>,
     pub date: String,
     pub created_at: String,
@@ -275,5 +305,35 @@ pub struct Photo {
     pub width: Option<i32>,
     pub height: Option<i32>,
     pub size_bytes: i64,
+    pub event_name: Option<String>,
     pub created_at: String,
+}
+
+// Sync options types
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SyncOptions {
+    pub include_database: bool,
+    pub include_profile_photos: bool,
+    pub include_result_photos: bool,
+    pub selected_photo_ids: Option<Vec<String>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CloudPhoto {
+    pub id: String,
+    pub name: String,
+    pub folder: String,
+    pub size_bytes: i64,
+    pub created_at: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LocalPhoto {
+    pub path: String,
+    pub name: String,
+    pub folder: String,
+    pub size_bytes: i64,
 }

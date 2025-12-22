@@ -5,8 +5,9 @@ import {
   categoryLabels,
   categoryOrder,
   getDisciplineById,
+  disciplineNeedsMinutes,
 } from "../../data/disciplines";
-import { parseTime, parseDistance } from "../../lib/formatters";
+import { TimeInput, DistanceInput, DatePicker } from "../ui";
 import type { Goal, NewGoal } from "../../types";
 
 interface GoalFormProps {
@@ -31,8 +32,8 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
   const [disciplineId, setDisciplineId] = useState<number | "">(
     goal?.disciplineId ?? ""
   );
-  const [targetValueInput, setTargetValueInput] = useState(
-    goal?.targetValue?.toString() ?? ""
+  const [targetValue, setTargetValue] = useState<number | null>(
+    goal?.targetValue ?? null
   );
   const [targetDate, setTargetDate] = useState(goal?.targetDate ?? "");
   const [errors, setErrors] = useState<FormErrors>({});
@@ -49,6 +50,13 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
     return disciplineId ? getDisciplineById(disciplineId) : undefined;
   }, [disciplineId]);
 
+  // Reset target value when discipline changes
+  useEffect(() => {
+    if (!goal) {
+      setTargetValue(null);
+    }
+  }, [disciplineId, goal]);
+
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
 
@@ -60,21 +68,8 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
       newErrors.disciplineId = "Valitse laji";
     }
 
-    if (!targetValueInput.trim()) {
+    if (targetValue === null || targetValue <= 0) {
       newErrors.targetValue = "Syötä tavoitetulos";
-    } else if (selectedDiscipline) {
-      try {
-        if (selectedDiscipline.unit === "time") {
-          parseTime(targetValueInput);
-        } else {
-          parseDistance(targetValueInput);
-        }
-      } catch {
-        newErrors.targetValue =
-          selectedDiscipline.unit === "time"
-            ? "Virheellinen aika (esim. 12.34 tai 1:23.45)"
-            : "Virheellinen matka (esim. 4.56)";
-      }
     }
 
     setErrors(newErrors);
@@ -84,32 +79,24 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validate() || !selectedDiscipline) {
+    if (!validate() || !selectedDiscipline || targetValue === null) {
       return;
     }
 
-    const targetValue =
-      selectedDiscipline.unit === "time"
-        ? parseTime(targetValueInput)
-        : parseDistance(targetValueInput);
+    // Convert from input format to database format:
+    // Time: hundredths to seconds (e.g., 184240 -> 1842.40)
+    // Distance: centimeters to meters (e.g., 550 -> 5.50)
+    const dbValue = targetValue / 100;
 
     const goalData: NewGoal = {
       athleteId: selectedAthleteId as number,
       disciplineId: disciplineId as number,
-      targetValue,
+      targetValue: dbValue,
       targetDate: targetDate || undefined,
       status: "active",
     };
 
     onSave(goalData);
-  };
-
-  // Get placeholder for target input
-  const getValuePlaceholder = () => {
-    if (!selectedDiscipline) return "Valitse ensin laji";
-    return selectedDiscipline.unit === "time"
-      ? "esim. 12.00 tai 1:20.00"
-      : "esim. 5.50";
   };
 
   // Get label for target input
@@ -137,7 +124,7 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
             setSelectedAthleteId(e.target.value ? parseInt(e.target.value) : "")
           }
           disabled={!!athleteId}
-          className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
+          className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer ${
             errors.athleteId ? "border-error" : "border-border"
           } ${athleteId ? "opacity-60" : ""}`}
         >
@@ -167,7 +154,7 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
           onChange={(e) =>
             setDisciplineId(e.target.value ? parseInt(e.target.value) : "")
           }
-          className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
+          className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer ${
             errors.disciplineId ? "border-error" : "border-border"
           }`}
         >
@@ -200,16 +187,26 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
         >
           {getValueLabel()} <span className="text-error">*</span>
         </label>
-        <input
-          type="text"
-          id="targetValue"
-          value={targetValueInput}
-          onChange={(e) => setTargetValueInput(e.target.value)}
-          placeholder={getValuePlaceholder()}
-          className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
-            errors.targetValue ? "border-error" : "border-border"
-          }`}
-        />
+        {!selectedDiscipline ? (
+          <p className="text-sm text-muted-foreground py-2">
+            Valitse ensin laji
+          </p>
+        ) : selectedDiscipline.unit === "time" ? (
+          <TimeInput
+            id="targetValue"
+            value={targetValue}
+            onChange={setTargetValue}
+            showMinutes={disciplineNeedsMinutes(selectedDiscipline.id)}
+            error={!!errors.targetValue}
+          />
+        ) : (
+          <DistanceInput
+            id="targetValue"
+            value={targetValue}
+            onChange={setTargetValue}
+            error={!!errors.targetValue}
+          />
+        )}
         {errors.targetValue && (
           <p className="mt-1 text-sm text-error">{errors.targetValue}</p>
         )}
@@ -223,12 +220,11 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
         >
           Tavoitepäivä
         </label>
-        <input
-          type="date"
+        <DatePicker
           id="targetDate"
           value={targetDate}
-          onChange={(e) => setTargetDate(e.target.value)}
-          className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
+          onChange={setTargetDate}
+          min={new Date().toISOString().split("T")[0]}
         />
         <p className="mt-1 text-xs text-muted-foreground">
           Valinnainen. Aseta päivämäärä, johon mennessä tavoite tulisi saavuttaa.
@@ -240,13 +236,13 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium rounded-lg border border-border hover:bg-muted transition-colors"
+          className="btn-secondary"
         >
           Peruuta
         </button>
         <button
           type="submit"
-          className="px-4 py-2 text-sm font-medium rounded-lg bg-primary text-black hover:bg-primary/90 transition-colors"
+          className="btn-primary"
         >
           Tallenna
         </button>

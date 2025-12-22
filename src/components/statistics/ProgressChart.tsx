@@ -33,6 +33,7 @@ function CustomTooltip({ active, payload, discipline }: CustomTooltipProps) {
   }
 
   const dataPoint = payload[0].payload;
+
   const formattedValue =
     discipline.unit === "time"
       ? formatTime(dataPoint.value)
@@ -45,10 +46,12 @@ function CustomTooltip({ active, payload, discipline }: CustomTooltipProps) {
     <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
       <p className="text-sm text-muted-foreground">{formattedDate}</p>
       <p className="text-lg font-bold">{formattedValue}</p>
-      {dataPoint.isPersonalBest && (
-        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-gold text-black mt-1">
-          SE
-        </span>
+      {(dataPoint.isPersonalBest || dataPoint.isSeasonBest || dataPoint.isNationalRecord) && (
+        <div className="flex gap-1 mt-1">
+          {dataPoint.isPersonalBest && <span className="badge-pb">OE</span>}
+          {dataPoint.isSeasonBest && <span className="badge-sb">KE</span>}
+          {dataPoint.isNationalRecord && <span className="badge-nr">SE</span>}
+        </div>
       )}
     </div>
   );
@@ -57,7 +60,7 @@ function CustomTooltip({ active, payload, discipline }: CustomTooltipProps) {
 export function ProgressChart({ data, discipline }: ProgressChartProps) {
   if (data.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 bg-card rounded-xl border border-border">
+      <div className="flex items-center justify-center h-96 bg-card rounded-xl border border-border">
         <p className="text-muted-foreground">Ei tuloksia näytettäväksi</p>
       </div>
     );
@@ -66,9 +69,10 @@ export function ProgressChart({ data, discipline }: ProgressChartProps) {
   // Find personal best point for highlighting
   const pbPoint = data.find((d) => d.isPersonalBest);
 
-  // Format dates for X axis
-  const chartData = data.map((d) => ({
+  // Format dates for X axis - add unique index to handle same-day results
+  const chartData = data.map((d, index) => ({
     ...d,
+    index, // Unique identifier for each point
     formattedDate: format(new Date(d.date), "d.M.yy"),
   }));
 
@@ -76,7 +80,8 @@ export function ProgressChart({ data, discipline }: ProgressChartProps) {
   const values = data.map((d) => d.value);
   const minValue = Math.min(...values);
   const maxValue = Math.max(...values);
-  const padding = (maxValue - minValue) * 0.1 || maxValue * 0.1;
+  const range = maxValue - minValue;
+  const padding = range * 0.1 || maxValue * 0.1;
 
   // For time events (lower is better), we want to invert the axis
   // so that better results appear higher on the chart
@@ -89,17 +94,18 @@ export function ProgressChart({ data, discipline }: ProgressChartProps) {
     if (discipline.unit === "time") {
       return formatTime(value);
     }
-    return `${value.toFixed(2)}`;
+    // Show meters without "m" suffix for cleaner axis
+    return value.toFixed(2);
   };
 
   return (
     <div className="bg-card rounded-xl border border-border p-4">
       <h3 className="text-sm font-medium text-foreground mb-4">Kehitys</h3>
-      <div className="h-64">
+      <div className="h-96">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={chartData}
-            margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
+            margin={{ top: 10, right: 30, left: 20, bottom: 25 }}
           >
             <CartesianGrid
               strokeDasharray="3 3"
@@ -107,14 +113,18 @@ export function ProgressChart({ data, discipline }: ProgressChartProps) {
               opacity={0.5}
             />
             <XAxis
-              dataKey="formattedDate"
+              dataKey="index"
               stroke="var(--color-muted-foreground)"
               fontSize={12}
               tickLine={false}
               axisLine={false}
+              padding={{ left: 20, right: 20 }}
+              dy={10}
+              tickFormatter={(index) => chartData[index]?.formattedDate || ""}
             />
             <YAxis
               domain={yDomain}
+              tickCount={5}
               tickFormatter={formatYAxis}
               stroke="var(--color-muted-foreground)"
               fontSize={12}
@@ -124,32 +134,43 @@ export function ProgressChart({ data, discipline }: ProgressChartProps) {
             />
             <Tooltip
               content={<CustomTooltip discipline={discipline} />}
-              cursor={{ stroke: "var(--color-primary)", strokeWidth: 1 }}
+              cursor={{ stroke: "var(--accent)", strokeWidth: 1 }}
             />
             <Line
-              type="monotone"
+              type="linear"
               dataKey="value"
-              stroke="var(--color-primary)"
+              stroke="var(--accent)"
               strokeWidth={2}
               dot={{
-                fill: "var(--color-primary)",
+                fill: "var(--accent)",
                 strokeWidth: 0,
                 r: 4,
               }}
               activeDot={{
-                fill: "var(--color-primary)",
+                fill: "var(--accent)",
                 strokeWidth: 0,
                 r: 6,
               }}
+              label={({ x, y, value }) => (
+                <text
+                  x={x}
+                  y={typeof y === "number" ? y - 10 : 0}
+                  fill="var(--foreground)"
+                  textAnchor="middle"
+                  fontSize={10}
+                >
+                  {typeof value === "number" ? value.toFixed(2) : ""}
+                </text>
+              )}
             />
-            {/* Highlight personal best */}
+            {/* Highlight personal best with larger accent-colored dot */}
             {pbPoint && (
               <ReferenceDot
-                x={format(new Date(pbPoint.date), "d.M.yy")}
+                x={chartData.findIndex((d) => d.isPersonalBest)}
                 y={pbPoint.value}
                 r={8}
-                fill="var(--color-gold)"
-                stroke="var(--color-gold)"
+                fill="var(--accent)"
+                stroke="var(--bg-card)"
                 strokeWidth={2}
               />
             )}

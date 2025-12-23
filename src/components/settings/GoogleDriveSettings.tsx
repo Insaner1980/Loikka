@@ -203,7 +203,7 @@ export function GoogleDriveSettings() {
             <button
               onClick={handleDisconnect}
               disabled={loading}
-              className="px-4 py-2 text-sm font-medium text-red-500 border border-red-500/30 rounded-lg hover:bg-red-500/10 transition-colors disabled:opacity-50 cursor-pointer"
+              className="px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:text-foreground hover:border-border-hover transition-colors disabled:opacity-50 cursor-pointer"
             >
               Katkaise yhteys
             </button>
@@ -266,7 +266,7 @@ export function GoogleDriveSettings() {
                           <button
                             onClick={() => handleDeleteBackup(backup.id)}
                             disabled={loading}
-                            className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors cursor-pointer"
+                            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
                             title="Poista varmuuskopio"
                           >
                             <Trash2 size={16} />

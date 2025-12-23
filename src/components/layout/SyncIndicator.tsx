@@ -24,13 +24,13 @@ export function SyncIndicator() {
 
     switch (syncStatus) {
       case "syncing":
-        return <Loader2 size={20} className="text-primary animate-spin" />;
+        return <Loader2 size={20} className="text-[var(--accent)] animate-spin" />;
       case "success":
-        return <CheckCircle size={20} className="text-green-500" />;
+        return <CheckCircle size={20} className="text-[var(--accent)]" />;
       case "error":
-        return <AlertCircle size={20} className="text-red-500" />;
+        return <AlertCircle size={20} className="text-muted-foreground" />;
       default:
-        return <Cloud size={20} className="text-green-500" />;
+        return <Cloud size={20} className="text-[var(--accent)]" />;
     }
   };
 
@@ -56,12 +56,8 @@ export function SyncIndicator() {
       return null;
     }
 
-    let color = "bg-green-500";
-    if (syncStatus === "syncing") {
-      color = "bg-yellow-500";
-    } else if (syncStatus === "error") {
-      color = "bg-red-500";
-    }
+    // Use accent color for all states - minimalist design
+    const color = syncStatus === "error" ? "bg-muted-foreground" : "bg-[var(--accent)]";
 
     return (
       <span

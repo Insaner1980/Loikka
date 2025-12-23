@@ -72,6 +72,7 @@ C:\dev\Loikka\
 ├── src/
 │   ├── components/
 │   │   ├── athletes/       # Urheilija-komponentit
+│   │   │   └── tabs/       # Urheilijan yksityiskohtasivun tab-komponentit
 │   │   ├── competitions/   # Kilpailukomponentit
 │   │   ├── goals/          # Tavoitekomponentit
 │   │   ├── layout/         # Layout-komponentit (Sidebar, Layout, TitleBar)

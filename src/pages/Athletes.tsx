@@ -93,9 +93,9 @@ export function Athletes() {
         />
       )}
 
-      {/* Athletes list */}
+      {/* Athletes grid */}
       {!loading && athletes.length > 0 && (
-        <div className="flex flex-col gap-3">
+        <div className="grid grid-cols-2 gap-4">
           {athletes.map(({ athlete, stats }) => (
             <AthleteCard key={athlete.id} athlete={athlete} stats={stats} />
           ))}

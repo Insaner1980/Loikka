@@ -83,7 +83,7 @@ export function PhotoViewer({
         {onDelete && (
           <button
             onClick={handleDelete}
-            className="p-2 text-white/70 hover:text-red-400 hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+            className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
           >
             <Trash2 size={20} />
           </button>

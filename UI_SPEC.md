@@ -411,6 +411,50 @@ bg-card rounded-xl
 | `GoalCard` | `bg-card` | `border-border-subtle` | `hover:border-border-hover` | - |
 | `GoalCard` (achieved) | `bg-success/10` | `border-success/30` | `hover:border-success/50` | Vihreä tausta |
 
+#### AthleteCard (urheilijakortti)
+
+Layout: 2-sarakkeinen grid urheilijoiden listanäkymässä.
+
+```
+┌─────────────────────────────────────┐
+│ [Avatar 80px]          🥇8 🥈7 🥉4  │  ← Top row
+│                                     │
+│ Nimi (text-lg font-semibold)        │  ← Middle
+│ Ikäluokka (text-body)               │
+│ Seura (text-body)                   │
+│                                     │
+│ X tulosta      [12 OE] [14 KE] [7 SE]│  ← Bottom row
+└─────────────────────────────────────┘
+```
+
+| Elementti | Koko/Tyyli |
+|-----------|------------|
+| Avatar | `w-20 h-20` (80px) pyöreä |
+| Nimikirjaimet | `text-2xl font-medium` |
+| Mitalit | `w-6 h-6` (24px) pyöreät |
+| Mitali-numerot | `text-default font-medium` |
+| Nimi | `text-lg font-semibold` (18px) |
+| Ikäluokka/Seura | `text-body text-muted-foreground` |
+| Ennätysbadget | `badge-pb`, `badge-sb`, `badge-nr` |
+
+#### AthleteHeader (urheilijan yksityiskohtasivu)
+
+```
+┌───────────────────────────────────────────────────────┐
+│ ← [Avatar 80px] 🥇2  Nimi (text-lg)    Kuvat > Muokkaa 🗑│
+│                 🥈1  Ikäluokka                          │
+│                 🥉1  Seura                              │
+│                      X tulosta [OE] [KE] [SE]          │
+└───────────────────────────────────────────────────────┘
+```
+
+| Elementti | Koko/Tyyli |
+|-----------|------------|
+| Avatar | `w-20 h-20` (80px) pyöreä |
+| Mitalit | `w-6 h-6` (24px) pystysuora pino avatarin vieressä |
+| Mitali-numerot | `text-default font-medium` |
+| Nimi | `text-lg font-semibold` (18px) |
+
 #### StatCard
 
 - Tausta: `bg-card`

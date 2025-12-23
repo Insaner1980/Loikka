@@ -75,18 +75,22 @@ export function toAssetUrl(filePath: string | undefined | null): string {
  * Example: Born 2016, in year 2025 turns 9 → T9
  *
  * SUL uses odd-numbered categories for children (7, 9, 11, 13, 15, 17).
+ * Children under 7 show their actual age (e.g., "2v" for 2-year-old).
  */
 export function getAgeCategory(birthYear: number): string {
   const currentYear = new Date().getFullYear();
   const ageThisYear = currentYear - birthYear;
 
+  // Children too young for official categories - show actual age
+  if (ageThisYear < 7) return `${ageThisYear}v`;
+
   // SUL uses odd-numbered age categories
-  if (ageThisYear <= 7) return "T7";
-  if (ageThisYear <= 9) return "T9";
-  if (ageThisYear <= 11) return "T11";
-  if (ageThisYear <= 13) return "T13";
-  if (ageThisYear <= 15) return "T15";
-  if (ageThisYear <= 17) return "T17";
+  if (ageThisYear <= 8) return "T7";   // 7-8 year olds
+  if (ageThisYear <= 10) return "T9";  // 9-10 year olds
+  if (ageThisYear <= 12) return "T11"; // 11-12 year olds
+  if (ageThisYear <= 14) return "T13"; // 13-14 year olds
+  if (ageThisYear <= 16) return "T15"; // 15-16 year olds
+  if (ageThisYear <= 18) return "T17"; // 17-18 year olds
   // Adults
   return "N";
 }

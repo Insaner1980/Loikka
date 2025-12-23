@@ -14,6 +14,8 @@ pub async fn get_all_athletes(app: AppHandle) -> Result<Vec<AthleteWithStats>, S
             COALESCE((SELECT COUNT(DISTINCT discipline_id) FROM results WHERE athlete_id = a.id), 0) as discipline_count,
             COALESCE((SELECT COUNT(*) FROM results WHERE athlete_id = a.id), 0) as result_count,
             COALESCE((SELECT COUNT(*) FROM results WHERE athlete_id = a.id AND is_personal_best = 1), 0) as pb_count,
+            COALESCE((SELECT COUNT(*) FROM results WHERE athlete_id = a.id AND is_season_best = 1), 0) as sb_count,
+            COALESCE((SELECT COUNT(*) FROM results WHERE athlete_id = a.id AND is_national_record = 1), 0) as nr_count,
             COALESCE((SELECT COUNT(*) FROM medals WHERE athlete_id = a.id AND type = 'gold'), 0) as gold_medals,
             COALESCE((SELECT COUNT(*) FROM medals WHERE athlete_id = a.id AND type = 'silver'), 0) as silver_medals,
             COALESCE((SELECT COUNT(*) FROM medals WHERE athlete_id = a.id AND type = 'bronze'), 0) as bronze_medals
@@ -40,6 +42,8 @@ pub async fn get_all_athletes(app: AppHandle) -> Result<Vec<AthleteWithStats>, S
             discipline_count: row.get("discipline_count"),
             result_count: row.get("result_count"),
             pb_count: row.get("pb_count"),
+            sb_count: row.get("sb_count"),
+            nr_count: row.get("nr_count"),
             gold_medals: row.get("gold_medals"),
             silver_medals: row.get("silver_medals"),
             bronze_medals: row.get("bronze_medals"),
@@ -66,6 +70,22 @@ async fn get_athlete_stats_internal(pool: &sqlx::Pool<sqlx::Sqlite>, athlete_id:
 
     let pb_count: i32 = sqlx::query_scalar(
         "SELECT COUNT(*) FROM results WHERE athlete_id = ? AND is_personal_best = 1"
+    )
+    .bind(athlete_id)
+    .fetch_one(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    let sb_count: i32 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM results WHERE athlete_id = ? AND is_season_best = 1"
+    )
+    .bind(athlete_id)
+    .fetch_one(pool)
+    .await
+    .map_err(|e| e.to_string())?;
+
+    let nr_count: i32 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM results WHERE athlete_id = ? AND is_national_record = 1"
     )
     .bind(athlete_id)
     .fetch_one(pool)
@@ -100,6 +120,8 @@ async fn get_athlete_stats_internal(pool: &sqlx::Pool<sqlx::Sqlite>, athlete_id:
         discipline_count,
         result_count,
         pb_count,
+        sb_count,
+        nr_count,
         gold_medals,
         silver_medals,
         bronze_medals,

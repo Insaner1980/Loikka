@@ -87,8 +87,9 @@ export function PhotoGallery({
 
   if (error) {
     return (
-      <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg text-red-500 text-sm">
-        Virhe kuvien latauksessa: {error}
+      <div className="flex items-center overflow-hidden rounded-lg bg-elevated">
+        <div className="w-1 self-stretch bg-[var(--accent)]" />
+        <div className="px-3 py-2 text-sm text-foreground">Virhe kuvien latauksessa: {error}</div>
       </div>
     );
   }
@@ -153,7 +154,7 @@ export function PhotoGallery({
             {canDelete && hoveredId === photo.id && (
               <button
                 onClick={(e) => handleDeletePhoto(photo.id, e)}
-                className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors cursor-pointer"
+                className="absolute top-2 right-2 p-1.5 bg-black/60 text-white/80 hover:text-white rounded-lg hover:bg-black/80 transition-colors cursor-pointer"
               >
                 <Trash2 size={14} />
               </button>

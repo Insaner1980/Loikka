@@ -272,8 +272,9 @@ export function AddPhotoDialog({
 
         {/* Error message */}
         {error && (
-          <div className="p-3 bg-error/10 border border-error/30 rounded-lg text-error text-sm">
-            {error}
+          <div className="flex items-center overflow-hidden rounded-lg bg-elevated">
+            <div className="w-1 self-stretch bg-[var(--accent)]" />
+            <div className="px-3 py-2 text-sm text-foreground">{error}</div>
           </div>
         )}
 

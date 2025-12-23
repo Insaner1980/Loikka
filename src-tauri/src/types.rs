@@ -240,6 +240,8 @@ pub struct AthleteStats {
     pub discipline_count: i32,
     pub result_count: i32,
     pub pb_count: i32,
+    pub sb_count: i32,
+    pub nr_count: i32,
     pub gold_medals: i32,
     pub silver_medals: i32,
     pub bronze_medals: i32,

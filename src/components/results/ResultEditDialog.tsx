@@ -765,7 +765,7 @@ export function ResultEditDialog({
             </button>
             <button
               onClick={handleDelete}
-              className="btn-primary bg-error hover:bg-error/90"
+              className="btn-primary"
               disabled={saving}
             >
               {saving ? "Poistetaan..." : "Poista"}

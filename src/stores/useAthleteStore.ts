@@ -15,6 +15,8 @@ interface AthleteStats {
   disciplineCount: number;
   resultCount: number;
   pbCount: number;
+  sbCount: number;
+  nrCount: number;
   goldMedals: number;
   silverMedals: number;
   bronzeMedals: number;
@@ -68,6 +70,7 @@ export const useAthleteStore = create<AthleteStore>((set, get) => ({
           firstName: athleteData.firstName,
           lastName: athleteData.lastName,
           birthYear: athleteData.birthYear,
+          gender: athleteData.gender || "T",
           clubName: athleteData.clubName || null,
           photoPath: null,
         },

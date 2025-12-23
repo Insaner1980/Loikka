@@ -37,7 +37,7 @@ export function TitleBar() {
       <div data-tauri-drag-region className="flex-1 flex items-center">
         <img src={theme === "light" ? logoIconDark : logoIconLight} alt="Loikka" className="w-12 h-12" />
         <span
-          className="text-2xl text-foreground tracking-wide"
+          className="text-xl text-foreground tracking-wide"
           style={{ fontFamily: 'Satoshi, sans-serif', fontWeight: 700 }}
         >
           LOIKKA

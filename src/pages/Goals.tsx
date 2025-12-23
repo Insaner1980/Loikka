@@ -7,7 +7,7 @@ import { getDisciplineById } from "../data/disciplines";
 import { GoalCard } from "../components/goals/GoalCard";
 import { GoalForm } from "../components/goals/GoalForm";
 import { GoalCelebrationModal } from "../components/goals/GoalCelebrationModal";
-import { Dialog, Confetti } from "../components/ui";
+import { Dialog, Confetti, ConfirmDialog, toast } from "../components/ui";
 import type { Goal, NewGoal, Athlete, Discipline } from "../types";
 
 interface CelebrationGoalData {
@@ -29,6 +29,7 @@ export function Goals() {
     goals,
     fetchGoals,
     addGoal,
+    deleteGoal,
     getActiveGoals,
     getAchievedGoals,
     getGoalWithProgress,
@@ -43,6 +44,7 @@ export function Goals() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showCelebrationModal, setShowCelebrationModal] = useState(false);
   const [celebrationGoals, setCelebrationGoals] = useState<CelebrationGoalData[]>([]);
+  const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
 
   useEffect(() => {
     fetchGoals();
@@ -155,6 +157,14 @@ export function Goals() {
     setIsFormOpen(false);
   };
 
+  const handleDeleteGoal = async () => {
+    if (goalToDelete) {
+      await deleteGoal(goalToDelete.id);
+      toast.success("Tavoite poistettu");
+      setGoalToDelete(null);
+    }
+  };
+
   return (
     <div className="p-6 h-full flex flex-col">
       {/* Header */}
@@ -225,6 +235,7 @@ export function Goals() {
                     remaining={goalWithProgress.remaining}
                     athlete={athleteMap.get(goalWithProgress.athleteId)}
                     discipline={getDisciplineById(goalWithProgress.disciplineId)}
+                    onDelete={() => setGoalToDelete(goalWithProgress)}
                   />
                 ))}
               </div>
@@ -282,6 +293,7 @@ export function Goals() {
                           discipline={getDisciplineById(
                             goalWithProgress.disciplineId
                           )}
+                          onDelete={() => setGoalToDelete(goalWithProgress)}
                         />
                       ))}
                     </div>
@@ -328,6 +340,21 @@ export function Goals() {
       <Confetti
         active={showConfetti}
         onComplete={() => setShowConfetti(false)}
+      />
+
+      {/* Delete Goal Confirmation Dialog */}
+      <ConfirmDialog
+        open={goalToDelete !== null}
+        onCancel={() => setGoalToDelete(null)}
+        onConfirm={handleDeleteGoal}
+        title="Poista tavoite"
+        message={
+          goalToDelete
+            ? `Haluatko varmasti poistaa tavoitteen "${getDisciplineById(goalToDelete.disciplineId)?.fullName ?? "Tuntematon laji"}"?`
+            : ""
+        }
+        confirmText="Poista"
+        cancelText="Peruuta"
       />
     </div>
   );

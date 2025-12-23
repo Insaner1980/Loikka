@@ -1,4 +1,4 @@
-import { Check, Calendar, Target } from "lucide-react";
+import { Check, Calendar, Target, Trash2 } from "lucide-react";
 import type { Athlete, Discipline, Goal } from "../../types";
 import { formatTime, formatDistance, formatDate } from "../../lib/formatters";
 
@@ -10,6 +10,7 @@ interface GoalCardProps {
   athlete?: Athlete;
   discipline?: Discipline;
   onClick?: () => void;
+  onDelete?: () => void;
 }
 
 export function GoalCard({
@@ -20,6 +21,7 @@ export function GoalCard({
   athlete,
   discipline,
   onClick,
+  onDelete,
 }: GoalCardProps) {
   const isAchieved = goal.status === "achieved";
   // Goal is completed when progress reaches 100% (even if not yet marked in DB)
@@ -71,8 +73,21 @@ export function GoalCard({
           </div>
           <p className="text-sm text-muted-foreground">{disciplineName}</p>
         </div>
-        <div className="p-2 bg-muted rounded-lg">
-          <Target size={20} className="text-tertiary" />
+        <div className="flex items-center gap-1">
+          <div className="p-2 bg-muted rounded-lg">
+            <Target size={20} className="text-tertiary" />
+          </div>
+          {onDelete && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+              className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
+            >
+              <Trash2 size={18} />
+            </button>
+          )}
         </div>
       </div>
 

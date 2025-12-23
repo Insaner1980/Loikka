@@ -30,8 +30,8 @@ export const YEAR_RANGE = {
 
 // Athlete birth year validation
 export const ATHLETE_BIRTH_YEAR = {
-  MIN: 2005,              // Oldest allowed birth year
-  MAX: 2022,              // Youngest allowed birth year
+  MIN: 2005,                        // Oldest allowed birth year
+  MAX: new Date().getFullYear(),    // Youngest allowed birth year (current year)
 } as const;
 
 // Toast notification settings

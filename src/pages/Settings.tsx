@@ -5,7 +5,7 @@ import {
   Palette,
 } from "lucide-react";
 import { SettingsSection, GoogleDriveSettings } from "../components/settings";
-import { SegmentedControl } from "../components/ui";
+import { SegmentedControl, toast } from "../components/ui";
 import { useTheme } from "../hooks";
 import { exportData, importData } from "../lib";
 
@@ -13,20 +13,16 @@ export function Settings() {
   const { theme, setTheme } = useTheme();
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   const handleExport = async () => {
     setIsExporting(true);
-    setError(null);
-    setSuccess(null);
     try {
       const saved = await exportData();
       if (saved) {
-        setSuccess("Tiedot viety onnistuneesti");
+        toast.success("Tiedot viety onnistuneesti");
       }
     } catch (err) {
-      setError((err as Error).message);
+      toast.error((err as Error).message);
     } finally {
       setIsExporting(false);
     }
@@ -34,15 +30,13 @@ export function Settings() {
 
   const handleImport = async () => {
     setIsImporting(true);
-    setError(null);
-    setSuccess(null);
     try {
       const imported = await importData();
       if (imported) {
-        setSuccess("Tiedot tuotu onnistuneesti");
+        toast.success("Tiedot tuotu onnistuneesti");
       }
     } catch (err) {
-      setError((err as Error).message);
+      toast.error((err as Error).message);
     } finally {
       setIsImporting(false);
     }
@@ -81,17 +75,6 @@ export function Settings() {
 
         {/* Data section */}
         <SettingsSection title="Tiedot">
-          {error && (
-            <div className="p-3 bg-error/10 border border-error/30 rounded-lg text-error text-sm">
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="p-3 bg-success/10 border border-success/30 rounded-lg text-success text-sm">
-              {success}
-            </div>
-          )}
-
           <div className="flex flex-col gap-3">
             <button
               onClick={handleExport}

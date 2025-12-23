@@ -1,0 +1,140 @@
+import { useState } from "react";
+import { ResultBadge } from "../../results/ResultBadge";
+import { formatTime, formatDistance, formatDate, getStatusLabel } from "../../../lib/formatters";
+import { categoryLabels, categoryOrder } from "../../../data/disciplines";
+import type { ResultWithDiscipline } from "./types";
+
+interface RecordsTabProps {
+  personalBests: ResultWithDiscipline[];
+}
+
+export function RecordsTab({ personalBests }: RecordsTabProps) {
+  const [disciplineFilter, setDisciplineFilter] = useState<number | null>(null);
+  const [seasonFilter, setSeasonFilter] = useState<number | null>(null);
+
+  // Get unique disciplines from personal bests
+  const disciplines = [...new Map(
+    personalBests.map((r) => [r.disciplineId, r.discipline])
+  ).values()];
+
+  // Filter personal bests by discipline first (for year options)
+  const recordsForYearFilter = disciplineFilter
+    ? personalBests.filter((r) => r.disciplineId === disciplineFilter)
+    : personalBests;
+
+  // Get unique years from discipline-filtered records
+  const uniqueYears = [...new Set(
+    recordsForYearFilter.map((r) => new Date(r.date).getFullYear())
+  )].sort((a, b) => b - a);
+
+  // Apply both filters for display
+  const filteredRecords = personalBests.filter((r) => {
+    if (disciplineFilter && r.disciplineId !== disciplineFilter) return false;
+    if (seasonFilter && new Date(r.date).getFullYear() !== seasonFilter) return false;
+    return true;
+  });
+
+  return (
+    <div className="space-y-3">
+      {/* Filter row */}
+      {personalBests.length > 0 && (
+        <div className="flex gap-3">
+          <select
+            value={disciplineFilter ?? ""}
+            onChange={(e) => {
+              setDisciplineFilter(e.target.value ? parseInt(e.target.value) : null);
+              setSeasonFilter(null);
+            }}
+            className="flex-1 px-3 py-2 bg-card border border-border-subtle rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer"
+          >
+            <option value="">Kaikki lajit</option>
+            {categoryOrder.map((category) => {
+              const categoryDisciplines = disciplines.filter(
+                (d) => d.category === category
+              );
+              if (categoryDisciplines.length === 0) return null;
+              return (
+                <optgroup key={category} label={categoryLabels[category]}>
+                  {categoryDisciplines.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.fullName}
+                    </option>
+                  ))}
+                </optgroup>
+              );
+            })}
+          </select>
+          <select
+            value={seasonFilter ?? ""}
+            onChange={(e) => setSeasonFilter(e.target.value ? parseInt(e.target.value) : null)}
+            className="flex-1 px-3 py-2 bg-card border border-border-subtle rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer"
+          >
+            <option value="">Kaikki kaudet</option>
+            {uniqueYears.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* Records grid */}
+      {filteredRecords.length === 0 ? (
+        <p className="text-muted-foreground text-body text-center py-8">
+          {personalBests.length === 0
+            ? "Ei ennätyksiä vielä"
+            : "Ei ennätyksiä valitulla suodattimella"}
+        </p>
+      ) : (
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+          {filteredRecords.map((result) => (
+            <div
+              key={result.id}
+              className="rounded-xl bg-card border border-border-subtle hover:border-border-hover transition-colors duration-150 p-4 flex flex-col"
+            >
+              {/* Top: Discipline */}
+              <div className="text-sm font-medium text-foreground mb-3">
+                {result.discipline.fullName}
+              </div>
+
+              {/* Center: Result value (big) */}
+              <div className="flex-1 flex flex-col items-center justify-center py-2">
+                {(result.status && result.status !== "valid") || result.value === 0 ? (
+                  <span className="px-3 py-1.5 text-sm font-medium rounded-lg bg-muted text-muted-foreground">
+                    {getStatusLabel(result.status) || "Ei tulosta"}
+                  </span>
+                ) : (
+                  <>
+                    <span className="text-2xl font-bold tabular-nums text-foreground">
+                      {result.discipline.unit === "time"
+                        ? formatTime(result.value)
+                        : formatDistance(result.value)}
+                    </span>
+                    {/* Badges */}
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      <ResultBadge type="pb" />
+                      {result.isSeasonBest && <ResultBadge type="sb" />}
+                      {result.isNationalRecord && <ResultBadge type="nr" />}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Divider */}
+              <div className="h-px w-full bg-border my-3" />
+
+              {/* Bottom: Date + competition */}
+              <div className="text-sm text-muted-foreground">
+                <div>{formatDate(result.date)}</div>
+                {result.competitionName && (
+                  <div className="truncate mt-0.5">{result.competitionName}</div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}

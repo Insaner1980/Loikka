@@ -1,6 +1,5 @@
 import { ReactNode, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { AlertTriangle } from "lucide-react";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -21,7 +20,7 @@ export function ConfirmDialog({
   message,
   confirmText = "OK",
   cancelText = "Peruuta",
-  variant = "default",
+  variant: _variant = "default",
 }: ConfirmDialogProps) {
   // Close on Escape key
   useEffect(() => {
@@ -49,12 +48,8 @@ export function ConfirmDialog({
 
   if (!open) return null;
 
-  const confirmButtonClass =
-    variant === "danger"
-      ? "bg-error hover:bg-error/90 text-white"
-      : variant === "warning"
-        ? "bg-warning hover:bg-warning/90 text-black"
-        : "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--btn-primary-text)]";
+  // All variants use the same accent color for minimalist design
+  const confirmButtonClass = "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--btn-primary-text)]";
 
   return createPortal(
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
@@ -75,32 +70,20 @@ export function ConfirmDialog({
       >
         {/* Content */}
         <div className="p-5">
-          {/* Icon and title */}
-          <div className="flex items-start gap-3 mb-3">
-            {variant === "danger" && (
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-error/15 flex items-center justify-center">
-                <AlertTriangle size={20} className="text-error" />
-              </div>
-            )}
-            {variant === "warning" && (
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-warning/15 flex items-center justify-center">
-                <AlertTriangle size={20} className="text-warning" />
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <h3
-                id="confirm-dialog-title"
-                className="text-sm font-medium text-foreground"
-              >
-                {title}
-              </h3>
-              <p
-                id="confirm-dialog-message"
-                className="mt-1 text-body text-muted-foreground"
-              >
-                {message}
-              </p>
-            </div>
+          {/* Title and message */}
+          <div className="mb-4">
+            <h3
+              id="confirm-dialog-title"
+              className="text-sm font-medium text-foreground"
+            >
+              {title}
+            </h3>
+            <p
+              id="confirm-dialog-message"
+              className="mt-1.5 text-body text-muted-foreground"
+            >
+              {message}
+            </p>
           </div>
 
           {/* Actions */}

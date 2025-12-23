@@ -296,7 +296,7 @@ export function Dashboard() {
                     </div>
 
                     {/* Divider */}
-                    <div className="h-px w-full bg-white/10 my-3" />
+                    <div className="h-px w-full bg-border my-3" />
 
                     {/* Bottom: Date, competition/training, placement */}
                     <div className="flex items-center justify-between gap-2 text-sm">

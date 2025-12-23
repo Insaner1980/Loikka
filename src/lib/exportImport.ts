@@ -3,12 +3,8 @@ import { writeTextFile, readTextFile } from "@tauri-apps/plugin-fs";
 import { invoke } from "@tauri-apps/api/core";
 
 export async function exportData(): Promise<boolean> {
-  // Get data from Rust backend
-  console.log("1. Getting data from backend...");
   const json = await invoke<string>("export_data");
-  console.log("2. Got data, length:", json?.length);
 
-  console.log("3. Opening save dialog...");
   const filePath = await save({
     defaultPath: `loikka-backup-${new Date().toISOString().split("T")[0]}.json`,
     filters: [
@@ -18,20 +14,11 @@ export async function exportData(): Promise<boolean> {
       },
     ],
   });
-  console.log("4. Save dialog returned:", filePath);
 
   if (filePath) {
-    console.log("5. Writing file...");
-    try {
-      await writeTextFile(filePath, json);
-      console.log("6. File written successfully!");
-      return true;
-    } catch (err) {
-      console.error("Write error:", err);
-      throw err;
-    }
+    await writeTextFile(filePath, json);
+    return true;
   }
-  console.log("5. No file path, user cancelled");
   return false;
 }
 

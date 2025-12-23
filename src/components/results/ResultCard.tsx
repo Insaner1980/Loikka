@@ -167,7 +167,7 @@ export function ResultCard({ result, athlete, discipline, onClick, onEdit, onDel
         </div>
 
         {/* Divider */}
-        <div className="h-px w-full bg-white/10 my-3" />
+        <div className="h-px w-full bg-border my-3" />
 
         {/* Bottom: Date, competition/training, placement, photos */}
         <div className="flex items-center justify-between gap-2 text-sm">

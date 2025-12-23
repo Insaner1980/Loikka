@@ -102,7 +102,7 @@ export function CompetitionCard({
       </div>
 
       {/* Divider */}
-      <div className="h-px w-full bg-white/10 my-2" />
+      <div className="h-px w-full bg-border my-2" />
 
       {/* Bottom info */}
       <div className="space-y-1.5 text-sm text-muted-foreground">

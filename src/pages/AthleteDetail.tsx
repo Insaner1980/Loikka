@@ -363,7 +363,7 @@ export function AthleteDetail() {
                     </div>
 
                     {/* Divider */}
-                    <div className="h-px w-full bg-white/10 my-3" />
+                    <div className="h-px w-full bg-border my-3" />
 
                     {/* Bottom: Date + competition */}
                     <div className="text-sm text-muted-foreground">
@@ -594,7 +594,7 @@ export function AthleteDetail() {
                       </div>
 
                       {/* Divider */}
-                      <div className="h-px w-full bg-white/10 my-3" />
+                      <div className="h-px w-full bg-border my-3" />
 
                       {/* Bottom: Competition, date, location */}
                       <div className="text-sm text-muted-foreground text-center">
@@ -1112,7 +1112,7 @@ export function AthleteDetail() {
                       </div>
 
                       {/* Divider */}
-                      <div className="h-px w-full bg-white/10 my-3" />
+                      <div className="h-px w-full bg-border my-3" />
 
                       {/* Bottom: Dates */}
                       <div className="text-sm text-muted-foreground text-center">

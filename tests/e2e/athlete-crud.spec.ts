@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 
 /**
  * E2E tests for athlete CRUD operations.
@@ -108,12 +108,18 @@ test.describe("Keyboard Shortcuts", () => {
     await page.goto("/athletes");
     await page.waitForLoadState("networkidle");
 
+    // Wait for page to be ready
+    await expect(page.locator("h1")).toBeVisible();
+
+    // Focus the body to ensure keyboard events are captured
+    await page.locator("body").click();
+
     // Press Ctrl+N
     await page.keyboard.press("Control+n");
 
-    // Dialog should open
+    // Dialog should open (with extended timeout for keyboard handling)
     const dialog = page.getByRole("dialog");
-    await expect(dialog).toBeVisible();
+    await expect(dialog).toBeVisible({ timeout: 3000 });
   });
 
   test("should close dialog with Escape", async ({ page }) => {

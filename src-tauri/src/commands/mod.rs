@@ -11,5 +11,4 @@ pub use competitions::*;
 pub use goals::*;
 pub use google_drive::*;
 pub use photos::*;
-pub use results::*;
 pub use sync::*;

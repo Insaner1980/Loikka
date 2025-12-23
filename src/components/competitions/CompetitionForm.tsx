@@ -1,22 +1,13 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Users } from "lucide-react";
 import { useAthleteStore } from "../../stores/useAthleteStore";
 import { useCompetitionStore } from "../../stores/useCompetitionStore";
 import { disciplines, categoryOrder } from "../../data/disciplines";
 import { getTodayISO } from "../../lib/formatters";
+import { COMPETITION_LEVEL_OPTIONS } from "../../lib/constants";
 import { DatePicker } from "../ui/DatePicker";
+import { AutocompleteInput } from "../shared";
 import type { Competition, NewCompetition, CompetitionLevel } from "../../types";
-
-const competitionLevelOptions: { value: CompetitionLevel; label: string }[] = [
-  { value: "seura", label: "Seuran kisat" },
-  { value: "seuraottelu", label: "Seuraottelu" },
-  { value: "piiri", label: "Piirikisat" },
-  { value: "pm", label: "Piirimestaruus (PM)" },
-  { value: "alue", label: "Aluemestaruus" },
-  { value: "sm", label: "Suomenmestaruus (SM)" },
-  { value: "kll", label: "Koululiikuntaliiton kisat (KLL)" },
-  { value: "muu", label: "Muu" },
-];
 
 interface CompetitionFormProps {
   competition?: Competition;
@@ -47,12 +38,6 @@ export function CompetitionForm({
 }: CompetitionFormProps) {
   const { athletes, fetchAthletes } = useAthleteStore();
   const { competitions, fetchCompetitions } = useCompetitionStore();
-
-  // Autocomplete state
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [filteredSuggestions, setFilteredSuggestions] = useState<string[]>([]);
-  const nameInputRef = useRef<HTMLInputElement>(null);
-  const suggestionsRef = useRef<HTMLDivElement>(null);
 
   // Form state
   const [name, setName] = useState(competition?.name ?? "");
@@ -88,45 +73,6 @@ export function CompetitionForm({
 
   // Get unique competition names for autocomplete
   const uniqueCompetitionNames = [...new Set(competitions.map((c) => c.name))];
-
-  // Handle name input change with autocomplete
-  const handleNameChange = (value: string) => {
-    setName(value);
-
-    if (value.trim().length > 0) {
-      const filtered = uniqueCompetitionNames.filter((n) =>
-        n.toLowerCase().includes(value.toLowerCase())
-      );
-      setFilteredSuggestions(filtered);
-      setShowSuggestions(filtered.length > 0);
-    } else {
-      setShowSuggestions(false);
-    }
-  };
-
-  // Handle suggestion click
-  const handleSuggestionClick = (suggestion: string) => {
-    setName(suggestion);
-    setFilteredSuggestions([]);
-    setShowSuggestions(false);
-  };
-
-  // Close suggestions when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        suggestionsRef.current &&
-        !suggestionsRef.current.contains(event.target as Node) &&
-        nameInputRef.current &&
-        !nameInputRef.current.contains(event.target as Node)
-      ) {
-        setShowSuggestions(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const toggleParticipant = (athleteId: number) => {
     setSelectedParticipants((prev) => {
@@ -211,49 +157,16 @@ export function CompetitionForm({
       {/* Row 1: Name and Level */}
       <div className="grid grid-cols-2 gap-4">
         {/* Name */}
-        <div className="relative">
-          <label htmlFor="name" className="block text-sm font-medium mb-1.5">
-            Nimi <span className="text-error">*</span>
-          </label>
-          <input
-            ref={nameInputRef}
-            type="text"
-            id="name"
-            value={name}
-            onChange={(e) => handleNameChange(e.target.value)}
-            onFocus={() => {
-              if (name.trim().length > 0 && filteredSuggestions.length > 0) {
-                setShowSuggestions(true);
-              }
-            }}
-            placeholder="esim. Tampereen aluemestaruus"
-            autoComplete="off"
-            className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
-              errors.name ? "border-error" : "border-border"
-            }`}
-          />
-          {/* Autocomplete suggestions */}
-          {showSuggestions && filteredSuggestions.length > 0 && (
-            <div
-              ref={suggestionsRef}
-              className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto"
-            >
-              {filteredSuggestions.map((suggestion, index) => (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => handleSuggestionClick(suggestion)}
-                  className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors cursor-pointer"
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          )}
-          {errors.name && (
-            <p className="mt-1 text-sm text-error">{errors.name}</p>
-          )}
-        </div>
+        <AutocompleteInput
+          id="name"
+          value={name}
+          onChange={setName}
+          suggestions={uniqueCompetitionNames}
+          label="Nimi"
+          required
+          placeholder="esim. Tampereen aluemestaruus"
+          error={errors.name}
+        />
 
         {/* Competition level */}
         <div>
@@ -267,7 +180,7 @@ export function CompetitionForm({
             className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer"
           >
             <option value="">Valitse taso</option>
-            {competitionLevelOptions.map((option) => (
+            {COMPETITION_LEVEL_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>

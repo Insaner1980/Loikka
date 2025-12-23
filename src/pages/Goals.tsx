@@ -355,6 +355,7 @@ export function Goals() {
         }
         confirmText="Poista"
         cancelText="Peruuta"
+        variant="danger"
       />
     </div>
   );

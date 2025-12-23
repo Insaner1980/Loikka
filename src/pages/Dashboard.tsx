@@ -16,6 +16,7 @@ import { getDisciplineById } from "../data/disciplines";
 import { formatTime, formatDistance, formatDate, toAssetUrl, getStatusLabel, getInitials, getDaysUntil } from "../lib/formatters";
 import { DASHBOARD } from "../lib/constants";
 import { Dialog } from "../components/ui/Dialog";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { CompetitionForm } from "../components/competitions/CompetitionForm";
 import { ResultEditDialog } from "../components/results/ResultEditDialog";
 import type { Competition, NewCompetition, Result } from "../types";
@@ -387,65 +388,31 @@ export function Dashboard() {
       </Dialog>
 
       {/* Delete Competition Confirmation Dialog */}
-      <Dialog
+      <ConfirmDialog
         open={deleteConfirmOpen}
-        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => setDeleteConfirmOpen(false)}
         title="Poista kilpailu"
-        maxWidth="sm"
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Haluatko varmasti poistaa kilpailun "{selectedCompetition?.name}"? Tätä toimintoa ei voi peruuttaa.
-          </p>
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={() => setDeleteConfirmOpen(false)}
-              className="btn-secondary"
-            >
-              Peruuta
-            </button>
-            <button
-              onClick={handleDeleteConfirm}
-              className="btn-primary"
-            >
-              Poista
-            </button>
-          </div>
-        </div>
-      </Dialog>
+        message={`Haluatko varmasti poistaa kilpailun "${selectedCompetition?.name}"? Tätä toimintoa ei voi peruuttaa.`}
+        confirmText="Poista"
+        variant="danger"
+      />
 
       {/* Delete Result Confirmation Dialog */}
-      <Dialog
+      <ConfirmDialog
         open={selectedResultForDelete !== null}
-        onClose={() => setSelectedResultForDelete(null)}
+        onConfirm={async () => {
+          if (selectedResultForDelete) {
+            await deleteResult(selectedResultForDelete.id);
+            setSelectedResultForDelete(null);
+          }
+        }}
+        onCancel={() => setSelectedResultForDelete(null)}
         title="Poista tulos"
-        maxWidth="sm"
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Haluatko varmasti poistaa tämän tuloksen? Tätä toimintoa ei voi peruuttaa.
-          </p>
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={() => setSelectedResultForDelete(null)}
-              className="btn-secondary"
-            >
-              Peruuta
-            </button>
-            <button
-              onClick={async () => {
-                if (selectedResultForDelete) {
-                  await deleteResult(selectedResultForDelete.id);
-                  setSelectedResultForDelete(null);
-                }
-              }}
-              className="btn-primary bg-[var(--status-error)] hover:bg-[var(--status-error)]/90"
-            >
-              Poista
-            </button>
-          </div>
-        </div>
-      </Dialog>
+        message="Haluatko varmasti poistaa tämän tuloksen? Tätä toimintoa ei voi peruuttaa."
+        confirmText="Poista"
+        variant="danger"
+      />
 
       {/* Result Edit Dialog */}
       <ResultEditDialog

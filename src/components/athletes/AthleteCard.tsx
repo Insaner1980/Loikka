@@ -1,17 +1,6 @@
 import { Link } from "react-router-dom";
-import type { Athlete } from "../../types";
+import type { Athlete, AthleteStats } from "../../types";
 import { toAssetUrl, getAgeCategory, getInitials } from "../../lib/formatters";
-
-interface AthleteStats {
-  disciplineCount: number;
-  resultCount: number;
-  pbCount: number;
-  sbCount: number;
-  nrCount: number;
-  goldMedals: number;
-  silverMedals: number;
-  bronzeMedals: number;
-}
 
 interface AthleteCardProps {
   athlete: Athlete;

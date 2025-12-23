@@ -127,7 +127,14 @@ C:\dev\Loikka\
 │   │   └── default.json    # Tauri-oikeudet
 │   ├── Cargo.toml
 │   └── tauri.conf.json
-├── UI_SPEC.md              # Käyttöliittymän spesifikaatio
+├── docs/                   # Dokumentaatio
+│   ├── UI_SPEC.md          # Käyttöliittymän spesifikaatio
+│   ├── THEME_SPEC.md       # Teeman spesifikaatio
+│   ├── DATABASE_ANALYSIS.md # Tietokanta-analyysi
+│   ├── CODE_ANALYSIS.md    # Koodi-analyysi
+│   ├── REVIEW_REPORT.md    # Arviointiraportti
+│   ├── REFACTORING_NOTES.md # Refaktorointimuistiinpanot
+│   └── USER_GUIDE.md       # Käyttöohje
 ├── CLAUDE.md               # Tämä tiedosto
 ├── package.json
 ├── tsconfig.json
@@ -458,7 +465,7 @@ className="hover:bg-card-hover transition-colors duration-150"
 | `src-tauri/src/db/seed_disciplines.sql` | Lajien seed-data |
 | `src-tauri/src/commands/*.rs` | Tauri-komennot |
 | `src-tauri/capabilities/default.json` | Tauri-oikeudet ja -rajoitukset |
-| `UI_SPEC.md` | Käyttöliittymän spesifikaatio |
+| `docs/UI_SPEC.md` | Käyttöliittymän spesifikaatio |
 
 ## Toteutetut ominaisuudet
 
@@ -480,7 +487,12 @@ className="hover:bg-card-hover transition-colors duration-150"
 
 1. **Google Drive -synkronointi:** UI valmis, backend (OAuth2, tiedostosynkronointi) keskeneräinen
 2. **Kehityskaaviot:** Tilastot-sivu osittain toteutettu
-3. **Testaus:** Ei testejä vielä (Vitest + Playwright suositus)
+
+## Testaus
+
+- **Unit-testit:** Vitest (61 testiä)
+- **E2E-testit:** Playwright (59 testiä)
+- **Rust-testit:** cargo test (23 testiä)
 
 ## Tietokantamigraatiot
 
@@ -500,4 +512,4 @@ Migraatiot ajetaan automaattisesti sovelluksen käynnistyksessä (`database.rs`)
 - Kuvat tallennetaan `%APPDATA%/com.loikka.app/photos/` ja `profile_photos/`
 - Thumbnailit generoidaan automaattisesti (300px)
 - Lazy loading käytössä sivuille (`React.lazy` + `Suspense`)
-- Katso `UI_SPEC.md` yksityiskohtaiselle käyttöliittymädokumentaatiolle
+- Katso `docs/UI_SPEC.md` yksityiskohtaiselle käyttöliittymädokumentaatiolle

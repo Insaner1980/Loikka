@@ -1,15 +1,17 @@
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
 interface ConfirmDialogProps {
   open: boolean;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   onCancel: () => void;
   title: string;
   message: string | ReactNode;
   confirmText?: string;
   cancelText?: string;
   variant?: "danger" | "warning" | "default";
+  /** Loading state - disables buttons */
+  loading?: boolean;
 }
 
 export function ConfirmDialog({
@@ -20,8 +22,25 @@ export function ConfirmDialog({
   message,
   confirmText = "OK",
   cancelText = "Peruuta",
-  variant: _variant = "default",
+  variant = "default",
+  loading = false,
 }: ConfirmDialogProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Handle async confirm
+  const handleConfirm = async () => {
+    const result = onConfirm();
+    if (result instanceof Promise) {
+      setIsSubmitting(true);
+      try {
+        await result;
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
+  const isLoading = loading || isSubmitting;
   // Close on Escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -48,8 +67,10 @@ export function ConfirmDialog({
 
   if (!open) return null;
 
-  // All variants use the same accent color for minimalist design
-  const confirmButtonClass = "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--btn-primary-text)]";
+  // Button styling based on variant
+  const confirmButtonClass = variant === "danger"
+    ? "bg-[var(--status-error)] hover:bg-[var(--status-error)]/90 text-white"
+    : "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--btn-primary-text)]";
 
   return createPortal(
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
@@ -91,14 +112,16 @@ export function ConfirmDialog({
             <button
               onClick={onCancel}
               className="btn-secondary btn-press"
+              disabled={isLoading}
             >
               {cancelText}
             </button>
             <button
-              onClick={onConfirm}
-              className={`flex items-center gap-2 px-3.5 py-2 text-body font-medium rounded-md transition-all duration-150 cursor-pointer btn-press ${confirmButtonClass}`}
+              onClick={handleConfirm}
+              disabled={isLoading}
+              className={`flex items-center gap-2 px-3.5 py-2 text-body font-medium rounded-md transition-all duration-150 cursor-pointer btn-press disabled:opacity-50 disabled:cursor-not-allowed ${confirmButtonClass}`}
             >
-              {confirmText}
+              {isLoading ? "Odota..." : confirmText}
             </button>
           </div>
         </div>

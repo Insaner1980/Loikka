@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Trash2 } from "lucide-react";
 import { Dialog } from "../ui/Dialog";
 import { ConfirmDialog } from "../ui/ConfirmDialog";
@@ -6,14 +6,15 @@ import { toast } from "../ui/Toast";
 import { TimeInput } from "../ui/TimeInput";
 import { DistanceInput } from "../ui/DistanceInput";
 import { DatePicker } from "../ui/DatePicker";
+import { AutocompleteInput } from "../shared";
 import { useAthleteStore } from "../../stores/useAthleteStore";
 import { useResultStore } from "../../stores/useResultStore";
 import { useCompetitionStore } from "../../stores/useCompetitionStore";
+import { useDisciplineFields } from "../../hooks";
 import {
   disciplines,
   categoryLabels,
   categoryOrder,
-  getDisciplineById,
   disciplineNeedsMinutes,
 } from "../../data/disciplines";
 import {
@@ -21,11 +22,9 @@ import {
   formatDistance,
 } from "../../lib/formatters";
 import {
-  WIND_AFFECTED_DISCIPLINES,
-  EQUIPMENT_WEIGHTS,
   HURDLE_HEIGHTS,
   RESULT_STATUSES,
-  DISCIPLINE_EQUIPMENT_MAP,
+  COMPETITION_LEVEL_OPTIONS,
 } from "../../lib/constants";
 import type { Result, ResultType, CompetitionLevel, ResultStatus } from "../../types";
 
@@ -42,17 +41,6 @@ interface FormErrors {
   competitionName?: string;
 }
 
-const competitionLevelOptions: { value: CompetitionLevel; label: string }[] = [
-  { value: "seura", label: "Seuran kisat" },
-  { value: "seuraottelu", label: "Seuraottelu" },
-  { value: "piiri", label: "Piirikisat" },
-  { value: "pm", label: "Piirimestaruus (PM)" },
-  { value: "alue", label: "Aluemestaruus" },
-  { value: "sm", label: "Suomenmestaruus (SM)" },
-  { value: "kll", label: "Koululiikuntaliiton kisat (KLL)" },
-  { value: "muu", label: "Muu" },
-];
-
 export function ResultEditDialog({
   result,
   open,
@@ -63,12 +51,6 @@ export function ResultEditDialog({
   const { athletes } = useAthleteStore();
   const { results, updateResult, deleteResult } = useResultStore();
   const { competitions, fetchCompetitions } = useCompetitionStore();
-
-  // Autocomplete state for competition name
-  const [showCompetitionSuggestions, setShowCompetitionSuggestions] = useState(false);
-  const [filteredCompetitionSuggestions, setFilteredCompetitionSuggestions] = useState<string[]>([]);
-  const competitionNameInputRef = useRef<HTMLInputElement>(null);
-  const competitionSuggestionsRef = useRef<HTMLDivElement>(null);
 
   // Form state
   const [disciplineId, setDisciplineId] = useState<number>(0);
@@ -114,45 +96,6 @@ export function ResultEditDialog({
     return [...new Set([...calendarNames, ...resultNames])].sort();
   }, [competitions, results]);
 
-  // Handle competition name change with autocomplete
-  const handleCompetitionNameChange = (value: string) => {
-    setCompetitionName(value);
-
-    if (value.trim().length > 0) {
-      const filtered = uniqueCompetitionNames.filter((n) =>
-        n.toLowerCase().includes(value.toLowerCase())
-      );
-      setFilteredCompetitionSuggestions(filtered);
-      setShowCompetitionSuggestions(filtered.length > 0);
-    } else {
-      setShowCompetitionSuggestions(false);
-    }
-  };
-
-  // Handle competition suggestion click
-  const handleCompetitionSuggestionClick = (suggestion: string) => {
-    setCompetitionName(suggestion);
-    setFilteredCompetitionSuggestions([]);
-    setShowCompetitionSuggestions(false);
-  };
-
-  // Close competition suggestions when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        competitionSuggestionsRef.current &&
-        !competitionSuggestionsRef.current.contains(event.target as Node) &&
-        competitionNameInputRef.current &&
-        !competitionNameInputRef.current.contains(event.target as Node)
-      ) {
-        setShowCompetitionSuggestions(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   // Initialize form when result changes
   useEffect(() => {
     if (result) {
@@ -177,38 +120,15 @@ export function ResultEditDialog({
     }
   }, [result]);
 
-  // Get selected discipline
-  const selectedDiscipline = useMemo(() => {
-    return disciplineId ? getDisciplineById(disciplineId) : undefined;
-  }, [disciplineId]);
-
-  // Check if discipline requires wind field
-  const showWindField = useMemo(() => {
-    if (!selectedDiscipline) return false;
-    return WIND_AFFECTED_DISCIPLINES.includes(selectedDiscipline.name as typeof WIND_AFFECTED_DISCIPLINES[number]);
-  }, [selectedDiscipline]);
-
-  // Check if discipline is hurdles
-  const isHurdleDiscipline = useMemo(() => {
-    return selectedDiscipline?.category === "hurdles";
-  }, [selectedDiscipline]);
-
-  // Check if discipline is throws
-  const isThrowDiscipline = useMemo(() => {
-    return selectedDiscipline?.category === "throws";
-  }, [selectedDiscipline]);
-
-  // Get equipment type for throws
-  const equipmentType = useMemo(() => {
-    if (!selectedDiscipline || !isThrowDiscipline) return null;
-    return DISCIPLINE_EQUIPMENT_MAP[selectedDiscipline.name] || null;
-  }, [selectedDiscipline, isThrowDiscipline]);
-
-  // Get available weights
-  const availableWeights = useMemo(() => {
-    if (!equipmentType) return [];
-    return EQUIPMENT_WEIGHTS[equipmentType] || [];
-  }, [equipmentType]);
+  // Get discipline-related fields
+  const {
+    selectedDiscipline,
+    showWindField,
+    isHurdleDiscipline,
+    isThrowDiscipline,
+    equipmentType,
+    availableWeights,
+  } = useDisciplineFields(disciplineId);
 
   // Get athlete name
   const athleteName = useMemo(() => {
@@ -584,49 +504,16 @@ export function ResultEditDialog({
           {resultType === "competition" && (
             <>
               <div className="grid grid-cols-2 gap-4">
-                <div className="relative">
-                  <label htmlFor="competitionName" className="block text-sm font-medium mb-1.5">
-                    Kilpailun nimi <span className="text-error">*</span>
-                  </label>
-                  <input
-                    ref={competitionNameInputRef}
-                    type="text"
-                    id="competitionName"
-                    value={competitionName}
-                    onChange={(e) => handleCompetitionNameChange(e.target.value)}
-                    onFocus={() => {
-                      if (competitionName.trim().length > 0 && filteredCompetitionSuggestions.length > 0) {
-                        setShowCompetitionSuggestions(true);
-                      }
-                    }}
-                    placeholder="esim. Kalevan kisat"
-                    autoComplete="off"
-                    className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
-                      errors.competitionName ? "border-error" : "border-border"
-                    }`}
-                  />
-                  {/* Autocomplete suggestions */}
-                  {showCompetitionSuggestions && filteredCompetitionSuggestions.length > 0 && (
-                    <div
-                      ref={competitionSuggestionsRef}
-                      className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto"
-                    >
-                      {filteredCompetitionSuggestions.map((suggestion, index) => (
-                        <button
-                          key={index}
-                          type="button"
-                          onClick={() => handleCompetitionSuggestionClick(suggestion)}
-                          className="w-full px-3 py-2 text-left text-sm hover:bg-muted transition-colors cursor-pointer"
-                        >
-                          {suggestion}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {errors.competitionName && (
-                    <p className="mt-1 text-sm text-error">{errors.competitionName}</p>
-                  )}
-                </div>
+                <AutocompleteInput
+                  id="competitionName"
+                  value={competitionName}
+                  onChange={setCompetitionName}
+                  suggestions={uniqueCompetitionNames}
+                  label="Kilpailun nimi"
+                  required
+                  placeholder="esim. Kalevan kisat"
+                  error={errors.competitionName}
+                />
 
                 <div>
                   <label htmlFor="competitionLevel" className="block text-sm font-medium mb-1.5">
@@ -639,7 +526,7 @@ export function ResultEditDialog({
                     className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer"
                   >
                     <option value="">Valitse taso</option>
-                    {competitionLevelOptions.map((option) => (
+                    {COMPETITION_LEVEL_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
                         {option.label}
                       </option>
@@ -745,34 +632,16 @@ export function ResultEditDialog({
       </Dialog>
 
       {/* Delete confirmation dialog */}
-      <Dialog
+      <ConfirmDialog
         open={deleteConfirmOpen}
-        onClose={() => setDeleteConfirmOpen(false)}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteConfirmOpen(false)}
         title="Poista tulos"
-        maxWidth="sm"
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Haluatko varmasti poistaa tämän tuloksen? Tätä toimintoa ei voi peruuttaa.
-          </p>
-          <div className="flex justify-end gap-3">
-            <button
-              onClick={() => setDeleteConfirmOpen(false)}
-              className="btn-secondary"
-              disabled={saving}
-            >
-              Peruuta
-            </button>
-            <button
-              onClick={handleDelete}
-              className="btn-primary"
-              disabled={saving}
-            >
-              {saving ? "Poistetaan..." : "Poista"}
-            </button>
-          </div>
-        </div>
-      </Dialog>
+        message="Haluatko varmasti poistaa tämän tuloksen? Tätä toimintoa ei voi peruuttaa."
+        confirmText="Poista"
+        variant="danger"
+        loading={saving}
+      />
 
       {/* Status change confirmation dialog */}
       <ConfirmDialog

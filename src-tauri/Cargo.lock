@@ -2687,6 +2687,7 @@ dependencies = [
  "tauri-plugin-notification",
  "tauri-plugin-opener",
  "tauri-plugin-sql",
+ "thiserror 1.0.69",
  "tiny_http",
  "tokio",
  "urlencoding",

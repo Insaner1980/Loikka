@@ -144,6 +144,9 @@ pub async fn create_result(app: AppHandle, result: CreateResult) -> Result<Athle
         (pb, sb)
     };
 
+    // Start transaction for atomic UPDATE + INSERT
+    let mut tx = pool.begin().await.map_err(|e| e.to_string())?;
+
     // If this is a new PB, clear old PB flag for this athlete/discipline (respecting equipment)
     if is_pb {
         if let Some(weight) = result.equipment_weight {
@@ -154,7 +157,7 @@ pub async fn create_result(app: AppHandle, result: CreateResult) -> Result<Athle
             .bind(result.athlete_id)
             .bind(result.discipline_id)
             .bind(weight)
-            .execute(&pool)
+            .execute(&mut *tx)
             .await
             .map_err(|e| e.to_string())?;
         } else if let Some(height) = result.hurdle_height {
@@ -165,7 +168,7 @@ pub async fn create_result(app: AppHandle, result: CreateResult) -> Result<Athle
             .bind(result.athlete_id)
             .bind(result.discipline_id)
             .bind(height)
-            .execute(&pool)
+            .execute(&mut *tx)
             .await
             .map_err(|e| e.to_string())?;
         } else {
@@ -175,7 +178,7 @@ pub async fn create_result(app: AppHandle, result: CreateResult) -> Result<Athle
             )
             .bind(result.athlete_id)
             .bind(result.discipline_id)
-            .execute(&pool)
+            .execute(&mut *tx)
             .await
             .map_err(|e| e.to_string())?;
         }
@@ -191,7 +194,7 @@ pub async fn create_result(app: AppHandle, result: CreateResult) -> Result<Athle
             .bind(result.discipline_id)
             .bind(year.to_string())
             .bind(weight)
-            .execute(&pool)
+            .execute(&mut *tx)
             .await
             .map_err(|e| e.to_string())?;
         } else if let Some(height) = result.hurdle_height {
@@ -202,7 +205,7 @@ pub async fn create_result(app: AppHandle, result: CreateResult) -> Result<Athle
             .bind(result.discipline_id)
             .bind(year.to_string())
             .bind(height)
-            .execute(&pool)
+            .execute(&mut *tx)
             .await
             .map_err(|e| e.to_string())?;
         } else {
@@ -212,7 +215,7 @@ pub async fn create_result(app: AppHandle, result: CreateResult) -> Result<Athle
             .bind(result.athlete_id)
             .bind(result.discipline_id)
             .bind(year.to_string())
-            .execute(&pool)
+            .execute(&mut *tx)
             .await
             .map_err(|e| e.to_string())?;
         }
@@ -240,7 +243,7 @@ pub async fn create_result(app: AppHandle, result: CreateResult) -> Result<Athle
     .bind(result.equipment_weight)
     .bind(result.hurdle_height)
     .bind(result.hurdle_spacing)
-    .execute(&pool)
+    .execute(&mut *tx)
     .await
     .map_err(|e| e.to_string())?;
 
@@ -251,9 +254,12 @@ pub async fn create_result(app: AppHandle, result: CreateResult) -> Result<Athle
         FROM results WHERE id = ?"#
     )
     .bind(id)
-    .fetch_one(&pool)
+    .fetch_one(&mut *tx)
     .await
     .map_err(|e| e.to_string())?;
+
+    // Commit transaction
+    tx.commit().await.map_err(|e| e.to_string())?;
 
     Ok(AthleteResult {
         id: row.get("id"),

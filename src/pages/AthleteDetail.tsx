@@ -5,6 +5,7 @@ import { ArrowLeft, X, Trash2 } from "lucide-react";
 import { useAthleteStore } from "../stores/useAthleteStore";
 import { useResultStore } from "../stores/useResultStore";
 import { useGoalStore } from "../stores/useGoalStore";
+import { useAthleteData } from "../hooks";
 import { AthleteTabs, type AthleteTab } from "../components/athletes/AthleteTabs";
 import { AthleteForm } from "../components/athletes/AthleteForm";
 import {
@@ -25,7 +26,6 @@ import type {
   NewAthlete,
   NewResult,
   MedalType,
-  Medal,
   Goal,
 } from "../types";
 
@@ -33,23 +33,48 @@ export function AthleteDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const athleteId = id ? parseInt(id) : 0;
+
   const {
     athletes,
     fetchAthletes,
     updateAthlete,
     deleteAthlete,
     getAthleteById,
-    getAthleteResults,
-    getAthletePersonalBests,
-    getAthleteMedals,
-    getAthleteGoals,
   } = useAthleteStore();
+
+  // Use centralized hook for athlete data
+  const {
+    results,
+    personalBests,
+    medals,
+    goals,
+    refetchResults,
+    refetchGoals,
+  } = useAthleteData(athleteId);
+
+  const { addResult, deleteResult } = useResultStore();
+  const { deleteGoal } = useGoalStore();
 
   // Get discipline filter from URL params
   const disciplineFilterParam = searchParams.get("discipline");
   const [disciplineFilter, setDisciplineFilter] = useState<number | null>(
     disciplineFilterParam ? parseInt(disciplineFilterParam) : null
   );
+
+  // UI state
+  const [activeTab, setActiveTab] = useState<AthleteTab>("records");
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [resultDialogOpen, setResultDialogOpen] = useState(false);
+  const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
+  const [confirmDeletePhotoOpen, setConfirmDeletePhotoOpen] = useState(false);
+  const [confirmDeleteAthleteOpen, setConfirmDeleteAthleteOpen] = useState(false);
+
+  // State for result editing and deletion
+  const [selectedResult, setSelectedResult] = useState<ResultWithDiscipline | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [deleteConfirmResult, setDeleteConfirmResult] = useState<ResultWithDiscipline | null>(null);
+  const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
 
   // Update discipline filter when URL changes and switch to results tab
   useEffect(() => {
@@ -71,30 +96,6 @@ export function AthleteDetail() {
     }
   };
 
-  const [activeTab, setActiveTab] = useState<AthleteTab>("records");
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [resultDialogOpen, setResultDialogOpen] = useState(false);
-  const [photoViewerOpen, setPhotoViewerOpen] = useState(false);
-  const [confirmDeletePhotoOpen, setConfirmDeletePhotoOpen] = useState(false);
-  const [confirmDeleteAthleteOpen, setConfirmDeleteAthleteOpen] = useState(false);
-
-  // State for async data
-  const [results, setResults] = useState<ResultWithDiscipline[]>([]);
-  const [personalBests, setPersonalBests] = useState<ResultWithDiscipline[]>([]);
-  const [medals, setMedals] = useState<Medal[]>([]);
-  const [goals, setGoals] = useState<Goal[]>([]);
-
-  const { addResult, deleteResult } = useResultStore();
-  const { deleteGoal } = useGoalStore();
-
-  // State for result editing and deletion
-  const [selectedResult, setSelectedResult] = useState<ResultWithDiscipline | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [deleteConfirmResult, setDeleteConfirmResult] = useState<ResultWithDiscipline | null>(null);
-  const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
-
-  const athleteId = id ? parseInt(id) : 0;
-
   const handleEditResult = (result: ResultWithDiscipline) => {
     setSelectedResult(result);
     setIsEditDialogOpen(true);
@@ -107,14 +108,7 @@ export function AthleteDetail() {
   const confirmDeleteResult = async () => {
     if (deleteConfirmResult) {
       await deleteResult(deleteConfirmResult.id);
-      const [resultsData, pbData, medalsData] = await Promise.all([
-        getAthleteResults(athleteId),
-        getAthletePersonalBests(athleteId),
-        getAthleteMedals(athleteId),
-      ]);
-      setResults(resultsData);
-      setPersonalBests(pbData);
-      setMedals(medalsData);
+      await refetchResults();
       setDeleteConfirmResult(null);
     }
   };
@@ -122,14 +116,7 @@ export function AthleteDetail() {
   const handleEditDialogClose = async () => {
     setIsEditDialogOpen(false);
     setSelectedResult(null);
-    const [resultsData, pbData, medalsData] = await Promise.all([
-      getAthleteResults(athleteId),
-      getAthletePersonalBests(athleteId),
-      getAthleteMedals(athleteId),
-    ]);
-    setResults(resultsData);
-    setPersonalBests(pbData);
-    setMedals(medalsData);
+    await refetchResults();
   };
 
   useEffect(() => {
@@ -137,31 +124,6 @@ export function AthleteDetail() {
       fetchAthletes();
     }
   }, [athletes.length, fetchAthletes]);
-
-  // Load async data when athlete changes
-  useEffect(() => {
-    if (athleteId) {
-      const loadData = async () => {
-        const [resultsData, pbData, medalsData, goalsData] = await Promise.all([
-          getAthleteResults(athleteId),
-          getAthletePersonalBests(athleteId),
-          getAthleteMedals(athleteId),
-          getAthleteGoals(athleteId),
-        ]);
-        setResults(resultsData);
-        setPersonalBests(pbData);
-        setMedals(medalsData);
-        setGoals(goalsData);
-      };
-      loadData();
-    }
-  }, [
-    athleteId,
-    getAthleteResults,
-    getAthletePersonalBests,
-    getAthleteMedals,
-    getAthleteGoals,
-  ]);
 
   const athleteData = getAthleteById(athleteId);
 
@@ -203,14 +165,7 @@ export function AthleteDetail() {
     medal?: { type: MedalType; competitionName: string }
   ) => {
     await addResult(data, medal);
-    const [resultsData, pbData, medalsData] = await Promise.all([
-      getAthleteResults(athleteId),
-      getAthletePersonalBests(athleteId),
-      getAthleteMedals(athleteId),
-    ]);
-    setResults(resultsData);
-    setPersonalBests(pbData);
-    setMedals(medalsData);
+    await refetchResults();
     setResultDialogOpen(false);
   };
 
@@ -447,8 +402,7 @@ export function AthleteDetail() {
         onConfirm={async () => {
           if (goalToDelete) {
             await deleteGoal(goalToDelete.id);
-            const goalsData = await getAthleteGoals(athleteId);
-            setGoals(goalsData);
+            await refetchGoals();
             toast.success("Tavoite poistettu");
             setGoalToDelete(null);
           }

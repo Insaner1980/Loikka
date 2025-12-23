@@ -1,9 +1,14 @@
 // Modules
+#[macro_use]
+mod macros;
 mod commands;
 mod database;
 mod db;
+mod error;
 mod google_drive;
 mod types;
+
+pub use error::{AppError, AppResult};
 
 use database::{init_database, AppDatabase};
 use tauri::Manager;

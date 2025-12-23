@@ -9,7 +9,7 @@ import {
   getStatusLabel,
 } from "../../lib/formatters";
 import { ResultBadge } from "./ResultBadge";
-import { usePhotoCount } from "../../hooks";
+import { usePhotoStore } from "../../stores";
 
 interface ResultCardProps {
   result: {
@@ -46,11 +46,12 @@ const medalColors = {
 };
 
 export function ResultCard({ result, athlete, discipline, onClick, onEdit, onDelete }: ResultCardProps) {
-  const { count: photoCount, fetchCount } = usePhotoCount("results", result.id);
+  const { fetchPhotoCount, getPhotoCount } = usePhotoStore();
+  const photoCount = getPhotoCount("results", result.id);
 
   useEffect(() => {
-    fetchCount();
-  }, [fetchCount]);
+    fetchPhotoCount("results", result.id);
+  }, [fetchPhotoCount, result.id]);
 
   // Get result year for wind check
   const resultYear = new Date(result.date).getFullYear();

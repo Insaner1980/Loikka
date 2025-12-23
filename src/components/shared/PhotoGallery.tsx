@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Plus, Trash2, ImageIcon, Loader2 } from "lucide-react";
-import { usePhotos, type EntityType, type Photo } from "../../hooks";
+import { usePhotoStore, type EntityType, type Photo } from "../../stores";
 import { PhotoViewer } from "./PhotoViewer";
 
 interface PhotoGalleryProps {
@@ -25,23 +25,23 @@ export function PhotoGallery({
   onPhotoCountChange,
 }: PhotoGalleryProps) {
   const {
-    photos,
-    loading,
-    error,
-    fetchPhotos,
-    addPhoto,
-    deletePhoto,
+    fetchEntityPhotos,
+    addEntityPhoto,
+    deleteEntityPhoto,
+    getEntityPhotos,
     getThumbnailUrl,
     getPhotoUrl,
-  } = usePhotos(entityType, entityId);
+  } = usePhotoStore();
+
+  const { photos, loading, error } = getEntityPhotos(entityType, entityId);
 
   const [viewerOpen, setViewerOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
 
   useEffect(() => {
-    fetchPhotos();
-  }, [fetchPhotos]);
+    fetchEntityPhotos(entityType, entityId);
+  }, [fetchEntityPhotos, entityType, entityId]);
 
   // Report photo count to parent
   useEffect(() => {
@@ -53,13 +53,13 @@ export function PhotoGallery({
       alert(`Voit lisätä enintään ${maxPhotos} kuvaa`);
       return;
     }
-    await addPhoto();
+    await addEntityPhoto(entityType, entityId);
   };
 
   const handleDeletePhoto = async (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
     if (window.confirm("Haluatko varmasti poistaa tämän kuvan?")) {
-      await deletePhoto(id);
+      await deleteEntityPhoto(entityType, entityId, id);
     }
   };
 
@@ -77,7 +77,7 @@ export function PhotoGallery({
   };
 
   const handleViewerDelete = async (photo: Photo) => {
-    await deletePhoto(photo.id);
+    await deleteEntityPhoto(entityType, entityId, photo.id);
     if (photos.length <= 1) {
       setViewerOpen(false);
     } else if (selectedIndex >= photos.length - 1) {

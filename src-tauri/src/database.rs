@@ -159,7 +159,7 @@ async fn run_migration_v3(pool: &DbPool) -> Result<(), String> {
     )
     .fetch_one(pool)
     .await
-    .unwrap_or(false);
+    .map_err(|e| format!("Migration v3 failed checking entity_type column: {}", e))?;
 
     // If photos table already has entity_type, just ensure index exists
     if has_entity_type {
@@ -174,7 +174,7 @@ async fn run_migration_v3(pool: &DbPool) -> Result<(), String> {
         )
         .fetch_one(pool)
         .await
-        .unwrap_or(false);
+        .map_err(|e| format!("Migration v3 failed checking photos table: {}", e))?;
 
         if table_exists {
             // Rename old table and create new one
@@ -233,7 +233,7 @@ async fn run_migration_v4(pool: &DbPool) -> Result<(), String> {
     )
     .fetch_one(pool)
     .await
-    .unwrap_or(false);
+    .map_err(|e| format!("Migration v4 failed checking level column: {}", e))?;
 
     if !has_level {
         sqlx::query("ALTER TABLE competitions ADD COLUMN level TEXT")
@@ -257,7 +257,7 @@ async fn run_migration_v5(pool: &DbPool) -> Result<(), String> {
     )
     .fetch_one(pool)
     .await
-    .unwrap_or(false);
+    .map_err(|e| format!("Migration v5 failed checking competition_level column: {}", e))?;
 
     if !has_level {
         sqlx::query("ALTER TABLE results ADD COLUMN competition_level TEXT")
@@ -281,7 +281,7 @@ async fn run_migration_v6(pool: &DbPool) -> Result<(), String> {
     )
     .fetch_one(pool)
     .await
-    .unwrap_or(false);
+    .map_err(|e| format!("Migration v6 failed checking wind column: {}", e))?;
 
     if !has_wind {
         sqlx::query("ALTER TABLE results ADD COLUMN wind REAL")
@@ -296,7 +296,7 @@ async fn run_migration_v6(pool: &DbPool) -> Result<(), String> {
     )
     .fetch_one(pool)
     .await
-    .unwrap_or(false);
+    .map_err(|e| format!("Migration v6 failed checking status column: {}", e))?;
 
     if !has_status {
         sqlx::query("ALTER TABLE results ADD COLUMN status TEXT DEFAULT 'valid'")
@@ -311,7 +311,7 @@ async fn run_migration_v6(pool: &DbPool) -> Result<(), String> {
     )
     .fetch_one(pool)
     .await
-    .unwrap_or(false);
+    .map_err(|e| format!("Migration v6 failed checking equipment_weight column: {}", e))?;
 
     if !has_weight {
         sqlx::query("ALTER TABLE results ADD COLUMN equipment_weight REAL")
@@ -326,7 +326,7 @@ async fn run_migration_v6(pool: &DbPool) -> Result<(), String> {
     )
     .fetch_one(pool)
     .await
-    .unwrap_or(false);
+    .map_err(|e| format!("Migration v6 failed checking hurdle_height column: {}", e))?;
 
     if !has_height {
         sqlx::query("ALTER TABLE results ADD COLUMN hurdle_height INTEGER")
@@ -341,7 +341,7 @@ async fn run_migration_v6(pool: &DbPool) -> Result<(), String> {
     )
     .fetch_one(pool)
     .await
-    .unwrap_or(false);
+    .map_err(|e| format!("Migration v6 failed checking hurdle_spacing column: {}", e))?;
 
     if !has_spacing {
         sqlx::query("ALTER TABLE results ADD COLUMN hurdle_spacing REAL")
@@ -365,7 +365,7 @@ async fn run_migration_v7(pool: &DbPool) -> Result<(), String> {
     )
     .fetch_one(pool)
     .await
-    .unwrap_or(false);
+    .map_err(|e| format!("Migration v7 failed checking gender column: {}", e))?;
 
     if !has_gender {
         // Default to 'T' (tytöt/girls) for existing athletes
@@ -390,7 +390,7 @@ async fn run_migration_v8(pool: &DbPool) -> Result<(), String> {
     )
     .fetch_one(pool)
     .await
-    .unwrap_or(false);
+    .map_err(|e| format!("Migration v8 failed checking event_name column: {}", e))?;
 
     if !has_event_name {
         sqlx::query("ALTER TABLE photos ADD COLUMN event_name TEXT")

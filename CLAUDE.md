@@ -373,7 +373,7 @@ export const useMyStore = create<MyStore>((set, get) => ({
 | `useResultStore` | Tulokset ja lajit |
 | `useCompetitionStore` | Kilpailut |
 | `useGoalStore` | Tavoitteet |
-| `usePhotoStore` | Kuvat ja galleria |
+| `usePhotoStore` | Kuvat ja galleria (myös entity-kohtaiset kuvat) |
 | `useSyncStore` | Google Drive -synkronointi |
 
 ### Custom Hooks
@@ -383,9 +383,8 @@ export const useMyStore = create<MyStore>((set, get) => ({
 | `useReminders` | Kilpailumuistutukset ja notifikaatiot |
 | `useKeyboardShortcuts` | Pikanäppäimet (Ctrl+N lisää uusi, 1-8 navigointi) |
 | `useCalendarKeyboard` | Kalenterin näppäinohjaus (←/→ kuukaudet, T tänään) |
-| `usePhotos` | Kuvien hallinta entity-pohjaisesti |
-| `usePhotoCount` | Kuvien lukumäärä entitylle |
 | `useTheme` | Teeman hallinta (dark/light) |
+| `useAthleteData` | Urheilijan tulokset, ennätykset, mitalit, tavoitteet |
 
 ### Muotoilufunktiot (formatters.ts)
 

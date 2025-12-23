@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from "react";
 import { X, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
-import type { Photo } from "../../hooks";
+import type { Photo } from "../../stores";
 
 interface PhotoViewerProps {
   photos: Photo[];

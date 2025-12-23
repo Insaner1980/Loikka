@@ -6,30 +6,11 @@ import type {
   Result,
   Medal,
   Goal,
-  Discipline,
+  AthleteWithStats,
+  ResultWithDiscipline,
 } from "../types";
 import { getDisciplineById } from "../data/disciplines";
 import { getErrorMessage } from "../lib";
-
-interface AthleteStats {
-  disciplineCount: number;
-  resultCount: number;
-  pbCount: number;
-  sbCount: number;
-  nrCount: number;
-  goldMedals: number;
-  silverMedals: number;
-  bronzeMedals: number;
-}
-
-interface AthleteWithStats {
-  athlete: Athlete;
-  stats: AthleteStats;
-}
-
-interface ResultWithDiscipline extends Result {
-  discipline: Discipline;
-}
 
 interface AthleteStore {
   athletes: AthleteWithStats[];

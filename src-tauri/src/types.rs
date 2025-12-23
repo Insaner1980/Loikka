@@ -173,7 +173,7 @@ pub struct CompetitionParticipant {
     pub id: i64,
     pub competition_id: i64,
     pub athlete_id: i64,
-    pub disciplines_planned: Option<String>,
+    pub disciplines_planned: Option<Vec<i64>>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

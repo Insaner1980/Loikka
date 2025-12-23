@@ -1,15 +1,9 @@
 import { create } from "zustand";
 import { invoke } from "@tauri-apps/api/core";
-import type { Goal, NewGoal, GoalStatus } from "../types";
+import type { Goal, NewGoal, GoalStatus, GoalWithProgress } from "../types";
 import { getDisciplineById } from "../data/disciplines";
 import { useResultStore } from "./useResultStore";
 import { getErrorMessage } from "../lib";
-
-interface GoalWithProgress extends Goal {
-  currentBest: number | null;
-  progress: number;
-  remaining: number | null;
-}
 
 interface GoalStore {
   goals: Goal[];

@@ -34,8 +34,14 @@ export type CompetitionLevel =
   | "kll"         // Koululiikuntaliitto
   | "muu";        // Muu
 
-// Sync states
+// Sync states (for Google Drive connection status in database)
 export type SyncState = "notConfigured" | "synced" | "pending" | "error";
+
+// Sync operation status (for UI state during sync operations)
+export type SyncOperationStatus = "idle" | "syncing" | "success" | "error";
+
+// Entity types for photos
+export type PhotoEntityType = "athletes" | "results" | "competitions";
 
 // Gender
 export type Gender = "T" | "P"; // T = Tytöt (girls), P = Pojat (boys)
@@ -141,7 +147,7 @@ export interface Medal {
 // Photo
 export interface Photo {
   id: number;
-  entityType: string;
+  entityType: PhotoEntityType;
   entityId: number;
   filePath: string;
   thumbnailPath?: string;
@@ -149,6 +155,7 @@ export interface Photo {
   width?: number;
   height?: number;
   sizeBytes: number;
+  eventName?: string;
   createdAt: string;
 }
 
@@ -196,4 +203,34 @@ export interface LocalPhoto {
   name: string;
   folder: string;
   sizeBytes: number;
+}
+
+// Athlete statistics (aggregated data)
+export interface AthleteStats {
+  disciplineCount: number;
+  resultCount: number;
+  pbCount: number;
+  sbCount: number;
+  nrCount: number;
+  goldMedals: number;
+  silverMedals: number;
+  bronzeMedals: number;
+}
+
+// Athlete with statistics
+export interface AthleteWithStats {
+  athlete: Athlete;
+  stats: AthleteStats;
+}
+
+// Result with discipline details
+export interface ResultWithDiscipline extends Result {
+  discipline: Discipline;
+}
+
+// Goal with progress calculation
+export interface GoalWithProgress extends Goal {
+  currentBest: number | null;
+  progress: number;
+  remaining: number | null;
 }

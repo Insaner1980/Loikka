@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS athletes (
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
     birth_year INTEGER NOT NULL,
+    gender TEXT NOT NULL DEFAULT 'T' CHECK (gender IN ('T', 'P')),
     club_name TEXT,
     photo_path TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
@@ -36,6 +37,12 @@ CREATE TABLE IF NOT EXISTS results (
     notes TEXT,
     is_personal_best INTEGER NOT NULL DEFAULT 0,
     is_season_best INTEGER NOT NULL DEFAULT 0,
+    is_national_record INTEGER NOT NULL DEFAULT 0,
+    wind REAL,
+    status TEXT CHECK (status IS NULL OR status IN ('valid', 'nm', 'dns', 'dnf', 'dq')),
+    equipment_weight REAL,
+    hurdle_height INTEGER,
+    hurdle_spacing REAL,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (athlete_id) REFERENCES athletes(id) ON DELETE CASCADE,
     FOREIGN KEY (discipline_id) REFERENCES disciplines(id) ON DELETE RESTRICT
@@ -88,11 +95,16 @@ CREATE TABLE IF NOT EXISTS medals (
     result_id INTEGER,
     type TEXT NOT NULL CHECK (type IN ('gold', 'silver', 'bronze')),
     competition_name TEXT NOT NULL,
+    competition_id INTEGER,
+    location TEXT,
+    discipline_id INTEGER,
     discipline_name TEXT,
     date TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     FOREIGN KEY (athlete_id) REFERENCES athletes(id) ON DELETE CASCADE,
-    FOREIGN KEY (result_id) REFERENCES results(id) ON DELETE SET NULL
+    FOREIGN KEY (result_id) REFERENCES results(id) ON DELETE SET NULL,
+    FOREIGN KEY (competition_id) REFERENCES competitions(id) ON DELETE SET NULL,
+    FOREIGN KEY (discipline_id) REFERENCES disciplines(id) ON DELETE SET NULL
 );
 
 -- Photos table (entity-based storage for athletes, results, competitions)
@@ -106,6 +118,7 @@ CREATE TABLE IF NOT EXISTS photos (
     width INTEGER,
     height INTEGER,
     size_bytes INTEGER NOT NULL DEFAULT 0,
+    event_name TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 

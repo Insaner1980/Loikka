@@ -214,11 +214,17 @@ pub async fn get_competition_participants(app: AppHandle, competition_id: i64) -
     .await
     .map_err(|e| e.to_string())?;
 
-    Ok(rows.iter().map(|row| CompetitionParticipant {
-        id: row.get("id"),
-        competition_id: row.get("competition_id"),
-        athlete_id: row.get("athlete_id"),
-        disciplines_planned: row.get("disciplines_planned"),
+    Ok(rows.iter().map(|row| {
+        let disciplines_json: Option<String> = row.get("disciplines_planned");
+        let disciplines_planned = disciplines_json
+            .and_then(|json| serde_json::from_str(&json).ok());
+
+        CompetitionParticipant {
+            id: row.get("id"),
+            competition_id: row.get("competition_id"),
+            athlete_id: row.get("athlete_id"),
+            disciplines_planned,
+        }
     }).collect())
 }
 
@@ -251,11 +257,15 @@ pub async fn add_competition_participant(app: AppHandle, participant: CreateComp
     .await
     .map_err(|e| e.to_string())?;
 
+    let disciplines_json: Option<String> = row.get("disciplines_planned");
+    let disciplines_planned = disciplines_json
+        .and_then(|json| serde_json::from_str(&json).ok());
+
     Ok(CompetitionParticipant {
         id: row.get("id"),
         competition_id: row.get("competition_id"),
         athlete_id: row.get("athlete_id"),
-        disciplines_planned: row.get("disciplines_planned"),
+        disciplines_planned,
     })
 }
 

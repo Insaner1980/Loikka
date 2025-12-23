@@ -17,14 +17,12 @@ import {
   type CloudBackup,
 } from "../lib/googleDrive";
 import { getErrorMessage } from "../lib";
-import type { SyncOptions, CloudPhoto, LocalPhoto } from "../types";
-
-export type SyncStatus = "idle" | "syncing" | "success" | "error";
+import type { SyncOptions, CloudPhoto, LocalPhoto, SyncOperationStatus } from "../types";
 
 interface SyncStore {
   // State
   authStatus: AuthStatus;
-  syncStatus: SyncStatus;
+  syncStatus: SyncOperationStatus;
   lastSyncAt: Date | null;
   lastSyncResult: SyncResult | null;
   backups: CloudBackup[];

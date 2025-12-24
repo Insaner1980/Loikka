@@ -109,3 +109,41 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
+#[cfg(test)]
+mod tests {
+    use ts_rs::TS;
+    use crate::types::*;
+
+    #[test]
+    fn export_typescript_types() {
+        // This test generates TypeScript type definitions from Rust types
+        // Run with: cargo test export_typescript_types
+        Athlete::export_all().expect("Failed to export Athlete");
+        CreateAthlete::export_all().expect("Failed to export CreateAthlete");
+        UpdateAthlete::export_all().expect("Failed to export UpdateAthlete");
+        Discipline::export_all().expect("Failed to export Discipline");
+        Result::export_all().expect("Failed to export Result");
+        CreateResult::export_all().expect("Failed to export CreateResult");
+        UpdateResult::export_all().expect("Failed to export UpdateResult");
+        Competition::export_all().expect("Failed to export Competition");
+        CreateCompetition::export_all().expect("Failed to export CreateCompetition");
+        UpdateCompetition::export_all().expect("Failed to export UpdateCompetition");
+        CompetitionParticipant::export_all().expect("Failed to export CompetitionParticipant");
+        CreateCompetitionParticipant::export_all().expect("Failed to export CreateCompetitionParticipant");
+        Goal::export_all().expect("Failed to export Goal");
+        CreateGoal::export_all().expect("Failed to export CreateGoal");
+        UpdateGoal::export_all().expect("Failed to export UpdateGoal");
+        Medal::export_all().expect("Failed to export Medal");
+        AthleteStats::export_all().expect("Failed to export AthleteStats");
+        AthleteWithStats::export_all().expect("Failed to export AthleteWithStats");
+        ExportData::export_all().expect("Failed to export ExportData");
+        AuthStatus::export_all().expect("Failed to export AuthStatus");
+        SyncResult::export_all().expect("Failed to export SyncResult");
+        CloudBackup::export_all().expect("Failed to export CloudBackup");
+        Photo::export_all().expect("Failed to export Photo");
+        SyncOptions::export_all().expect("Failed to export SyncOptions");
+        CloudPhoto::export_all().expect("Failed to export CloudPhoto");
+        LocalPhoto::export_all().expect("Failed to export LocalPhoto");
+    }
+}

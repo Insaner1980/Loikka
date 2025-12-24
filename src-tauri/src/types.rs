@@ -1,7 +1,9 @@
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
 // Athlete types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct Athlete {
     pub id: i64,
@@ -15,7 +17,8 @@ pub struct Athlete {
     pub updated_at: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct CreateAthlete {
     pub first_name: String,
@@ -26,7 +29,8 @@ pub struct CreateAthlete {
     pub photo_path: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateAthlete {
     pub first_name: Option<String>,
@@ -38,7 +42,8 @@ pub struct UpdateAthlete {
 }
 
 // Discipline types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct Discipline {
     pub id: i64,
@@ -51,7 +56,8 @@ pub struct Discipline {
 }
 
 // Result types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct Result {
     pub id: i64,
@@ -77,7 +83,8 @@ pub struct Result {
     pub created_at: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct CreateResult {
     pub athlete_id: i64,
@@ -99,7 +106,8 @@ pub struct CreateResult {
     pub is_national_record: Option<bool>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateResult {
     pub athlete_id: Option<i64>,
@@ -122,7 +130,8 @@ pub struct UpdateResult {
 }
 
 // Competition types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct Competition {
     pub id: i64,
@@ -138,7 +147,8 @@ pub struct Competition {
     pub created_at: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct CreateCompetition {
     pub name: String,
@@ -152,7 +162,8 @@ pub struct CreateCompetition {
     pub reminder_days_before: Option<i32>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateCompetition {
     pub name: Option<String>,
@@ -167,7 +178,8 @@ pub struct UpdateCompetition {
 }
 
 // Competition participant types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct CompetitionParticipant {
     pub id: i64,
@@ -176,7 +188,8 @@ pub struct CompetitionParticipant {
     pub disciplines_planned: Option<Vec<i64>>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct CreateCompetitionParticipant {
     pub competition_id: i64,
@@ -185,7 +198,8 @@ pub struct CreateCompetitionParticipant {
 }
 
 // Goal types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct Goal {
     pub id: i64,
@@ -198,7 +212,8 @@ pub struct Goal {
     pub created_at: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct CreateGoal {
     pub athlete_id: i64,
@@ -207,7 +222,8 @@ pub struct CreateGoal {
     pub target_date: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateGoal {
     pub target_value: Option<f64>,
@@ -216,7 +232,8 @@ pub struct UpdateGoal {
 }
 
 // Medal types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct Medal {
     pub id: i64,
@@ -234,7 +251,8 @@ pub struct Medal {
 }
 
 // Athlete stats
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct AthleteStats {
     pub discipline_count: i32,
@@ -247,7 +265,8 @@ pub struct AthleteStats {
     pub bronze_medals: i32,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct AthleteWithStats {
     pub athlete: Athlete,
@@ -255,7 +274,8 @@ pub struct AthleteWithStats {
 }
 
 // Export data structure
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct ExportData {
     pub version: String,
@@ -268,7 +288,8 @@ pub struct ExportData {
 }
 
 // Google Drive sync types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct AuthStatus {
     pub is_authenticated: bool,
@@ -276,7 +297,8 @@ pub struct AuthStatus {
     pub expires_at: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct SyncResult {
     pub success: bool,
@@ -285,7 +307,8 @@ pub struct SyncResult {
     pub items_synced: Option<i32>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct CloudBackup {
     pub id: String,
@@ -295,7 +318,8 @@ pub struct CloudBackup {
 }
 
 // Photo types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct Photo {
     pub id: i64,
@@ -312,7 +336,8 @@ pub struct Photo {
 }
 
 // Sync options types
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct SyncOptions {
     pub include_database: bool,
@@ -321,7 +346,8 @@ pub struct SyncOptions {
     pub selected_photo_ids: Option<Vec<String>>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct CloudPhoto {
     pub id: String,
@@ -331,7 +357,8 @@ pub struct CloudPhoto {
     pub created_at: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
 #[serde(rename_all = "camelCase")]
 pub struct LocalPhoto {
     pub path: String,

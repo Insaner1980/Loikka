@@ -229,7 +229,30 @@ Jos INSERT epäonnistuu, vanhojen PB/SB-lippujen nollaus peruuntuu automaattises
 
 ---
 
+### 6.6 Tyyppien automaattinen generointi (ts-rs) ✅
+
+Lisätty `ts-rs`-kirjasto, joka generoi TypeScript-tyypit automaattisesti Rust-tyypeistä:
+
+```rust
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../src/types/generated/")]
+pub struct Athlete { ... }
+```
+
+Generoidut tyypit löytyvät `src/types/generated/`-kansiosta. Generoi uudelleen:
+```bash
+cd src-tauri && cargo test export_typescript_types
+```
+
+### 6.7 Migraatioiden checkpoint (v10) ✅
+
+Lisätty migraatio v10, joka dokumentoi konsolidointipisteen:
+- `schema.sql` sisältää nyt täydellisen skeeman (kaikki sarakkeet v1-v9)
+- Uudet asennukset saavat valmiin skeeman ilman erillisiä ALTER-komentoja
+- Checkpoint merkitsee, että skeema on nyt yhtenäinen
+
+---
+
 ## 7. Jatkokehitysideoita
 
 1. **Tyyppiturvallisuus** - Korvaa `String` virhetyyppi `AppError`:lla komennoissa
-2. **Tyyppi-generointi** - Generoi TypeScript-tyypit automaattisesti Rust-tyypeistä

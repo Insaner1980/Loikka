@@ -94,6 +94,10 @@ async fn run_migrations(pool: &DbPool) -> Result<(), String> {
         run_migration_v9(pool).await?;
     }
 
+    if current_version < 10 {
+        run_migration_v10(pool).await?;
+    }
+
     Ok(())
 }
 
@@ -427,6 +431,25 @@ async fn run_migration_v9(pool: &DbPool) -> Result<(), String> {
         .execute(pool)
         .await
         .map_err(|e| format!("Failed to record migration v9: {}", e))?;
+
+    Ok(())
+}
+
+async fn run_migration_v10(pool: &DbPool) -> Result<(), String> {
+    // Migration v10: Checkpoint
+    // This migration marks a consolidation point where:
+    // - schema.sql contains the complete database schema (all columns from v1-v9)
+    // - seed_disciplines.sql contains the discipline seed data
+    // - All previous migrations (v1-v9) are now considered legacy
+    //
+    // For new installations, v1 runs schema.sql which already has all columns,
+    // so migrations v3-v9 (which add columns) are no-ops.
+    // This checkpoint documents that the schema is now consolidated.
+
+    sqlx::query("INSERT INTO _migrations (version, description) VALUES (10, 'checkpoint_consolidated_schema')")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Failed to record migration v10: {}", e))?;
 
     Ok(())
 }

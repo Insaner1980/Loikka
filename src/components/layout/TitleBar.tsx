@@ -1,14 +1,11 @@
 import { useEffect, useState } from "react";
 import { Minus, Square, Copy, X } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { useTheme } from "../../hooks/useTheme";
-import logoIconLight from "../../assets/icon-transparent.svg";
-import logoIconDark from "../../assets/icon-transparent-dark.svg";
+import logoIcon from "../../assets/icon-transparent.svg";
 
 export function TitleBar() {
   const appWindow = getCurrentWindow();
   const [isMaximized, setIsMaximized] = useState(false);
-  const { theme } = useTheme();
 
   useEffect(() => {
     // Check initial state
@@ -35,7 +32,7 @@ export function TitleBar() {
     >
       {/* Logo and app name - draggable area */}
       <div data-tauri-drag-region className="flex-1 flex items-center">
-        <img src={theme === "light" ? logoIconDark : logoIconLight} alt="Loikka" className="w-12 h-12" />
+        <img src={logoIcon} alt="Loikka" className="w-12 h-12" />
         <span
           className="text-xl text-foreground tracking-wide"
           style={{ fontFamily: 'Satoshi, sans-serif', fontWeight: 700 }}

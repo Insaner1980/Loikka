@@ -70,7 +70,7 @@ export const TOAST = {
 
 ## Väripaletti
 
-### Dark Theme (oletus)
+### Värimuuttujat
 
 #### Taustat
 
@@ -134,55 +134,6 @@ export const TOAST = {
 | `--overlay-bg` | `rgba(0, 0, 0, 0.8)` | Dialog backdrop |
 | `--overlay-light` | `rgba(0, 0, 0, 0.5)` | Kevyempi overlay |
 | `--overlay-gradient` | `linear-gradient(to top, rgba(0,0,0,0.8), transparent)` | Kuvan päällä oleva gradient |
-
----
-
-### Light Theme
-
-#### Taustat
-
-| Muuttuja | Arvo |
-|----------|------|
-| `--bg-base` | `#FFFFFF` |
-| `--bg-surface` | `#F9FAFB` |
-| `--bg-elevated` | `#F3F4F6` |
-| `--bg-hover` | `#E5E7EB` |
-
-#### Reunat
-
-| Muuttuja | Arvo |
-|----------|------|
-| `--border-subtle` | `rgba(0, 0, 0, 0.04)` |
-| `--border-default` | `rgba(0, 0, 0, 0.08)` |
-| `--border-hover` | `rgba(0, 0, 0, 0.15)` |
-
-#### Teksti
-
-| Muuttuja | Arvo |
-|----------|------|
-| `--text-primary` | `#111827` |
-| `--text-secondary` | `#6B7280` |
-| `--text-muted` | `#9CA3AF` |
-| `--text-placeholder` | `#9CA3AF` |
-| `--text-initials` | `#D1D5DB` |
-
-#### Korostusväri
-
-| Muuttuja | Arvo |
-|----------|------|
-| `--accent` | `#2563EB` |
-| `--accent-hover` | `#1D4ED8` |
-| `--accent-muted` | `rgba(37, 99, 235, 0.1)` |
-| `--btn-primary-text` | `#FFFFFF` |
-
-#### Tilavärit (Light)
-
-| Muuttuja | Arvo |
-|----------|------|
-| `--status-success` | `#059669` |
-| `--status-warning` | `#D97706` |
-| `--status-orange` | `#EA580C` |
-| `--status-error` | `#DC2626` |
 
 ---
 
@@ -707,14 +658,6 @@ Ajastus (vakioista `TOAST`):
 
 ---
 
-### SegmentedControl (Teemavalitsin)
-
-- Käytetään Asetukset-sivulla teeman valintaan
-- Aktiivinen: `bg-[var(--accent)] text-[var(--btn-primary-text)]`
-- Inaktiivinen: `text-muted-foreground hover:text-foreground`
-
----
-
 ### CalendarView (Kalenterinäkymä)
 
 - Tausta: `bg-card rounded-lg p-4`
@@ -803,24 +746,6 @@ style={{ animationDelay: `${index * 50}ms` }}
 ### Domain-spesifiset
 
 `Trophy`, `Medal`, `Camera`, `User`, `MapPin`, `Calendar`, `Timer`, `BarChart3`, `Target`
-
----
-
-## Teeman vaihtaminen
-
-Teema tallennetaan `localStorage`-avaimen `loikka-theme` alle.
-
-```typescript
-// useTheme hook
-const { theme, setTheme } = useTheme();
-
-// Arvot: 'light' | 'dark'
-// Oletus: 'dark'
-```
-
-CSS-luokka `<html>` -elementissä:
-- Dark: `class="dark"` tai ei luokkaa
-- Light: `class="light"`
 
 ---
 

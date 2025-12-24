@@ -8,7 +8,6 @@ export { ErrorMessage } from "./ErrorMessage";
 export { Skeleton, SkeletonCard, SkeletonRow, SkeletonStats } from "./Skeleton";
 export { Spinner, PageLoader } from "./Spinner";
 export { EmptyState } from "./EmptyState";
-export { SegmentedControl } from "./SegmentedControl";
 export { Confetti } from "./Confetti";
 export { TimeInput } from "./TimeInput";
 export { DistanceInput } from "./DistanceInput";

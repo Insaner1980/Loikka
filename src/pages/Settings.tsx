@@ -1,16 +1,10 @@
 import { useState } from "react";
-import {
-  Download,
-  Upload,
-  Palette,
-} from "lucide-react";
+import { Download, Upload } from "lucide-react";
 import { SettingsSection, GoogleDriveSettings } from "../components/settings";
-import { SegmentedControl, toast } from "../components/ui";
-import { useTheme } from "../hooks";
+import { toast } from "../components/ui";
 import { exportData, importData } from "../lib";
 
 export function Settings() {
-  const { theme, setTheme } = useTheme();
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
 
@@ -50,29 +44,6 @@ export function Settings() {
       </div>
 
       <div className="space-y-6">
-        {/* Appearance section */}
-        <SettingsSection title="Ulkoasu">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Palette size={20} className="text-muted-foreground" />
-              <div>
-                <span className="font-medium">Teema</span>
-                <p className="text-sm text-muted-foreground">
-                  Valitse sovelluksen ulkoasu
-                </p>
-              </div>
-            </div>
-            <SegmentedControl
-              options={[
-                { value: "light", label: "Vaalea" },
-                { value: "dark", label: "Tumma" },
-              ]}
-              value={theme}
-              onChange={setTheme}
-            />
-          </div>
-        </SettingsSection>
-
         {/* Data section */}
         <SettingsSection title="Tiedot">
           <div className="flex flex-col gap-3">

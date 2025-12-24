@@ -129,7 +129,6 @@ C:\dev\Loikka\
 │   └── tauri.conf.json
 ├── docs/                   # Dokumentaatio
 │   ├── UI_SPEC.md          # Käyttöliittymän spesifikaatio
-│   ├── THEME_SPEC.md       # Teeman spesifikaatio
 │   ├── DATABASE_ANALYSIS.md # Tietokanta-analyysi
 │   ├── CODE_ANALYSIS.md    # Koodi-analyysi
 │   ├── REVIEW_REPORT.md    # Arviointiraportti
@@ -187,9 +186,7 @@ export const TOAST = {
 
 ## Väripaletti
 
-Sovellus tukee sekä tummaa (oletus) että vaaleaa teemaa. Kaikki värit määritellään CSS-muuttujina `index.css`:ssä.
-
-### Dark Theme (oletus)
+Sovellus käyttää tummaa teemaa. Kaikki värit määritellään CSS-muuttujina `index.css`:ssä.
 
 ```css
 /* Taustat */
@@ -231,41 +228,6 @@ Sovellus tukee sekä tummaa (oletus) että vaaleaa teemaa. Kaikki värit määri
 --overlay-bg: rgba(0, 0, 0, 0.8);
 --overlay-gradient: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
 ```
-
-### Light Theme
-
-```css
-/* Taustat */
---bg-base: #FFFFFF;
---bg-surface: #F9FAFB;
---bg-elevated: #F3F4F6;
---bg-hover: #E5E7EB;
-
-/* Reunat */
---border-subtle: rgba(0, 0, 0, 0.04);
---border-default: rgba(0, 0, 0, 0.08);
---border-hover: rgba(0, 0, 0, 0.15);
-
-/* Teksti */
---text-primary: #111827;
---text-secondary: #6B7280;
---text-muted: #9CA3AF;
-
-/* Aksentti - tumma sininen */
---accent: #2563EB;
---accent-hover: #1D4ED8;
---btn-primary-text: #FFFFFF;
-```
-
-### Teeman vaihtaminen
-
-```typescript
-// useTheme hook
-const { theme, setTheme } = useTheme();
-// theme: 'light' | 'dark' (oletus: 'dark')
-```
-
-Teema tallennetaan `localStorage`-avaimeen `loikka-theme`.
 
 ## Tietokantarakenne
 
@@ -383,7 +345,7 @@ export const useMyStore = create<MyStore>((set, get) => ({
 | `useReminders` | Kilpailumuistutukset ja notifikaatiot |
 | `useKeyboardShortcuts` | Pikanäppäimet (Ctrl+N lisää uusi, 1-8 navigointi) |
 | `useCalendarKeyboard` | Kalenterin näppäinohjaus (←/→ kuukaudet, T tänään) |
-| `useTheme` | Teeman hallinta (dark/light) |
+| `useTheme` | Teeman hallinta (vain dark) |
 | `useAthleteData` | Urheilijan tulokset, ennätykset, mitalit, tavoitteet |
 
 ### Muotoilufunktiot (formatters.ts)
@@ -479,7 +441,6 @@ className="hover:bg-card-hover transition-colors duration-150"
 - [x] Tilastokaaviot (Recharts)
 - [x] Oma otsikkopalkki (decorations: false)
 - [x] Tumma teema
-- [x] Vaalea teema
 - [x] Tietojen vienti/tuonti (JSON)
 
 ## Keskeneräiset ominaisuudet

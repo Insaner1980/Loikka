@@ -1,4 +1,5 @@
 import { Loader2 } from "lucide-react";
+import { LoadingSpinner } from "./LoadingSpinner";
 
 interface SpinnerProps {
   size?: number;
@@ -21,8 +22,8 @@ interface PageLoaderProps {
 export function PageLoader({ message = "Ladataan..." }: PageLoaderProps) {
   return (
     <div className="flex flex-col items-center justify-center py-16">
-      <Spinner size={24} />
-      <p className="mt-4 text-body text-muted-foreground">{message}</p>
+      <LoadingSpinner size={64} />
+      {message && <p className="mt-4 text-body text-muted-foreground">{message}</p>}
     </div>
   );
 }

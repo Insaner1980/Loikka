@@ -1,25 +1,20 @@
 import { useState, useEffect } from "react";
 import { ResultCard } from "../../results/ResultCard";
 import { categoryLabels, categoryOrder } from "../../../data/disciplines";
-import type { Athlete } from "../../../types";
 import type { ResultWithDiscipline } from "./types";
 
 interface ResultsTabProps {
-  athlete: Athlete;
   results: ResultWithDiscipline[];
   initialDisciplineFilter?: number | null;
   onDisciplineFilterChange?: (disciplineId: number | null) => void;
   onEditResult: (result: ResultWithDiscipline) => void;
-  onDeleteResult: (result: ResultWithDiscipline) => void;
 }
 
 export function ResultsTab({
-  athlete,
   results,
   initialDisciplineFilter,
   onDisciplineFilterChange,
   onEditResult,
-  onDeleteResult,
 }: ResultsTabProps) {
   const [disciplineFilter, setDisciplineFilter] = useState<number | null>(
     initialDisciplineFilter ?? null
@@ -67,7 +62,7 @@ export function ResultsTab({
           <select
             value={disciplineFilter ?? ""}
             onChange={(e) => handleDisciplineChange(e.target.value ? parseInt(e.target.value) : null)}
-            className="flex-1 px-3 py-2 bg-card border border-border-subtle rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer"
+            className="flex-1 px-3 py-2 bg-card border border-border-subtle rounded-lg text-sm input-focus cursor-pointer"
           >
             <option value="">Kaikki lajit</option>
             {categoryOrder.map((category) => {
@@ -89,7 +84,7 @@ export function ResultsTab({
           <select
             value={seasonFilter ?? ""}
             onChange={(e) => setSeasonFilter(e.target.value ? parseInt(e.target.value) : null)}
-            className="flex-1 px-3 py-2 bg-card border border-border-subtle rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer"
+            className="flex-1 px-3 py-2 bg-card border border-border-subtle rounded-lg text-sm input-focus cursor-pointer"
           >
             <option value="">Kaikki kaudet</option>
             {uniqueYears.map((year) => (
@@ -114,10 +109,9 @@ export function ResultsTab({
             <ResultCard
               key={result.id}
               result={result}
-              athlete={athlete}
               discipline={result.discipline}
+              showAthleteName={false}
               onEdit={() => onEditResult(result)}
-              onDelete={() => onDeleteResult(result)}
             />
           ))}
         </div>

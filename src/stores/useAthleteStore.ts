@@ -32,7 +32,16 @@ export const useAthleteStore = create<AthleteStore>((set, get) => ({
   loading: false,
   error: null,
 
-  fetchAthletes: async () => {
+  fetchAthletes: async (force = false) => {
+    const state = get();
+    // Skip if already loaded (unless forced)
+    if (!force && state.athletes.length > 0) {
+      return;
+    }
+    // Prevent concurrent fetches
+    if (state.loading) {
+      return;
+    }
     set({ loading: true, error: null });
     try {
       const athletes = await invoke<AthleteWithStats[]>("get_all_athletes");

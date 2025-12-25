@@ -4,7 +4,6 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, X, Trash2 } from "lucide-react";
 import { useAthleteStore } from "../stores/useAthleteStore";
 import { useResultStore } from "../stores/useResultStore";
-import { useGoalStore } from "../stores/useGoalStore";
 import { useAthleteData } from "../hooks";
 import { AthleteTabs, type AthleteTab } from "../components/athletes/AthleteTabs";
 import { AthleteForm } from "../components/athletes/AthleteForm";
@@ -26,7 +25,6 @@ import type {
   NewAthlete,
   NewResult,
   MedalType,
-  Goal,
 } from "../types";
 
 export function AthleteDetail() {
@@ -50,11 +48,9 @@ export function AthleteDetail() {
     medals,
     goals,
     refetchResults,
-    refetchGoals,
   } = useAthleteData(athleteId);
 
-  const { addResult, deleteResult } = useResultStore();
-  const { deleteGoal } = useGoalStore();
+  const { addResult } = useResultStore();
 
   // Get discipline filter from URL params
   const disciplineFilterParam = searchParams.get("discipline");
@@ -73,8 +69,6 @@ export function AthleteDetail() {
   // State for result editing and deletion
   const [selectedResult, setSelectedResult] = useState<ResultWithDiscipline | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [deleteConfirmResult, setDeleteConfirmResult] = useState<ResultWithDiscipline | null>(null);
-  const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
 
   // Update discipline filter when URL changes and switch to results tab
   useEffect(() => {
@@ -101,17 +95,6 @@ export function AthleteDetail() {
     setIsEditDialogOpen(true);
   };
 
-  const handleDeleteResult = (result: ResultWithDiscipline) => {
-    setDeleteConfirmResult(result);
-  };
-
-  const confirmDeleteResult = async () => {
-    if (deleteConfirmResult) {
-      await deleteResult(deleteConfirmResult.id);
-      await refetchResults();
-      setDeleteConfirmResult(null);
-    }
-  };
 
   const handleEditDialogClose = async () => {
     setIsEditDialogOpen(false);
@@ -123,7 +106,7 @@ export function AthleteDetail() {
     if (athletes.length === 0) {
       fetchAthletes();
     }
-  }, [athletes.length, fetchAthletes]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const athleteData = getAthleteById(athleteId);
 
@@ -186,12 +169,10 @@ export function AthleteDetail() {
       case "results":
         return (
           <ResultsTab
-            athlete={athlete}
             results={results}
             initialDisciplineFilter={disciplineFilter}
             onDisciplineFilterChange={handleDisciplineFilterChange}
             onEditResult={handleEditResult}
-            onDeleteResult={handleDeleteResult}
           />
         );
       case "medals":
@@ -209,7 +190,6 @@ export function AthleteDetail() {
           <GoalsTab
             goals={goals}
             getDisciplineForGoal={getDisciplineForGoal}
-            onDeleteGoal={(goal) => setGoalToDelete(goal)}
           />
         );
     }
@@ -300,6 +280,7 @@ export function AthleteDetail() {
               alt={`${athlete.firstName} ${athlete.lastName}`}
               className="photo-viewer-image rounded-lg shadow-2xl"
               onClick={(e) => e.stopPropagation()}
+              loading="eager"
             />
           </div>
         </div>,
@@ -330,7 +311,7 @@ export function AthleteDetail() {
                 setConfirmDeletePhotoOpen(false);
                 setPhotoViewerOpen(false);
               }}
-              className="btn-primary bg-[var(--status-error)] hover:bg-[var(--status-error)]/90 cursor-pointer"
+              className="btn-primary"
             >
               Poista
             </button>
@@ -344,34 +325,6 @@ export function AthleteDetail() {
         open={isEditDialogOpen}
         onClose={handleEditDialogClose}
       />
-
-      {/* Delete Result Confirmation Dialog */}
-      <Dialog
-        open={deleteConfirmResult !== null}
-        onClose={() => setDeleteConfirmResult(null)}
-        title="Poista tulos"
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Haluatko varmasti poistaa tämän tuloksen? Tätä toimintoa ei voi
-            perua.
-          </p>
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={() => setDeleteConfirmResult(null)}
-              className="btn-secondary"
-            >
-              Peruuta
-            </button>
-            <button
-              onClick={confirmDeleteResult}
-              className="btn-primary bg-[var(--status-error)] hover:bg-[var(--status-error)]/90 cursor-pointer"
-            >
-              Poista
-            </button>
-          </div>
-        </div>
-      </Dialog>
 
       {/* Delete Athlete Confirmation Dialog */}
       <ConfirmDialog
@@ -395,23 +348,6 @@ export function AthleteDetail() {
         cancelText="Peruuta"
       />
 
-      {/* Delete Goal Confirmation Dialog */}
-      <ConfirmDialog
-        open={goalToDelete !== null}
-        onCancel={() => setGoalToDelete(null)}
-        onConfirm={async () => {
-          if (goalToDelete) {
-            await deleteGoal(goalToDelete.id);
-            await refetchGoals();
-            toast.success("Tavoite poistettu");
-            setGoalToDelete(null);
-          }
-        }}
-        title="Poista tavoite"
-        message="Haluatko varmasti poistaa tämän tavoitteen?"
-        confirmText="Poista"
-        cancelText="Peruuta"
-      />
     </div>
   );
 }

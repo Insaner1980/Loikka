@@ -53,14 +53,14 @@ export function GoogleDriveSettings() {
   // Check auth status on mount
   useEffect(() => {
     checkStatus();
-  }, [checkStatus]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Fetch backups when authenticated
   useEffect(() => {
     if (authStatus.isAuthenticated) {
       fetchBackups();
     }
-  }, [authStatus.isAuthenticated, fetchBackups]);
+  }, [authStatus.isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleConnect = async () => {
     try {
@@ -181,6 +181,7 @@ export function GoogleDriveSettings() {
               src={DriveIcon}
               alt="Google Drive"
               className={`w-10 h-10 ${!authStatus.isAuthenticated ? "grayscale opacity-50" : ""}`}
+              loading="eager"
             />
             <div>
               <div className="font-medium">

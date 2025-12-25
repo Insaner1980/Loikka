@@ -15,7 +15,7 @@ export function RecordsTab({ personalBests }: RecordsTabProps) {
   // Get unique disciplines from personal bests
   const disciplines = [...new Map(
     personalBests.map((r) => [r.disciplineId, r.discipline])
-  ).values()];
+  ).values()].sort((a, b) => a.id - b.id);
 
   // Filter personal bests by discipline first (for year options)
   const recordsForYearFilter = disciplineFilter
@@ -45,7 +45,7 @@ export function RecordsTab({ personalBests }: RecordsTabProps) {
               setDisciplineFilter(e.target.value ? parseInt(e.target.value) : null);
               setSeasonFilter(null);
             }}
-            className="flex-1 px-3 py-2 bg-card border border-border-subtle rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer"
+            className="flex-1 px-3 py-2 bg-card border border-border-subtle rounded-lg text-sm input-focus cursor-pointer"
           >
             <option value="">Kaikki lajit</option>
             {categoryOrder.map((category) => {
@@ -67,7 +67,7 @@ export function RecordsTab({ personalBests }: RecordsTabProps) {
           <select
             value={seasonFilter ?? ""}
             onChange={(e) => setSeasonFilter(e.target.value ? parseInt(e.target.value) : null)}
-            className="flex-1 px-3 py-2 bg-card border border-border-subtle rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer"
+            className="flex-1 px-3 py-2 bg-card border border-border-subtle rounded-lg text-sm input-focus cursor-pointer"
           >
             <option value="">Kaikki kaudet</option>
             {uniqueYears.map((year) => (

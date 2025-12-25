@@ -10,13 +10,12 @@ import { YEAR_RANGE } from "../lib/constants";
 
 export function Statistics() {
   const {
-    fetchResults,
     getResultsForChart,
     getSeasonStats,
     getSeasonComparison,
     results,
   } = useResultStore();
-  const { athletes, fetchAthletes } = useAthleteStore();
+  const { athletes } = useAthleteStore();
 
   const [selectedAthleteId, setSelectedAthleteId] = useState<number | null>(
     null
@@ -28,10 +27,7 @@ export function Statistics() {
     new Date().getFullYear()
   );
 
-  useEffect(() => {
-    fetchResults();
-    fetchAthletes();
-  }, [fetchResults, fetchAthletes]);
+  // Data is fetched in Layout.tsx on app start
 
   // Auto-select first athlete if none selected
   useEffect(() => {
@@ -54,7 +50,8 @@ export function Statistics() {
 
     return disciplineIds
       .map((id) => getDisciplineById(id))
-      .filter((d) => d !== undefined);
+      .filter((d) => d !== undefined)
+      .sort((a, b) => a!.id - b!.id);
   }, [selectedAthleteId, results]);
 
   // Auto-select first discipline if available
@@ -83,10 +80,11 @@ export function Statistics() {
   }, []);
 
   // Get data for charts
+  // Note: Store functions are NOT in dependencies - they change every render
   const chartData = useMemo(() => {
     if (selectedAthleteId === null || selectedDisciplineId === null) return [];
     return getResultsForChart(selectedAthleteId, selectedDisciplineId);
-  }, [selectedAthleteId, selectedDisciplineId, getResultsForChart]);
+  }, [selectedAthleteId, selectedDisciplineId, results]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const seasonStats = useMemo(() => {
     if (selectedAthleteId === null || selectedDisciplineId === null) {
@@ -98,12 +96,12 @@ export function Statistics() {
       };
     }
     return getSeasonStats(selectedAthleteId, selectedDisciplineId, selectedYear);
-  }, [selectedAthleteId, selectedDisciplineId, selectedYear, getSeasonStats]);
+  }, [selectedAthleteId, selectedDisciplineId, selectedYear, results]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const comparisonData = useMemo(() => {
     if (selectedAthleteId === null || selectedDisciplineId === null) return [];
     return getSeasonComparison(selectedAthleteId, selectedDisciplineId);
-  }, [selectedAthleteId, selectedDisciplineId, getSeasonComparison]);
+  }, [selectedAthleteId, selectedDisciplineId, results]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const selectedDiscipline = selectedDisciplineId
     ? getDisciplineById(selectedDisciplineId)

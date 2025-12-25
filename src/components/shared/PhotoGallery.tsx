@@ -41,7 +41,7 @@ export function PhotoGallery({
 
   useEffect(() => {
     fetchEntityPhotos(entityType, entityId);
-  }, [fetchEntityPhotos, entityType, entityId]);
+  }, [entityType, entityId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Report photo count to parent
   useEffect(() => {
@@ -141,6 +141,7 @@ export function PhotoGallery({
               src={getThumbnailUrl(photo)}
               alt={photo.originalName}
               className="w-full h-full object-cover transition-transform group-hover:scale-105"
+              loading="eager"
             />
 
             {/* Hover overlay */}

@@ -9,6 +9,7 @@ import {
   Settings,
 } from "lucide-react";
 import { SidebarIcon } from "./SidebarIcon";
+import logoIcon from "../../assets/icon-transparent.svg";
 
 const navigationItems = [
   { icon: Home, path: "/" },
@@ -22,7 +23,7 @@ const navigationItems = [
 
 export function Sidebar() {
   return (
-    <aside className="w-14 h-full flex flex-col py-4 pb-6 pl-1">
+    <aside className="w-14 h-full flex flex-col py-4 pb-6 pl-1 relative">
       {/* Top spacer */}
       <div className="flex-1" />
 
@@ -43,11 +44,21 @@ export function Sidebar() {
       {/* Bottom spacer */}
       <div className="flex-1" />
 
-      {/* Settings at bottom */}
-      <div className="flex flex-col items-center gap-1 px-1.5">
+      {/* Settings - above bottom logo */}
+      <div className="flex flex-col items-center gap-1 px-1.5 mb-2">
         <SidebarIcon
           icon={Settings}
           path="/settings"
+        />
+      </div>
+
+      {/* Bottom logo - flipped vertically */}
+      <div className="absolute bottom-0 left-0">
+        <img
+          src={logoIcon}
+          alt=""
+          className="w-12 h-12 -scale-y-100"
+          loading="eager"
         />
       </div>
     </aside>

@@ -1,13 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Plus, Target, ChevronDown, ChevronUp, Check } from "lucide-react";
+import { Plus, Target, ChevronDown, ChevronUp, Check, X, Trash2 } from "lucide-react";
 import { useGoalStore } from "../stores/useGoalStore";
 import { useAthleteStore } from "../stores/useAthleteStore";
-import { useResultStore } from "../stores/useResultStore";
 import { getDisciplineById } from "../data/disciplines";
 import { GoalCard } from "../components/goals/GoalCard";
 import { GoalForm } from "../components/goals/GoalForm";
 import { GoalCelebrationModal } from "../components/goals/GoalCelebrationModal";
-import { Dialog, Confetti, ConfirmDialog, toast } from "../components/ui";
+import { Dialog, Confetti, toast } from "../components/ui";
 import type { Goal, NewGoal, Athlete, Discipline } from "../types";
 
 interface CelebrationGoalData {
@@ -27,15 +26,13 @@ const CELEBRATED_GOALS_KEY = "loikka-celebrated-goals";
 export function Goals() {
   const {
     goals,
-    fetchGoals,
     addGoal,
     deleteGoal,
     getActiveGoals,
     getAchievedGoals,
     getGoalWithProgress,
   } = useGoalStore();
-  const { athletes, fetchAthletes } = useAthleteStore();
-  const { fetchResults } = useResultStore();
+  const { athletes } = useAthleteStore();
 
   const [athleteFilter, setAthleteFilter] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
@@ -44,13 +41,13 @@ export function Goals() {
   const [showConfetti, setShowConfetti] = useState(false);
   const [showCelebrationModal, setShowCelebrationModal] = useState(false);
   const [celebrationGoals, setCelebrationGoals] = useState<CelebrationGoalData[]>([]);
-  const [goalToDelete, setGoalToDelete] = useState<Goal | null>(null);
 
-  useEffect(() => {
-    fetchGoals();
-    fetchAthletes();
-    fetchResults();
-  }, [fetchGoals, fetchAthletes, fetchResults]);
+  // Selection mode state
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
+
+  // Data is fetched in Layout.tsx on app start
 
   // Get celebrated goal IDs from localStorage
   const getCelebratedGoals = useCallback((): Set<number> => {
@@ -109,7 +106,7 @@ export function Goals() {
       // Mark all newly completed goals as celebrated
       newlyCompleted.forEach((goal) => markGoalAsCelebrated(goal.id));
     }
-  }, [goals, athletes, getCelebratedGoals, markGoalAsCelebrated, getGoalWithProgress]);
+  }, [goals, athletes]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Map athlete ID to athlete data
   const athleteMap = useMemo(() => {
@@ -157,26 +154,100 @@ export function Goals() {
     setIsFormOpen(false);
   };
 
-  const handleDeleteGoal = async () => {
-    if (goalToDelete) {
-      await deleteGoal(goalToDelete.id);
-      toast.success("Tavoite poistettu");
-      setGoalToDelete(null);
+  // Handle Esc key to exit selection mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && selectionMode) {
+        setSelectionMode(false);
+        setSelectedIds(new Set());
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [selectionMode]);
+
+  // Toggle selection for a goal
+  const handleCheckboxClick = useCallback((goalId: number) => {
+    if (!selectionMode) {
+      setSelectionMode(true);
     }
-  };
+
+    setSelectedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(goalId)) {
+        newSet.delete(goalId);
+      } else {
+        newSet.add(goalId);
+      }
+      return newSet;
+    });
+  }, [selectionMode]);
+
+  // Cancel selection mode
+  const handleCancelSelection = useCallback(() => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  }, []);
+
+  // Confirm bulk delete
+  const handleBulkDelete = useCallback(async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+
+    for (const id of ids) {
+      await deleteGoal(id);
+    }
+    toast.success(`${ids.length} tavoitetta poistettu`);
+    setBulkDeleteConfirmOpen(false);
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  }, [selectedIds, deleteGoal]);
+
+  const selectedCount = selectedIds.size;
+  const hasSelection = selectedCount > 0;
 
   return (
     <div className="p-6 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 pb-5 border-b border-border-subtle">
-        <h1 className="text-title font-medium text-foreground">Tavoitteet</h1>
-        <button
-          onClick={() => setIsFormOpen(true)}
-          className="btn-primary btn-press"
-        >
-          <Plus size={18} />
-          Lisää tavoite
-        </button>
+        {selectionMode ? (
+          <>
+            {/* Selection mode header */}
+            <h1 className="text-title font-medium text-foreground">
+              {hasSelection ? `${selectedCount} valittu` : "Valitse tavoitteita"}
+            </h1>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setBulkDeleteConfirmOpen(true)}
+                disabled={!hasSelection}
+                className="btn-secondary btn-press"
+              >
+                <Trash2 size={16} />
+                Poista
+              </button>
+              <button
+                onClick={handleCancelSelection}
+                className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                aria-label="Peruuta valinta"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Normal header */}
+            <h1 className="text-title font-medium text-foreground">Tavoitteet</h1>
+            <button
+              onClick={() => setIsFormOpen(true)}
+              className="btn-primary btn-press"
+            >
+              <Plus size={18} />
+              Lisää tavoite
+            </button>
+          </>
+        )}
       </div>
 
       {/* Filters */}
@@ -235,7 +306,9 @@ export function Goals() {
                     remaining={goalWithProgress.remaining}
                     athlete={athleteMap.get(goalWithProgress.athleteId)}
                     discipline={getDisciplineById(goalWithProgress.disciplineId)}
-                    onDelete={() => setGoalToDelete(goalWithProgress)}
+                    selectionMode={selectionMode}
+                    isSelected={selectedIds.has(goalWithProgress.id)}
+                    onCheckboxClick={() => handleCheckboxClick(goalWithProgress.id)}
                   />
                 ))}
               </div>
@@ -293,7 +366,9 @@ export function Goals() {
                           discipline={getDisciplineById(
                             goalWithProgress.disciplineId
                           )}
-                          onDelete={() => setGoalToDelete(goalWithProgress)}
+                          selectionMode={selectionMode}
+                          isSelected={selectedIds.has(goalWithProgress.id)}
+                          onCheckboxClick={() => handleCheckboxClick(goalWithProgress.id)}
                         />
                       ))}
                     </div>
@@ -342,21 +417,33 @@ export function Goals() {
         onComplete={() => setShowConfetti(false)}
       />
 
-      {/* Delete Goal Confirmation Dialog */}
-      <ConfirmDialog
-        open={goalToDelete !== null}
-        onCancel={() => setGoalToDelete(null)}
-        onConfirm={handleDeleteGoal}
-        title="Poista tavoite"
-        message={
-          goalToDelete
-            ? `Haluatko varmasti poistaa tavoitteen "${getDisciplineById(goalToDelete.disciplineId)?.fullName ?? "Tuntematon laji"}"?`
-            : ""
-        }
-        confirmText="Poista"
-        cancelText="Peruuta"
-        variant="danger"
-      />
+      {/* Bulk Delete Confirmation Dialog */}
+      <Dialog
+        open={bulkDeleteConfirmOpen}
+        onClose={() => setBulkDeleteConfirmOpen(false)}
+        title="Poista tavoitteet"
+        maxWidth="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-body text-muted-foreground">
+            Haluatko varmasti poistaa {selectedCount} {selectedCount === 1 ? "tavoitteen" : "tavoitetta"}? Tätä toimintoa ei voi perua.
+          </p>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setBulkDeleteConfirmOpen(false)}
+              className="btn-secondary"
+            >
+              Peruuta
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              className="btn-primary"
+            >
+              Poista
+            </button>
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 }

@@ -15,17 +15,17 @@ use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let mut builder = tauri::Builder::default()
+    let builder = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_notification::init());
 
-    // MCP Bridge plugin - only in debug builds
-    #[cfg(debug_assertions)]
-    {
-        builder = builder.plugin(tauri_plugin_mcp_bridge::init());
-    }
+    // MCP Bridge plugin - temporarily disabled for freeze debugging
+    // #[cfg(debug_assertions)]
+    // {
+    //     builder = builder.plugin(tauri_plugin_mcp_bridge::init());
+    // }
 
     builder
         .manage(AppDatabase::new())
@@ -101,6 +101,9 @@ pub fn run() {
             commands::get_photos,
             commands::get_photo_count,
             commands::delete_photo,
+            commands::delete_photos_bulk,
+            commands::link_photos_to_competition,
+            commands::link_photos_to_athlete,
             commands::get_photo_url,
             commands::get_all_photos,
             commands::get_photo_years,

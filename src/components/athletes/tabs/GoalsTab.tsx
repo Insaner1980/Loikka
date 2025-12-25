@@ -1,14 +1,13 @@
-import { Target, CheckCircle, Trash2 } from "lucide-react";
+import { Target } from "lucide-react";
 import { formatTime, formatDistance, formatDate } from "../../../lib/formatters";
 import type { Goal, Discipline } from "../../../types";
 
 interface GoalsTabProps {
   goals: Goal[];
   getDisciplineForGoal: (disciplineId: number) => Discipline | undefined;
-  onDeleteGoal?: (goal: Goal) => void;
 }
 
-export function GoalsTab({ goals, getDisciplineForGoal, onDeleteGoal }: GoalsTabProps) {
+export function GoalsTab({ goals, getDisciplineForGoal }: GoalsTabProps) {
   if (goals.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
@@ -39,24 +38,11 @@ export function GoalsTab({ goals, getDisciplineForGoal, onDeleteGoal }: GoalsTab
             key={goal.id}
             className="rounded-xl bg-card border border-border-subtle p-4 flex flex-col"
           >
-            {/* Top: Icon + discipline + delete */}
-            <div className="flex items-center gap-2 mb-3">
-              {isAchieved ? (
-                <CheckCircle size={18} className="text-muted-foreground shrink-0" />
-              ) : (
-                <Target size={18} className="text-muted-foreground shrink-0" />
-              )}
-              <span className="text-sm font-medium text-foreground truncate flex-1">
+            {/* Top: Discipline name */}
+            <div className="mb-3">
+              <span className="text-sm font-medium text-foreground">
                 {discipline?.fullName || "Tuntematon laji"}
               </span>
-              {onDeleteGoal && (
-                <button
-                  onClick={() => onDeleteGoal(goal)}
-                  className="p-1 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer shrink-0"
-                >
-                  <Trash2 size={16} />
-                </button>
-              )}
             </div>
 
             {/* Center: Target value (big) */}
@@ -65,7 +51,7 @@ export function GoalsTab({ goals, getDisciplineForGoal, onDeleteGoal }: GoalsTab
                 {formattedTarget}
               </span>
               {isAchieved && (
-                <span className="px-1.5 py-0.5 mt-1.5 rounded text-caption font-medium bg-transparent text-[var(--text-muted)] border border-[var(--border-hover)]">
+                <span className="badge-status mt-1.5">
                   Saavutettu
                 </span>
               )}

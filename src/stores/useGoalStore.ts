@@ -27,7 +27,16 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
   loading: false,
   error: null,
 
-  fetchGoals: async () => {
+  fetchGoals: async (force = false) => {
+    const state = get();
+    // Skip if already loaded (unless forced)
+    if (!force && state.goals.length > 0) {
+      return;
+    }
+    // Prevent concurrent fetches
+    if (state.loading) {
+      return;
+    }
     set({ loading: true, error: null });
     try {
       const goals = await invoke<Goal[]>("get_all_goals");

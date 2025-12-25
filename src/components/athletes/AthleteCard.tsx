@@ -43,6 +43,7 @@ export function AthleteCard({ athlete, stats }: AthleteCardProps) {
             src={toAssetUrl(athlete.photoPath)}
             alt={`${athlete.firstName} ${athlete.lastName}`}
             className="w-20 h-20 rounded-full object-cover flex-shrink-0"
+            loading="eager"
           />
         ) : (
           <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center text-initials font-medium text-2xl flex-shrink-0">

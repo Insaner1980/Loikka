@@ -1,6 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
-import { Plus, FileText } from "lucide-react";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { Plus, FileText, X, Trash2 } from "lucide-react";
 import { useResultStore, type ResultFilters } from "../stores/useResultStore";
 import { useAthleteStore } from "../stores/useAthleteStore";
 import { getDisciplineById } from "../data/disciplines";
@@ -16,9 +15,8 @@ import { Dialog } from "../components/ui/Dialog";
 import type { NewResult, MedalType, Result } from "../types";
 
 export function Results() {
-  const navigate = useNavigate();
-  const { results, fetchResults, getResultsByDate, addResult, deleteResult } = useResultStore();
-  const { athletes, fetchAthletes } = useAthleteStore();
+  const { results, getResultsByDate, addResult, deleteResultsBulk } = useResultStore();
+  const { athletes } = useAthleteStore();
 
   const [filters, setFilters] = useState<ResultFiltersState>({
     athleteId: null,
@@ -31,28 +29,69 @@ export function Results() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedResult, setSelectedResult] = useState<Result | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [deleteConfirmResult, setDeleteConfirmResult] = useState<Result | null>(null);
+
+  // Selection mode state
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
 
   const handleEditResult = (result: Result) => {
     setSelectedResult(result);
     setIsEditDialogOpen(true);
   };
 
-  const handleDeleteResult = (result: Result) => {
-    setDeleteConfirmResult(result);
-  };
-
-  const confirmDelete = async () => {
-    if (deleteConfirmResult) {
-      await deleteResult(deleteConfirmResult.id);
-      setDeleteConfirmResult(null);
-    }
-  };
-
+  // Handle Esc key to exit selection mode
   useEffect(() => {
-    fetchResults();
-    fetchAthletes();
-  }, [fetchResults, fetchAthletes]);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && selectionMode) {
+        setSelectionMode(false);
+        setSelectedIds(new Set());
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [selectionMode]);
+
+  // Toggle selection for a result
+  const handleCheckboxClick = useCallback((resultId: number) => {
+    // If not in selection mode, enter it
+    if (!selectionMode) {
+      setSelectionMode(true);
+    }
+
+    setSelectedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(resultId)) {
+        newSet.delete(resultId);
+      } else {
+        newSet.add(resultId);
+      }
+      return newSet;
+    });
+  }, [selectionMode]);
+
+  // Cancel selection mode
+  const handleCancelSelection = useCallback(() => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  }, []);
+
+  // Confirm bulk delete
+  const handleBulkDelete = useCallback(async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+
+    await deleteResultsBulk(ids);
+    setBulkDeleteConfirmOpen(false);
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  }, [selectedIds, deleteResultsBulk]);
+
+  const selectedCount = selectedIds.size;
+  const hasSelection = selectedCount > 0;
+
+  // Data is fetched in Layout.tsx on app start
 
   const athleteMap = useMemo(
     () => new Map(athletes.map((a) => [a.athlete.id, a.athlete])),
@@ -62,21 +101,50 @@ export function Results() {
 
   const resultsByDate = useMemo(
     () => getResultsByDate(filters as ResultFilters, athleteList),
-    [results, filters, athleteList, getResultsByDate]
+    [results, filters, athleteList] // eslint-disable-line react-hooks/exhaustive-deps
   );
 
   return (
     <div className="p-6 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 pb-5 border-b border-border-subtle">
-        <h1 className="text-title font-medium text-foreground">Tulokset</h1>
-        <button
-          onClick={() => setIsFormOpen(true)}
-          className="btn-primary btn-press"
-        >
-          <Plus size={18} />
-          Lisää tulos
-        </button>
+        {selectionMode ? (
+          <>
+            {/* Selection mode header */}
+            <h1 className="text-title font-medium text-foreground">
+              {hasSelection ? `${selectedCount} valittu` : "Valitse tuloksia"}
+            </h1>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setBulkDeleteConfirmOpen(true)}
+                disabled={!hasSelection}
+                className="btn-secondary btn-press"
+              >
+                <Trash2 size={16} />
+                Poista
+              </button>
+              <button
+                onClick={handleCancelSelection}
+                className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                aria-label="Peruuta valinta"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Normal header */}
+            <h1 className="text-title font-medium text-foreground">Tulokset</h1>
+            <button
+              onClick={() => setIsFormOpen(true)}
+              className="btn-primary btn-press"
+            >
+              <Plus size={18} />
+              Lisää tulos
+            </button>
+          </>
+        )}
       </div>
 
       {/* Filters */}
@@ -123,9 +191,10 @@ export function Results() {
                       result={result}
                       athlete={athleteMap.get(result.athleteId)}
                       discipline={getDisciplineById(result.disciplineId)}
-                      onClick={() => navigate(`/athletes/${result.athleteId}?discipline=${result.disciplineId}`)}
                       onEdit={() => handleEditResult(result)}
-                      onDelete={() => handleDeleteResult(result)}
+                      selectionMode={selectionMode}
+                      isSelected={selectedIds.has(result.id)}
+                      onCheckboxClick={() => handleCheckboxClick(result.id)}
                     />
                   ))}
                 </div>
@@ -163,27 +232,27 @@ export function Results() {
         }}
       />
 
-      {/* Delete Confirmation Dialog */}
+      {/* Bulk Delete Confirmation Dialog */}
       <Dialog
-        open={deleteConfirmResult !== null}
-        onClose={() => setDeleteConfirmResult(null)}
-        title="Poista tulos"
+        open={bulkDeleteConfirmOpen}
+        onClose={() => setBulkDeleteConfirmOpen(false)}
+        title="Poista tulokset"
+        maxWidth="sm"
       >
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Haluatko varmasti poistaa tämän tuloksen? Tätä toimintoa ei voi
-            perua.
+          <p className="text-body text-muted-foreground">
+            Haluatko varmasti poistaa {selectedCount} {selectedCount === 1 ? "tuloksen" : "tulosta"}? Tätä toimintoa ei voi perua.
           </p>
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-3">
             <button
-              onClick={() => setDeleteConfirmResult(null)}
+              onClick={() => setBulkDeleteConfirmOpen(false)}
               className="btn-secondary"
             >
               Peruuta
             </button>
             <button
-              onClick={confirmDelete}
-              className="btn-primary bg-[var(--status-error)] hover:bg-[var(--status-error)]/90 cursor-pointer"
+              onClick={handleBulkDelete}
+              className="btn-primary"
             >
               Poista
             </button>

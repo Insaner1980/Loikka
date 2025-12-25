@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ChevronRight,
@@ -7,7 +7,6 @@ import {
   Users,
   Trash2,
   Trophy,
-  Pencil,
 } from "lucide-react";
 import { useAthleteStore } from "../stores/useAthleteStore";
 import { useResultStore } from "../stores/useResultStore";
@@ -18,30 +17,22 @@ import { DASHBOARD } from "../lib/constants";
 import { Dialog } from "../components/ui/Dialog";
 import { ConfirmDialog } from "../components/ui/ConfirmDialog";
 import { CompetitionForm } from "../components/competitions/CompetitionForm";
-import { ResultEditDialog } from "../components/results/ResultEditDialog";
-import type { Competition, NewCompetition, Result } from "../types";
+import type { Competition, NewCompetition } from "../types";
 
 // Badge style for days until competition
 const DAYS_BADGE_STYLE = "bg-transparent text-[var(--text-muted)] border border-[var(--border-hover)]";
 
 export function Dashboard() {
   const navigate = useNavigate();
-  const { athletes, fetchAthletes } = useAthleteStore();
-  const { results, fetchResults, deleteResult } = useResultStore();
-  const { competitions, fetchCompetitions, updateCompetition, deleteCompetition, getParticipants } = useCompetitionStore();
+  const { athletes } = useAthleteStore();
+  const { results } = useResultStore();
+  const { competitions, updateCompetition, deleteCompetition, getParticipants } = useCompetitionStore();
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedCompetition, setSelectedCompetition] = useState<Competition | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [selectedResultForDelete, setSelectedResultForDelete] = useState<typeof results[0] | null>(null);
-  const [selectedResultForEdit, setSelectedResultForEdit] = useState<Result | null>(null);
-  const [resultEditDialogOpen, setResultEditDialogOpen] = useState(false);
 
-  useEffect(() => {
-    fetchAthletes();
-    fetchResults();
-    fetchCompetitions();
-  }, [fetchAthletes, fetchResults, fetchCompetitions]);
+  // Data is fetched in Layout.tsx on app start
 
   const handleCompetitionClick = (competition: Competition) => {
     setSelectedCompetition(competition);
@@ -130,7 +121,7 @@ export function Dashboard() {
                 <button
                   key={competition.id}
                   onClick={() => handleCompetitionClick(competition)}
-                  className="block w-full text-left py-3 first:pt-0 last:pb-0 hover:bg-card-hover -mx-2 px-2 rounded-lg transition-colors duration-150"
+                  className="block w-full text-left py-3 first:pt-0 last:pb-0 hover:bg-card-hover -mx-2 px-2 rounded-lg transition-colors duration-150 cursor-pointer"
                 >
                   <div className="flex items-start justify-between">
                     <div>
@@ -193,6 +184,7 @@ export function Dashboard() {
                       src={toAssetUrl(athlete.photoPath)}
                       alt={`${athlete.firstName} ${athlete.lastName}`}
                       className="w-full h-full object-cover"
+                      loading="eager"
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[var(--text-initials)] text-4xl font-medium">
@@ -244,33 +236,9 @@ export function Dashboard() {
                 >
                   <div className="p-4 flex flex-col h-full">
                     {/* Top row: Athlete name + discipline */}
-                    <div className="flex items-start justify-between gap-2 mb-3">
-                      <div className="min-w-0">
-                        <div className="font-medium text-foreground truncate">{result.athleteName?.split(' ')[0] || "Tuntematon"}</div>
-                        <div className="text-sm text-muted-foreground truncate">{result.disciplineName}</div>
-                      </div>
-                      {/* Action icons */}
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedResultForDelete(result);
-                          }}
-                          className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors cursor-pointer"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedResultForEdit(result);
-                            setResultEditDialogOpen(true);
-                          }}
-                          className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors cursor-pointer"
-                        >
-                          <Pencil size={14} />
-                        </button>
-                      </div>
+                    <div className="mb-3">
+                      <div className="font-medium text-foreground truncate">{result.athleteName?.split(' ')[0] || "Tuntematon"}</div>
+                      <div className="text-sm text-muted-foreground truncate">{result.disciplineName}</div>
                     </div>
 
                     {/* Center: Result value (big) */}
@@ -377,7 +345,7 @@ export function Dashboard() {
             <div className="pt-4 border-t border-border">
               <button
                 onClick={handleDeleteClick}
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
                 <Trash2 size={16} />
                 Poista kilpailu
@@ -398,34 +366,6 @@ export function Dashboard() {
         variant="danger"
       />
 
-      {/* Delete Result Confirmation Dialog */}
-      <ConfirmDialog
-        open={selectedResultForDelete !== null}
-        onConfirm={async () => {
-          if (selectedResultForDelete) {
-            await deleteResult(selectedResultForDelete.id);
-            setSelectedResultForDelete(null);
-          }
-        }}
-        onCancel={() => setSelectedResultForDelete(null)}
-        title="Poista tulos"
-        message="Haluatko varmasti poistaa tämän tuloksen? Tätä toimintoa ei voi peruuttaa."
-        confirmText="Poista"
-        variant="danger"
-      />
-
-      {/* Result Edit Dialog */}
-      <ResultEditDialog
-        result={selectedResultForEdit}
-        open={resultEditDialogOpen}
-        onClose={() => {
-          setResultEditDialogOpen(false);
-          setSelectedResultForEdit(null);
-        }}
-        onSaved={() => {
-          fetchResults();
-        }}
-      />
     </div>
   );
 }

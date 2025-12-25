@@ -73,7 +73,7 @@ export function AutocompleteInput({
         placeholder={placeholder}
         autoComplete="off"
         disabled={disabled}
-        className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
+        className={`w-full px-3 py-2 bg-background border rounded-lg input-focus ${
           error ? "border-error" : "border-border"
         } ${disabled ? "opacity-60" : ""} ${className}`}
       />

@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { Trophy, Calendar, ImageIcon, Pencil, Trash2, MapPin } from "lucide-react";
+import { memo, useCallback } from "react";
+import { Trophy, Calendar, MapPin } from "lucide-react";
 import type { Athlete, Discipline, ResultStatus } from "../../types";
 import {
   formatTime,
@@ -9,7 +9,7 @@ import {
   getStatusLabel,
 } from "../../lib/formatters";
 import { ResultBadge } from "./ResultBadge";
-import { usePhotoStore } from "../../stores";
+import { HoverCheckbox } from "../ui";
 
 interface ResultCardProps {
   result: {
@@ -34,9 +34,11 @@ interface ResultCardProps {
   };
   athlete?: Athlete;
   discipline?: Discipline;
-  onClick?: () => void;
+  showAthleteName?: boolean;
   onEdit?: () => void;
-  onDelete?: () => void;
+  selectionMode?: boolean;
+  isSelected?: boolean;
+  onCheckboxClick?: () => void;
 }
 
 const medalColors = {
@@ -45,16 +47,39 @@ const medalColors = {
   3: "bg-bronze",
 };
 
-export function ResultCard({ result, athlete, discipline, onClick, onEdit, onDelete }: ResultCardProps) {
-  const { fetchPhotoCount, getPhotoCount } = usePhotoStore();
-  const photoCount = getPhotoCount("results", result.id);
-
-  useEffect(() => {
-    fetchPhotoCount("results", result.id);
-  }, [fetchPhotoCount, result.id]);
-
+export const ResultCard = memo(function ResultCard({
+  result,
+  athlete,
+  discipline,
+  showAthleteName = true,
+  onEdit,
+  selectionMode = false,
+  isSelected = false,
+  onCheckboxClick,
+}: ResultCardProps) {
   // Get result year for wind check
   const resultYear = new Date(result.date).getFullYear();
+
+  const handleCheckboxClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onCheckboxClick?.();
+  }, [onCheckboxClick]);
+
+  const handleCardClick = useCallback((e: React.MouseEvent) => {
+    // If Ctrl/Cmd is held, treat as checkbox click
+    if (e.ctrlKey || e.metaKey) {
+      e.stopPropagation();
+      onCheckboxClick?.();
+      return;
+    }
+    // In selection mode, clicking card toggles selection
+    if (selectionMode) {
+      onCheckboxClick?.();
+      return;
+    }
+    // Normal click opens edit dialog
+    onEdit?.();
+  }, [onEdit, onCheckboxClick, selectionMode]);
 
   // Format the result value
   const formattedValue = discipline
@@ -97,54 +122,46 @@ export function ResultCard({ result, athlete, discipline, onClick, onEdit, onDel
   const athleteName = athlete?.firstName ?? "Tuntematon";
   const disciplineName = discipline?.fullName ?? "Tuntematon laji";
 
-  const handleDeleteClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onDelete?.();
-  };
-
-  const handleEditClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onEdit?.();
-  };
-
   // Medal placement (1-3)
   const hasMedal = result.placement && result.placement >= 1 && result.placement <= 3;
 
   return (
     <div
-      onClick={onClick}
-      className={`group rounded-xl bg-card border border-border-subtle hover:border-border-hover transition-colors duration-150 ${onClick ? "cursor-pointer" : ""}`}
+      onClick={handleCardClick}
+      className={`group relative rounded-xl bg-card border transition-colors duration-150 ${
+        isSelected
+          ? "border-[var(--accent)] ring-1 ring-[var(--accent)]"
+          : "border-border-subtle hover:border-border-hover"
+      } ${onEdit || selectionMode ? "cursor-pointer" : ""}`}
     >
+      {/* Hover checkbox - only shown when onCheckboxClick is provided */}
+      {onCheckboxClick && (
+        <div
+          className={`absolute top-3 right-3 z-10 transition-all duration-200 ${
+            isSelected
+              ? "opacity-100 scale-100"
+              : "opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 pointer-events-none group-hover:pointer-events-auto"
+          }`}
+        >
+          <HoverCheckbox
+            isSelected={isSelected}
+            onClick={handleCheckboxClick}
+            itemType="tulos"
+          />
+        </div>
+      )}
+
       <div className="p-4 flex flex-col h-full">
-        {/* Top row: Athlete name + discipline + metadata */}
-        <div className="flex items-start justify-between gap-2 mb-3">
-          <div className="min-w-0">
+        {/* Top row: Athlete name (optional) + discipline + metadata */}
+        <div className="mb-3">
+          {showAthleteName && (
             <div className="font-medium text-foreground truncate">{athleteName}</div>
-            <div className="text-sm text-muted-foreground truncate">{disciplineName}</div>
-            {metadataLine && (
-              <div className="text-xs text-muted-foreground truncate">{metadataLine}</div>
-            )}
+          )}
+          <div className={`truncate ${showAthleteName ? "text-sm text-muted-foreground" : "text-sm font-medium text-foreground"}`}>
+            {disciplineName}
           </div>
-          {/* Action icons */}
-          {(onEdit || onDelete) && (
-            <div className="flex items-center gap-1 shrink-0">
-              {onDelete && (
-                <button
-                  onClick={handleDeleteClick}
-                  className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors cursor-pointer"
-                >
-                  <Trash2 size={14} />
-                </button>
-              )}
-              {onEdit && (
-                <button
-                  onClick={handleEditClick}
-                  className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded transition-colors cursor-pointer"
-                >
-                  <Pencil size={14} />
-                </button>
-              )}
-            </div>
+          {metadataLine && (
+            <div className="text-xs text-muted-foreground truncate">{metadataLine}</div>
           )}
         </div>
 
@@ -200,14 +217,8 @@ export function ResultCard({ result, athlete, discipline, onClick, onEdit, onDel
             )}
           </div>
 
-          {/* Right: Medal + photos */}
+          {/* Right: Medal */}
           <div className="flex items-center gap-2 shrink-0">
-            {photoCount > 0 && (
-              <div className="flex items-center gap-1 text-muted-foreground" title={`${photoCount} kuvaa`}>
-                <ImageIcon size={13} />
-                <span className="text-xs">{photoCount}</span>
-              </div>
-            )}
             {hasMedal && (
               <div
                 className={`w-7 h-7 rounded-full ${medalColors[result.placement as 1 | 2 | 3]} flex items-center justify-center shadow-sm`}
@@ -225,4 +236,4 @@ export function ResultCard({ result, athlete, discipline, onClick, onEdit, onDel
       </div>
     </div>
   );
-}
+});

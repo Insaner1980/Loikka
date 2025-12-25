@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   format,
@@ -9,7 +10,6 @@ import {
   startOfWeek,
   endOfWeek,
   eachDayOfInterval,
-  isSameMonth,
   isSameDay,
   isToday,
   isBefore,
@@ -50,6 +50,8 @@ export function DatePicker({
 
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
 
   // Parse min/max dates
   const minDate = useMemo(() => (min ? new Date(min) : undefined), [min]);
@@ -80,10 +82,11 @@ export function DatePicker({
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
+      const target = event.target as Node;
+      const isOutsideContainer = containerRef.current && !containerRef.current.contains(target);
+      const isOutsideDropdown = dropdownRef.current && !dropdownRef.current.contains(target);
+
+      if (isOutsideContainer && isOutsideDropdown) {
         setIsOpen(false);
       }
     };
@@ -103,6 +106,50 @@ export function DatePicker({
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
+
+  // Calculate dropdown position when opening
+  useEffect(() => {
+    if (isOpen && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      const dropdownWidth = 280;
+      const dropdownHeight = 340; // approximate height
+
+      // Find the dialog container to constrain within
+      const dialog = containerRef.current.closest('[role="dialog"]');
+      const dialogRect = dialog?.getBoundingClientRect();
+
+      // Use dialog bounds if available, otherwise window bounds
+      const rightBound = dialogRect ? dialogRect.right - 20 : window.innerWidth - 16;
+      const leftBound = dialogRect ? dialogRect.left + 20 : 16;
+
+      // Calculate horizontal position - align to left edge of input
+      let left = rect.left;
+
+      // If dropdown would overflow right bound, align to right edge of input
+      if (left + dropdownWidth > rightBound) {
+        left = rect.right - dropdownWidth;
+      }
+
+      // Ensure it doesn't go past left bound
+      if (left < leftBound) {
+        left = leftBound;
+      }
+
+      // Calculate vertical position
+      let top = rect.bottom + 4;
+      if (top + dropdownHeight > window.innerHeight - 16) {
+        // Not enough space below, position above
+        top = rect.top - dropdownHeight - 4;
+      }
+
+      setDropdownStyle({
+        position: 'fixed',
+        top: `${top}px`,
+        left: `${left}px`,
+        width: `${dropdownWidth}px`,
+      });
+    }
   }, [isOpen]);
 
   // Get calendar days
@@ -239,7 +286,7 @@ export function DatePicker({
           onFocus={() => setIsOpen(true)}
           placeholder={placeholder}
           autoComplete="off"
-          className={`w-full pl-3 pr-10 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
+          className={`w-full pl-3 pr-10 py-2 bg-background border rounded-lg input-focus ${
             error ? "border-error" : "border-border"
           }`}
         />
@@ -254,9 +301,13 @@ export function DatePicker({
         </button>
       </div>
 
-      {/* Calendar dropdown */}
-      {isOpen && (
-        <div className="absolute z-50 mt-1 w-[280px] bg-card border border-border rounded-lg shadow-lg p-3 animate-fade-in right-0">
+      {/* Calendar dropdown - rendered as portal to escape overflow:hidden */}
+      {isOpen && createPortal(
+        <div
+          ref={dropdownRef}
+          style={dropdownStyle}
+          className="z-[10001] bg-card border border-border rounded-lg shadow-lg p-3 animate-fade-in"
+        >
           {/* Month navigation */}
           <div className="flex items-center justify-between mb-3">
             <button
@@ -294,7 +345,6 @@ export function DatePicker({
           <div className="grid grid-cols-7 gap-1">
             {calendarDays.map((day) => {
               const dateStr = format(day, "yyyy-MM-dd");
-              const isCurrentMonth = isSameMonth(day, currentMonth);
               const isSelected = selectedDate && isSameDay(day, selectedDate);
               const isTodayDate = isToday(day);
               const isDisabled = isDateDisabled(day);
@@ -308,11 +358,9 @@ export function DatePicker({
                   className={`
                     relative aspect-square flex items-center justify-center
                     rounded-md text-body transition-colors cursor-pointer
-                    ${!isCurrentMonth ? "text-[var(--text-initials)]" : ""}
                     ${isDisabled ? "text-[var(--text-initials)] cursor-not-allowed" : ""}
                     ${isSelected ? "bg-[var(--accent)] text-[var(--btn-primary-text)] font-medium" : ""}
-                    ${!isSelected && !isDisabled && isCurrentMonth ? "text-foreground hover:bg-muted" : ""}
-                    ${!isSelected && !isDisabled && !isCurrentMonth ? "hover:bg-muted" : ""}
+                    ${!isSelected && !isDisabled ? "text-foreground hover:bg-muted" : ""}
                     ${isTodayDate && !isSelected ? "ring-1 ring-[var(--accent)] ring-inset" : ""}
                   `}
                 >
@@ -332,7 +380,8 @@ export function DatePicker({
               Tänään
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

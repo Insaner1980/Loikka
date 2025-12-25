@@ -114,6 +114,7 @@ export function PhotoViewer({
           src={getPhotoUrl(currentPhoto)}
           alt={currentPhoto.originalName}
           className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl"
+          loading="eager"
         />
       </div>
 

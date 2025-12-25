@@ -169,6 +169,7 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
                 src={photoPreviewUrl}
                 alt="Urheilijan kuva"
                 className="w-20 h-20 rounded-full object-cover"
+                loading="eager"
               />
             ) : (
               <div className="w-20 h-20 rounded-full bg-elevated flex items-center justify-center text-[var(--text-placeholder)] font-medium text-xl">

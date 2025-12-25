@@ -5,7 +5,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
   ReferenceDot,
 } from "recharts";
 import { format } from "date-fns";
@@ -102,9 +101,10 @@ export function ProgressChart({ data, discipline }: ProgressChartProps) {
     <div className="bg-card rounded-xl border border-border p-4">
       <h3 className="text-sm font-medium text-foreground mb-4">Kehitys</h3>
       <div className="h-96">
-        <ResponsiveContainer width="100%" height="100%">
           <LineChart
             data={chartData}
+            width={800}
+            height={384}
             margin={{ top: 10, right: 30, left: 20, bottom: 25 }}
           >
             <CartesianGrid
@@ -175,7 +175,6 @@ export function ProgressChart({ data, discipline }: ProgressChartProps) {
               />
             )}
           </LineChart>
-        </ResponsiveContainer>
       </div>
     </div>
   );

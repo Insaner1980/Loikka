@@ -21,7 +21,9 @@
         "center": true,
         "decorations": false,
         "resizable": true,
-        "transparent": false
+        "transparent": false,
+        "backgroundColor": "#0A0A0A",
+        "additionalBrowserArgs": "--disable-features=LazyImageLoading,LazyFrameLoading"
       }
     ],
     "security": {

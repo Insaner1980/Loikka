@@ -57,9 +57,22 @@ interface PhotoStore {
   error: string | null;
   filters: PhotoFilters;
 
+  // Selection mode state
+  selectionMode: boolean;
+  selectedIds: Set<number>;
+
   // Entity-specific photo cache
   entityPhotos: Map<string, EntityPhotoCache>;
   photoCounts: Map<string, number>;
+
+  // Selection actions
+  setSelectionMode: (enabled: boolean) => void;
+  toggleSelection: (id: number) => void;
+  selectAll: () => void;
+  clearSelection: () => void;
+  deleteSelected: () => Promise<boolean>;
+  linkSelectedToCompetition: (competitionId: number) => Promise<boolean>;
+  linkSelectedToAthlete: (athleteId: number) => Promise<boolean>;
 
   // Gallery actions
   fetchPhotos: (filters?: PhotoFilters) => Promise<void>;
@@ -92,8 +105,102 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
   loading: false,
   error: null,
   filters: {},
+  selectionMode: false,
+  selectedIds: new Set(),
   entityPhotos: new Map(),
   photoCounts: new Map(),
+
+  setSelectionMode: (enabled: boolean) => {
+    set({
+      selectionMode: enabled,
+      selectedIds: enabled ? get().selectedIds : new Set(),
+    });
+  },
+
+  toggleSelection: (id: number) => {
+    const newSet = new Set(get().selectedIds);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    set({ selectedIds: newSet });
+  },
+
+  selectAll: () => {
+    const allIds = new Set(get().photos.map((p) => p.id));
+    set({ selectedIds: allIds });
+  },
+
+  clearSelection: () => {
+    set({ selectedIds: new Set() });
+  },
+
+  deleteSelected: async (): Promise<boolean> => {
+    const ids = Array.from(get().selectedIds);
+    if (ids.length === 0) return false;
+
+    set({ loading: true, error: null });
+    try {
+      const success = await invoke<boolean>("delete_photos_bulk", { ids });
+      if (success) {
+        set((state) => ({
+          photos: state.photos.filter((p) => !state.selectedIds.has(p.id)),
+          selectedIds: new Set(),
+          selectionMode: false,
+          loading: false,
+        }));
+      }
+      return success;
+    } catch (error) {
+      set({ error: getErrorMessage(error), loading: false });
+      return false;
+    }
+  },
+
+  linkSelectedToCompetition: async (competitionId: number): Promise<boolean> => {
+    const ids = Array.from(get().selectedIds);
+    if (ids.length === 0) return false;
+
+    set({ loading: true, error: null });
+    try {
+      const success = await invoke<boolean>("link_photos_to_competition", {
+        photoIds: ids,
+        competitionId,
+      });
+      if (success) {
+        // Refetch to get updated data
+        await get().fetchPhotos();
+        set({ selectedIds: new Set(), selectionMode: false });
+      }
+      return success;
+    } catch (error) {
+      set({ error: getErrorMessage(error), loading: false });
+      return false;
+    }
+  },
+
+  linkSelectedToAthlete: async (athleteId: number): Promise<boolean> => {
+    const ids = Array.from(get().selectedIds);
+    if (ids.length === 0) return false;
+
+    set({ loading: true, error: null });
+    try {
+      const success = await invoke<boolean>("link_photos_to_athlete", {
+        photoIds: ids,
+        athleteId,
+      });
+      if (success) {
+        // Refetch to get updated data
+        await get().fetchPhotos();
+        set({ selectedIds: new Set(), selectionMode: false });
+      }
+      return success;
+    } catch (error) {
+      set({ error: getErrorMessage(error), loading: false });
+      return false;
+    }
+  },
 
   fetchPhotos: async (filters?: PhotoFilters) => {
     const effectiveFilters = filters || get().filters;

@@ -111,7 +111,7 @@ export function DistanceInput({
     }
   };
 
-  const inputClassName = `w-full text-center bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
+  const inputClassName = `w-full text-center bg-background border rounded-lg input-focus ${
     error ? "border-error" : "border-border"
   } ${disabled ? "opacity-60 cursor-not-allowed" : ""}`;
 

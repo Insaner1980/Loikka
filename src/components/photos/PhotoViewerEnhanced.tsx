@@ -128,7 +128,7 @@ export function PhotoViewerEnhanced({
             </button>
             <button
               onClick={handleConfirmDelete}
-              className="btn-primary bg-[var(--status-error)] hover:bg-[var(--status-error)]/90 cursor-pointer"
+              className="btn-primary"
             >
               Poista
             </button>
@@ -136,37 +136,47 @@ export function PhotoViewerEnhanced({
         </div>
       </Dialog>
 
-      {/* Navigation buttons */}
-      {hasMultiple && (
-        <>
-          <button
-            onClick={() => onNavigate("prev")}
-            className="absolute left-4 top-1/2 -translate-y-1/2 p-3 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors z-10 cursor-pointer"
-          >
-            <ChevronLeft size={32} />
-          </button>
-          <button
-            onClick={() => onNavigate("next")}
-            className="absolute right-4 top-1/2 -translate-y-1/2 p-3 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors z-10 cursor-pointer"
-          >
-            <ChevronRight size={32} />
-          </button>
-        </>
-      )}
+      {/* Main content with navigation */}
+      <div className="photo-viewer-main" onClick={handleBackdropClick}>
+        {/* Left navigation button */}
+        <div className="photo-viewer-nav" onClick={handleBackdropClick}>
+          {hasMultiple && (
+            <button
+              onClick={() => onNavigate("prev")}
+              className="p-3 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+            >
+              <ChevronLeft size={32} />
+            </button>
+          )}
+        </div>
 
-      {/* Main image container */}
-      <div className="photo-viewer-content">
-        <img
-          src={getPhotoUrl(currentPhoto)}
-          alt={currentPhoto.originalName}
-          className="photo-viewer-image rounded-lg shadow-2xl"
-        />
+        {/* Image container */}
+        <div className="photo-viewer-content">
+          <img
+            src={getPhotoUrl(currentPhoto)}
+            alt={currentPhoto.originalName}
+            className="photo-viewer-image rounded-lg shadow-2xl"
+            loading="eager"
+          />
 
-        {/* Caption below photo */}
-        <div className="mt-3 text-center">
-          <p className="text-white/60 text-sm">
-            {captionParts.join(" · ")}
-          </p>
+          {/* Caption below photo */}
+          <div className="mt-3 text-center">
+            <p className="text-white/60 text-sm">
+              {captionParts.join(" · ")}
+            </p>
+          </div>
+        </div>
+
+        {/* Right navigation button */}
+        <div className="photo-viewer-nav" onClick={handleBackdropClick}>
+          {hasMultiple && (
+            <button
+              onClick={() => onNavigate("next")}
+              className="p-3 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+            >
+              <ChevronRight size={32} />
+            </button>
+          )}
         </div>
       </div>
 

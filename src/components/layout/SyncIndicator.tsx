@@ -11,7 +11,7 @@ export function SyncIndicator() {
   // Check status on mount
   useEffect(() => {
     checkStatus();
-  }, [checkStatus]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleClick = () => {
     navigate("/settings");

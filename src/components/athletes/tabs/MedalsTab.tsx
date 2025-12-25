@@ -28,7 +28,7 @@ export function MedalsTab({ medals, results, onMedalClick }: MedalsTabProps) {
       .filter(m => m.disciplineId && m.disciplineName)
       .map(m => [m.disciplineId!, { id: m.disciplineId!, name: m.disciplineName! }])
   );
-  const disciplines = [...disciplinesMap.values()];
+  const disciplines = [...disciplinesMap.values()].sort((a, b) => a.id - b.id);
 
   // Filter by discipline first (for competition options)
   const medalsForCompetitionFilter = disciplineFilter
@@ -64,7 +64,7 @@ export function MedalsTab({ medals, results, onMedalClick }: MedalsTabProps) {
           <select
             value={disciplineFilter ?? ""}
             onChange={(e) => setDisciplineFilter(e.target.value ? parseInt(e.target.value) : null)}
-            className="flex-1 px-3 py-2 bg-card border border-border-subtle rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer"
+            className="flex-1 px-3 py-2 bg-card border border-border-subtle rounded-lg text-sm input-focus cursor-pointer"
           >
             <option value="">Kaikki lajit</option>
             {disciplines.map(d => (
@@ -74,7 +74,7 @@ export function MedalsTab({ medals, results, onMedalClick }: MedalsTabProps) {
           <select
             value={competitionFilter ?? ""}
             onChange={(e) => setCompetitionFilter(e.target.value || null)}
-            className="flex-1 px-3 py-2 bg-card border border-border-subtle rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer"
+            className="flex-1 px-3 py-2 bg-card border border-border-subtle rounded-lg text-sm input-focus cursor-pointer"
           >
             <option value="">Kaikki kilpailut</option>
             {competitions.map(name => (
@@ -84,7 +84,7 @@ export function MedalsTab({ medals, results, onMedalClick }: MedalsTabProps) {
           <select
             value={seasonFilter ?? ""}
             onChange={(e) => setSeasonFilter(e.target.value ? parseInt(e.target.value) : null)}
-            className="w-28 px-3 py-2 bg-card border border-border-subtle rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer"
+            className="w-28 px-3 py-2 bg-card border border-border-subtle rounded-lg text-sm input-focus cursor-pointer"
           >
             <option value="">Kaudet</option>
             {uniqueYears.map(year => (

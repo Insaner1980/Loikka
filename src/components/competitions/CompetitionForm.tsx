@@ -69,7 +69,7 @@ export function CompetitionForm({
     if (competitions.length === 0) {
       fetchCompetitions();
     }
-  }, [athletes.length, fetchAthletes, competitions.length, fetchCompetitions]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Get unique competition names for autocomplete
   const uniqueCompetitionNames = [...new Set(competitions.map((c) => c.name))];
@@ -177,7 +177,7 @@ export function CompetitionForm({
             id="level"
             value={level}
             onChange={(e) => setLevel(e.target.value as CompetitionLevel | "")}
-            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer"
+            className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus cursor-pointer"
           >
             <option value="">Valitse taso</option>
             {COMPETITION_LEVEL_OPTIONS.map((option) => (
@@ -236,7 +236,7 @@ export function CompetitionForm({
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="esim. Tampere"
-            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
+            className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
           />
         </div>
 
@@ -251,7 +251,7 @@ export function CompetitionForm({
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             placeholder="esim. Ratina stadion"
-            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
+            className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
           />
         </div>
       </div>
@@ -267,7 +267,7 @@ export function CompetitionForm({
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Valinnainen lisätieto..."
-          className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
+          className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
         />
       </div>
 

@@ -80,7 +80,7 @@ export function useAthleteData(athleteId: number): UseAthleteDataReturn {
 
   useEffect(() => {
     fetchAll();
-  }, [fetchAll]);
+  }, [athleteId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
     ...data,

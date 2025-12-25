@@ -5,7 +5,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
   Cell,
 } from "recharts";
 import type { Discipline } from "../../types";
@@ -103,9 +102,10 @@ export function ComparisonChart({ data, discipline }: ComparisonChartProps) {
     <div className="bg-card rounded-xl border border-border p-4">
       <h3 className="text-lg font-semibold mb-4">Kausivertailu</h3>
       <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}
+            width={800}
+            height={256}
             margin={{ top: 10, right: 30, left: 10, bottom: 10 }}
           >
             <CartesianGrid
@@ -147,7 +147,6 @@ export function ComparisonChart({ data, discipline }: ComparisonChartProps) {
               ))}
             </Bar>
           </BarChart>
-        </ResponsiveContainer>
       </div>
       <p className="text-xs text-muted-foreground text-center mt-2">
         Paras tulos kultaisella

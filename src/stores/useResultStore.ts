@@ -115,6 +115,7 @@ interface ResultStore {
   ) => Promise<Result>;
   updateResult: (id: number, result: UpdateResult) => Promise<Result>;
   deleteResult: (id: number) => Promise<boolean>;
+  deleteResultsBulk: (ids: number[]) => Promise<boolean>;
   checkPersonalBest: (
     athleteId: number,
     disciplineId: number,
@@ -149,7 +150,16 @@ export const useResultStore = create<ResultStore>((set, get) => ({
   loading: false,
   error: null,
 
-  fetchResults: async () => {
+  fetchResults: async (force = false) => {
+    const state = get();
+    // Skip if already loaded (unless forced)
+    if (!force && state.results.length > 0) {
+      return;
+    }
+    // Prevent concurrent fetches
+    if (state.loading) {
+      return;
+    }
     set({ loading: true, error: null });
     try {
       const results = await invoke<Result[]>("get_all_results");
@@ -255,6 +265,27 @@ export const useResultStore = create<ResultStore>((set, get) => ({
     set({ loading: true, error: null });
     try {
       await invoke<boolean>("delete_result", { id });
+
+      // Refetch all results
+      const results = await invoke<Result[]>("get_all_results");
+      set({ results, loading: false });
+
+      return true;
+    } catch (error) {
+      set({ error: getErrorMessage(error), loading: false });
+      throw error;
+    }
+  },
+
+  deleteResultsBulk: async (ids: number[]) => {
+    if (ids.length === 0) return false;
+
+    set({ loading: true, error: null });
+    try {
+      // Delete each result
+      for (const id of ids) {
+        await invoke<boolean>("delete_result", { id });
+      }
 
       // Refetch all results
       const results = await invoke<Result[]>("get_all_results");

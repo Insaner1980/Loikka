@@ -56,8 +56,9 @@ export function AddPhotoDialog({
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    // Use 'click' instead of 'mousedown' to allow scrollbar dragging
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
   const resetForm = () => {
@@ -149,6 +150,7 @@ export function AddPhotoDialog({
         eventName: eventNameToSave,
       });
 
+      toast.success("Kuva lisätty");
       handleClose();
       onPhotoAdded();
     } catch (err) {
@@ -172,6 +174,7 @@ export function AddPhotoDialog({
                 src={previewUrl}
                 alt="Esikatselu"
                 className="w-full max-h-64 object-contain rounded-lg bg-card"
+                loading="eager"
               />
               <button
                 onClick={() => {
@@ -206,7 +209,7 @@ export function AddPhotoDialog({
             onChange={(e) => {
               setAthleteId(e.target.value ? Number(e.target.value) : "");
             }}
-            className="w-full bg-card border border-border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 cursor-pointer"
+            className="w-full bg-card border border-border rounded-lg px-4 py-2.5 text-sm input-focus cursor-pointer"
             disabled={!!preselectedAthleteId}
           >
             <option value="">Valitse urheilija</option>
@@ -232,12 +235,15 @@ export function AddPhotoDialog({
               onFocus={() => setCompetitionDropdownOpen(true)}
               placeholder="Kirjoita tai valitse kilpailu"
               autoComplete="off"
-              className="w-full bg-card border border-border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]/50 pr-10"
+              className="w-full bg-card border border-border rounded-lg px-4 py-2.5 text-sm input-focus pr-10"
               disabled={!!preselectedCompetitionId}
             />
             <button
               type="button"
-              onClick={() => setCompetitionDropdownOpen(!competitionDropdownOpen)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setCompetitionDropdownOpen(!competitionDropdownOpen);
+              }}
               className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground cursor-pointer"
               disabled={!!preselectedCompetitionId}
             >

@@ -59,7 +59,7 @@ export function SyncOptionsDialog({
         fetchCloudPhotos();
       }
     }
-  }, [open, mode, fetchCloudPhotos, fetchLocalPhotos]);
+  }, [open, mode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Reset state when dialog opens
   useEffect(() => {
@@ -380,6 +380,7 @@ export function SyncOptionsDialog({
                                   src={thumbnailSrc}
                                   alt={photo.name}
                                   className="w-full h-full object-cover"
+                                  loading="eager"
                                 />
                               ) : (
                                 <div className="w-full h-full bg-muted flex items-center justify-center">

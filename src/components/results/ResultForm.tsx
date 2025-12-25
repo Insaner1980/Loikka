@@ -90,7 +90,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
     if (competitions.length === 0) {
       fetchCompetitions();
     }
-  }, [athletes.length, fetchAthletes, competitions.length, fetchCompetitions]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Get unique competition names for autocomplete (from both calendar and previous results)
   const uniqueCompetitionNames = useMemo(() => {
@@ -121,10 +121,11 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
     setPotentialBests({ isPB: false, isSB: false });
   }, [disciplineId]);
 
-  // Clear result value when status is not valid (DNF, DNS, NM, DQ)
+  // Clear result value and placement when status is not valid (DNF, DNS, NM, DQ)
   useEffect(() => {
     if (resultStatus !== "valid") {
       setResultValue(null);
+      setPlacement("");
     }
   }, [resultStatus]);
 
@@ -273,7 +274,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
               setSelectedAthleteId(e.target.value ? parseInt(e.target.value) : "")
             }
             disabled={!!athleteId}
-            className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer ${
+            className={`w-full px-3 py-2 bg-background border rounded-lg input-focus cursor-pointer ${
               errors.athleteId ? "border-error" : "border-border"
             } ${athleteId ? "opacity-60" : ""}`}
           >
@@ -303,7 +304,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
             onChange={(e) =>
               setDisciplineId(e.target.value ? parseInt(e.target.value) : "")
             }
-            className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer ${
+            className={`w-full px-3 py-2 bg-background border rounded-lg input-focus cursor-pointer ${
               errors.disciplineId ? "border-error" : "border-border"
             }`}
           >
@@ -440,7 +441,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="esim. Tampere"
-            className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
+            className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
           />
         </div>
       </div>
@@ -474,7 +475,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
                 id="competitionLevel"
                 value={competitionLevel}
                 onChange={(e) => setCompetitionLevel(e.target.value as CompetitionLevel | "")}
-                className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer"
+                className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus cursor-pointer"
               >
                 <option value="">Valitse taso</option>
                 {COMPETITION_LEVEL_OPTIONS.map((option) => (
@@ -498,8 +499,11 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
                   setPlacement(e.target.value ? parseInt(e.target.value) : "")
                 }
                 min={1}
-                placeholder="esim. 1"
-                className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
+                placeholder={statusRequiresValue ? "esim. 1" : "-"}
+                disabled={!statusRequiresValue}
+                className={`w-full px-3 py-2 bg-background border border-border rounded-lg input-focus ${
+                  !statusRequiresValue ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               />
             </div>
           </div>
@@ -543,7 +547,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
                 value={wind}
                 onChange={(e) => setWind(e.target.value)}
                 placeholder="esim. +1.8 tai -0.5"
-                className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
+                className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
               />
               <p className="mt-1 text-xs text-muted-foreground">Valinnainen. Myötätuuli +, vastatuuli -</p>
             </div>
@@ -559,7 +563,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
                 id="equipmentWeight"
                 value={equipmentWeight}
                 onChange={(e) => setEquipmentWeight(e.target.value ? parseFloat(e.target.value) : "")}
-                className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer"
+                className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus cursor-pointer"
               >
                 <option value="">Valitse paino</option>
                 {availableWeights.map((weight) => (
@@ -581,7 +585,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
                 id="hurdleHeight"
                 value={hurdleHeight}
                 onChange={(e) => setHurdleHeight(e.target.value ? parseInt(e.target.value) : "")}
-                className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer"
+                className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus cursor-pointer"
               >
                 <option value="">Valitse korkeus</option>
                 {HURDLE_HEIGHTS.map((height) => (
@@ -605,7 +609,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
                 value={hurdleSpacing}
                 onChange={(e) => setHurdleSpacing(e.target.value)}
                 placeholder="esim. 8.0"
-                className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
+                className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
               />
               <p className="mt-1 text-xs text-muted-foreground">Valinnainen</p>
             </div>
@@ -624,7 +628,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Valinnainen lisätieto..."
-          className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
+          className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
         />
       </div>
 

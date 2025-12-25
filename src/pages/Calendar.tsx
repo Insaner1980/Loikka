@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
-import { Plus, List, CalendarDays, CalendarIcon } from "lucide-react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { Plus, List, CalendarDays, CalendarIcon, Trash2, X } from "lucide-react";
 import { format } from "date-fns";
 import { fi } from "date-fns/locale";
 import { useCompetitionStore } from "../stores/useCompetitionStore";
@@ -7,7 +7,7 @@ import { useAthleteStore } from "../stores/useAthleteStore";
 import { CalendarView } from "../components/competitions/CalendarView";
 import { CompetitionCard } from "../components/competitions/CompetitionCard";
 import { CompetitionForm } from "../components/competitions/CompetitionForm";
-import { Dialog } from "../components/ui/Dialog";
+import { Dialog, toast } from "../components/ui";
 import type { Competition, NewCompetition } from "../types";
 
 type ViewMode = "list" | "month";
@@ -16,15 +16,15 @@ export function Calendar() {
   const {
     competitions,
     participants,
-    fetchCompetitions,
     getUpcomingCompetitions,
     getCompetitionsByDate,
     addCompetition,
     updateCompetition,
+    deleteCompetition,
     addParticipant,
     removeParticipant,
   } = useCompetitionStore();
-  const { athletes, fetchAthletes } = useAthleteStore();
+  const { athletes } = useAthleteStore();
 
   const [viewMode, setViewMode] = useState<ViewMode>("list");
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -32,10 +32,12 @@ export function Calendar() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCompetition, setEditingCompetition] = useState<Competition | null>(null);
 
-  useEffect(() => {
-    fetchCompetitions();
-    fetchAthletes();
-  }, [fetchCompetitions, fetchAthletes]);
+  // Selection mode state
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
+
+  // Data is fetched in Layout.tsx on app start
 
   // Map athlete ID to athlete data
   const athleteMap = useMemo(() => {
@@ -155,18 +157,100 @@ export function Calendar() {
       }));
   };
 
+  // Handle Esc key to exit selection mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && selectionMode) {
+        setSelectionMode(false);
+        setSelectedIds(new Set());
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [selectionMode]);
+
+  // Toggle selection for a competition
+  const handleCheckboxClick = useCallback((competitionId: number) => {
+    if (!selectionMode) {
+      setSelectionMode(true);
+    }
+
+    setSelectedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(competitionId)) {
+        newSet.delete(competitionId);
+      } else {
+        newSet.add(competitionId);
+      }
+      return newSet;
+    });
+  }, [selectionMode]);
+
+  // Cancel selection mode
+  const handleCancelSelection = useCallback(() => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  }, []);
+
+  // Confirm bulk delete
+  const handleBulkDelete = useCallback(async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+
+    for (const id of ids) {
+      await deleteCompetition(id);
+    }
+    toast.success(`${ids.length} kilpailua poistettu`);
+    setBulkDeleteConfirmOpen(false);
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  }, [selectedIds, deleteCompetition]);
+
+  const selectedCount = selectedIds.size;
+  const hasSelection = selectedCount > 0;
+
   return (
     <div className="p-6 h-full flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 pb-5 border-b border-border-subtle">
-        <h1 className="text-title font-medium text-foreground">Kalenteri</h1>
-        <button
-          onClick={() => setIsFormOpen(true)}
-          className="btn-primary btn-press"
-        >
-          <Plus size={18} />
-          Lisää kilpailu
-        </button>
+        {selectionMode ? (
+          <>
+            {/* Selection mode header */}
+            <h1 className="text-title font-medium text-foreground">
+              {hasSelection ? `${selectedCount} valittu` : "Valitse kilpailuja"}
+            </h1>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setBulkDeleteConfirmOpen(true)}
+                disabled={!hasSelection}
+                className="btn-secondary btn-press"
+              >
+                <Trash2 size={16} />
+                Poista
+              </button>
+              <button
+                onClick={handleCancelSelection}
+                className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                aria-label="Peruuta valinta"
+              >
+                <X size={18} />
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            {/* Normal header */}
+            <h1 className="text-title font-medium text-foreground">Kalenteri</h1>
+            <button
+              onClick={() => setIsFormOpen(true)}
+              className="btn-primary btn-press"
+            >
+              <Plus size={18} />
+              Lisää kilpailu
+            </button>
+          </>
+        )}
       </div>
 
       {/* View toggle */}
@@ -216,6 +300,9 @@ export function Calendar() {
                     competition={competition}
                     participants={getParticipantsWithAthletes(competition.id)}
                     onClick={() => handleOpenEdit(competition)}
+                    selectionMode={selectionMode}
+                    isSelected={selectedIds.has(competition.id)}
+                    onCheckboxClick={() => handleCheckboxClick(competition.id)}
                   />
                 ))}
               </div>
@@ -255,6 +342,9 @@ export function Calendar() {
                             competition.id
                           )}
                           onClick={() => handleOpenEdit(competition)}
+                          selectionMode={selectionMode}
+                          isSelected={selectedIds.has(competition.id)}
+                          onCheckboxClick={() => handleCheckboxClick(competition.id)}
                         />
                       ))}
                     </div>
@@ -289,6 +379,34 @@ export function Calendar() {
           onSave={handleSaveCompetition}
           onCancel={handleCloseForm}
         />
+      </Dialog>
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <Dialog
+        open={bulkDeleteConfirmOpen}
+        onClose={() => setBulkDeleteConfirmOpen(false)}
+        title="Poista kilpailut"
+        maxWidth="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-body text-muted-foreground">
+            Haluatko varmasti poistaa {selectedCount} {selectedCount === 1 ? "kilpailun" : "kilpailua"}? Tätä toimintoa ei voi perua.
+          </p>
+          <div className="flex justify-end gap-3">
+            <button
+              onClick={() => setBulkDeleteConfirmOpen(false)}
+              className="btn-secondary"
+            >
+              Peruuta
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              className="btn-primary"
+            >
+              Poista
+            </button>
+          </div>
+        </div>
       </Dialog>
     </div>
   );

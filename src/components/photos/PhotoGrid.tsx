@@ -1,28 +1,35 @@
-import { ReactNode } from "react";
+import { ReactNode, useCallback } from "react";
 import { Loader2 } from "lucide-react";
 import type { PhotoWithDetails } from "../../stores/usePhotoStore";
 import { formatDate } from "../../lib/formatters";
+import { HoverCheckbox } from "../ui";
 
 interface PhotoGridProps {
   photos: PhotoWithDetails[];
   loading?: boolean;
-  onPhotoClick: (index: number) => void;
+  onPhotoClick: (index: number, event: React.MouseEvent) => void;
+  onCheckboxClick: (index: number, event: React.MouseEvent) => void;
   getThumbnailUrl: (photo: PhotoWithDetails) => string;
   emptyIcon?: ReactNode;
   emptyMessage?: string;
   emptySubMessage?: string;
   columns?: number;
+  selectionMode?: boolean;
+  selectedIds?: Set<number>;
 }
 
 export function PhotoGrid({
   photos,
   loading = false,
   onPhotoClick,
+  onCheckboxClick,
   getThumbnailUrl,
   emptyIcon,
   emptyMessage = "Ei kuvia",
   emptySubMessage,
   columns = 5,
+  selectionMode = false,
+  selectedIds = new Set(),
 }: PhotoGridProps) {
   if (loading && photos.length === 0) {
     return (
@@ -56,7 +63,10 @@ export function PhotoGrid({
           key={photo.id}
           photo={photo}
           thumbnailUrl={getThumbnailUrl(photo)}
-          onClick={() => onPhotoClick(index)}
+          onClick={(e) => onPhotoClick(index, e)}
+          onCheckboxClick={(e) => onCheckboxClick(index, e)}
+          selectionMode={selectionMode}
+          isSelected={selectedIds.has(photo.id)}
         />
       ))}
     </div>
@@ -66,29 +76,76 @@ export function PhotoGrid({
 interface PhotoThumbnailProps {
   photo: PhotoWithDetails;
   thumbnailUrl: string;
-  onClick: () => void;
+  onClick: (event: React.MouseEvent) => void;
+  onCheckboxClick: (event: React.MouseEvent) => void;
+  selectionMode?: boolean;
+  isSelected?: boolean;
 }
 
-function PhotoThumbnail({ photo, thumbnailUrl, onClick }: PhotoThumbnailProps) {
-  const displayName = photo.athleteName || photo.competitionName || photo.eventName || "";
+function PhotoThumbnail({
+  photo,
+  thumbnailUrl,
+  onClick,
+  onCheckboxClick,
+  selectionMode = false,
+  isSelected = false,
+}: PhotoThumbnailProps) {
+  // Prefer event name (custom competition name), then actual competition, then athlete
+  const displayName = photo.eventName || photo.competitionName || photo.athleteName || "";
   const dateStr = formatDate(photo.createdAt);
 
+  const handleCheckboxClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onCheckboxClick(e);
+  }, [onCheckboxClick]);
+
+  const handleImageClick = useCallback((e: React.MouseEvent) => {
+    // If Ctrl is held, treat as checkbox click
+    if (e.ctrlKey || e.metaKey) {
+      e.stopPropagation();
+      onCheckboxClick(e);
+      return;
+    }
+    onClick(e);
+  }, [onClick, onCheckboxClick]);
+
   return (
-    <div className="group cursor-pointer" onClick={onClick}>
+    <div
+      className="group cursor-pointer"
+      onClick={handleImageClick}
+    >
       {/* Thumbnail container */}
-      <div className="relative aspect-square rounded-lg overflow-hidden bg-card">
+      <div className={`relative aspect-square rounded-lg overflow-hidden bg-card ${
+        isSelected ? "ring-2 ring-[var(--accent)]" : ""
+      }`}>
         <img
           src={thumbnailUrl}
           alt={photo.originalName}
-          className="w-full h-full object-cover transition-transform duration-150 group-hover:scale-[1.02]"
-          loading="lazy"
+          width={300}
+          height={300}
+          className={`w-full h-full object-cover transition-all duration-150 ${
+            selectionMode ? "" : "group-hover:scale-[1.02]"
+          } ${isSelected ? "opacity-80" : ""}`}
+          loading="eager"
         />
 
-        {/* Hover overlay with date */}
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-end justify-center pb-2">
-          <span className="text-xs text-white/90">{dateStr}</span>
+        {/* Hover checkbox - visible on hover or when selected - positioned at top right */}
+        <div
+          className={`absolute top-2 right-2 z-10 transition-all duration-200 ${
+            isSelected
+              ? "opacity-100 scale-100"
+              : "opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 pointer-events-none group-hover:pointer-events-auto"
+          }`}
+        >
+          <HoverCheckbox
+            isSelected={isSelected}
+            onClick={handleCheckboxClick}
+            itemType="kuva"
+            variant="image"
+          />
         </div>
-      </div>
+
+              </div>
 
       {/* Caption below */}
       <div className="mt-1.5 px-0.5">

@@ -1,6 +1,8 @@
-import { Check, Calendar, Target, Trash2 } from "lucide-react";
+import { memo, useCallback } from "react";
+import { Check, Calendar } from "lucide-react";
 import type { Athlete, Discipline, Goal } from "../../types";
 import { formatTime, formatDistance, formatDate } from "../../lib/formatters";
+import { HoverCheckbox } from "../ui";
 
 interface GoalCardProps {
   goal: Goal;
@@ -10,10 +12,12 @@ interface GoalCardProps {
   athlete?: Athlete;
   discipline?: Discipline;
   onClick?: () => void;
-  onDelete?: () => void;
+  selectionMode?: boolean;
+  isSelected?: boolean;
+  onCheckboxClick?: () => void;
 }
 
-export function GoalCard({
+export const GoalCard = memo(function GoalCard({
   goal,
   currentBest,
   progress,
@@ -21,8 +25,29 @@ export function GoalCard({
   athlete,
   discipline,
   onClick,
-  onDelete,
+  selectionMode = false,
+  isSelected = false,
+  onCheckboxClick,
 }: GoalCardProps) {
+  const handleCheckboxClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    onCheckboxClick?.();
+  }, [onCheckboxClick]);
+
+  const handleCardClick = useCallback((e: React.MouseEvent) => {
+    // If Ctrl/Cmd is held, treat as checkbox click
+    if (e.ctrlKey || e.metaKey) {
+      e.stopPropagation();
+      onCheckboxClick?.();
+      return;
+    }
+    // In selection mode, clicking card toggles selection
+    if (selectionMode) {
+      onCheckboxClick?.();
+      return;
+    }
+    onClick?.();
+  }, [onClick, onCheckboxClick, selectionMode]);
   const isAchieved = goal.status === "achieved";
   // Goal is completed when progress reaches 100% (even if not yet marked in DB)
   const isCompleted = progress >= 100 || isAchieved;
@@ -49,46 +74,47 @@ export function GoalCard({
 
   return (
     <div
-      onClick={onClick}
-      className={`rounded-xl p-4 border transition-colors duration-150 bg-card border-border-subtle hover:border-border-hover ${
-        onClick ? "cursor-pointer" : ""
-      }`}
+      onClick={handleCardClick}
+      className={`group relative rounded-xl p-4 border transition-colors duration-150 bg-card ${
+        isSelected
+          ? "border-[var(--accent)] ring-1 ring-[var(--accent)]"
+          : "border-border-subtle hover:border-border-hover"
+      } ${onClick || selectionMode ? "cursor-pointer" : ""}`}
     >
-      {/* Header */}
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="font-medium">{athleteName}</span>
-            {isCompleted && (
-              <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-caption font-medium bg-transparent text-[var(--text-muted)] border border-[var(--border-hover)]">
-                <Check size={12} />
-                Saavutettu
-              </span>
-            )}
-            {isCloseToGoal && (
-              <span className="px-1.5 py-0.5 rounded text-caption font-medium bg-transparent text-[var(--text-muted)] border border-[var(--border-hover)]">
-                Lähellä!
-              </span>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground">{disciplineName}</p>
+      {/* Hover checkbox - only shown when onCheckboxClick is provided */}
+      {onCheckboxClick && (
+        <div
+          className={`absolute top-3 right-3 z-10 transition-all duration-200 ${
+            isSelected
+              ? "opacity-100 scale-100"
+              : "opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100 pointer-events-none group-hover:pointer-events-auto"
+          }`}
+        >
+          <HoverCheckbox
+            isSelected={isSelected}
+            onClick={handleCheckboxClick}
+            itemType="tavoite"
+          />
         </div>
-        <div className="flex items-center gap-1">
-          <div className="p-2 bg-muted rounded-lg">
-            <Target size={20} className="text-tertiary" />
-          </div>
-          {onDelete && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-              className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
-            >
-              <Trash2 size={18} />
-            </button>
+      )}
+
+      {/* Header */}
+      <div className="mb-3">
+        <div className="flex items-center gap-2">
+          <span className="font-medium">{athleteName}</span>
+          {isCompleted && (
+            <span className="badge-status flex items-center gap-1">
+              <Check size={12} />
+              Saavutettu
+            </span>
+          )}
+          {isCloseToGoal && (
+            <span className="badge-status">
+              Lähellä!
+            </span>
           )}
         </div>
+        <p className="text-sm text-muted-foreground">{disciplineName}</p>
       </div>
 
       {/* Target */}
@@ -142,4 +168,4 @@ export function GoalCard({
       )}
     </div>
   );
-}
+});

@@ -43,7 +43,7 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
     if (athletes.length === 0) {
       fetchAthletes();
     }
-  }, [athletes.length, fetchAthletes]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Get selected discipline
   const selectedDiscipline = useMemo(() => {
@@ -124,7 +124,7 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
             setSelectedAthleteId(e.target.value ? parseInt(e.target.value) : "")
           }
           disabled={!!athleteId}
-          className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer ${
+          className={`w-full px-3 py-2 bg-background border rounded-lg input-focus cursor-pointer ${
             errors.athleteId ? "border-error" : "border-border"
           } ${athleteId ? "opacity-60" : ""}`}
         >
@@ -154,7 +154,7 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
           onChange={(e) =>
             setDisciplineId(e.target.value ? parseInt(e.target.value) : "")
           }
-          className={`w-full px-3 py-2 bg-background border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer ${
+          className={`w-full px-3 py-2 bg-background border rounded-lg input-focus cursor-pointer ${
             errors.disciplineId ? "border-error" : "border-border"
           }`}
         >

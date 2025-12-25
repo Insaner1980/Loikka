@@ -85,7 +85,7 @@ export function ResultEditDialog({
     if (competitions.length === 0) {
       fetchCompetitions();
     }
-  }, [competitions.length, fetchCompetitions]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Get unique competition names for autocomplete (from both calendar and previous results)
   const uniqueCompetitionNames = useMemo(() => {
@@ -153,15 +153,17 @@ export function ResultEditDialog({
       setResultStatus(newStatus);
       if (newStatus !== "valid") {
         setResultValue(null);
+        setPlacement("");
       }
     }
   };
 
-  // Confirm status change - clear value and apply new status
+  // Confirm status change - clear value and placement, apply new status
   const confirmStatusChange = () => {
     if (pendingStatus) {
       setResultStatus(pendingStatus);
       setResultValue(null);
+      setPlacement("");
       setPendingStatus(null);
     }
     setStatusChangeConfirmOpen(false);
@@ -283,7 +285,7 @@ export function ResultEditDialog({
               id="discipline"
               value={disciplineId}
               onChange={(e) => setDisciplineId(parseInt(e.target.value))}
-              className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer"
+              className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus cursor-pointer"
             >
               {categoryOrder.map((category) => {
                 const categoryDisciplines = disciplines.filter(
@@ -381,7 +383,7 @@ export function ResultEditDialog({
                     onChange={(e) => setWind(e.target.value)}
                     placeholder="esim. +1.5 tai -0.3"
                     step="0.1"
-                    className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
+                    className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
                   />
                 </div>
               )}
@@ -394,7 +396,7 @@ export function ResultEditDialog({
                   id="status"
                   value={resultStatus}
                   onChange={(e) => handleStatusChange(e.target.value as ResultStatus)}
-                  className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer"
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus cursor-pointer"
                 >
                   {RESULT_STATUSES.map((status) => (
                     <option key={status.value} value={status.value}>
@@ -418,7 +420,7 @@ export function ResultEditDialog({
                 onChange={(e) =>
                   setEquipmentWeight(e.target.value ? parseFloat(e.target.value) : "")
                 }
-                className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer"
+                className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus cursor-pointer"
               >
                 <option value="">Valitse paino</option>
                 {availableWeights.map((weight) => (
@@ -443,7 +445,7 @@ export function ResultEditDialog({
                   onChange={(e) =>
                     setHurdleHeight(e.target.value ? parseInt(e.target.value) : "")
                   }
-                  className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer"
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus cursor-pointer"
                 >
                   <option value="">Valitse korkeus</option>
                   {HURDLE_HEIGHTS.map((height) => (
@@ -465,7 +467,7 @@ export function ResultEditDialog({
                   onChange={(e) => setHurdleSpacing(e.target.value)}
                   placeholder="esim. 8.5"
                   step="0.5"
-                  className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
+                  className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
                 />
               </div>
             </div>
@@ -523,7 +525,7 @@ export function ResultEditDialog({
                     id="competitionLevel"
                     value={competitionLevel}
                     onChange={(e) => setCompetitionLevel(e.target.value as CompetitionLevel | "")}
-                    className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors cursor-pointer"
+                    className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus cursor-pointer"
                   >
                     <option value="">Valitse taso</option>
                     {COMPETITION_LEVEL_OPTIONS.map((option) => (
@@ -546,7 +548,7 @@ export function ResultEditDialog({
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
                     placeholder="esim. Tampere"
-                    className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
+                    className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
                   />
                 </div>
 
@@ -562,8 +564,11 @@ export function ResultEditDialog({
                       setPlacement(e.target.value ? parseInt(e.target.value) : "")
                     }
                     min={1}
-                    placeholder="esim. 1"
-                    className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
+                    placeholder={statusRequiresValue ? "esim. 1" : "-"}
+                    disabled={!statusRequiresValue}
+                    className={`w-full px-3 py-2 bg-background border border-border rounded-lg input-focus ${
+                      !statusRequiresValue ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
                   />
                 </div>
               </div>
@@ -581,7 +586,7 @@ export function ResultEditDialog({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Valinnainen lisätieto..."
-              className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
+              className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
             />
           </div>
 

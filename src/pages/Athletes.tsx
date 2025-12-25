@@ -1,14 +1,14 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Plus } from "lucide-react";
 import { AthleteCard } from "../components/athletes/AthleteCard";
 import { AthleteForm } from "../components/athletes/AthleteForm";
 import { Dialog, EmptyState, SkeletonCard, toast } from "../components/ui";
 import { useAthleteStore } from "../stores/useAthleteStore";
-import { useKeyboardShortcuts } from "../hooks";
+// import { useKeyboardShortcuts } from "../hooks"; // Temporarily disabled for debugging
 import type { Athlete, NewAthlete } from "../types";
 
 export function Athletes() {
-  const { athletes, loading, fetchAthletes, addAthlete, updateAthlete } =
+  const { athletes, loading, addAthlete, updateAthlete } =
     useAthleteStore();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingAthlete, setEditingAthlete] = useState<Athlete | undefined>(
@@ -16,15 +16,13 @@ export function Athletes() {
   );
   const [saving, setSaving] = useState(false);
 
-  // Keyboard shortcuts
-  useKeyboardShortcuts(() => {
-    setEditingAthlete(undefined);
-    setDialogOpen(true);
-  });
+  // Keyboard shortcuts - temporarily disabled for debugging
+  // useKeyboardShortcuts(() => {
+  //   setEditingAthlete(undefined);
+  //   setDialogOpen(true);
+  // });
 
-  useEffect(() => {
-    fetchAthletes();
-  }, [fetchAthletes]);
+  // Data is fetched in Layout.tsx on app start
 
   const handleAddClick = () => {
     setEditingAthlete(undefined);

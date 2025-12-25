@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Minus, Square, Copy, X } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import logoIcon from "../../assets/icon-transparent.svg";
 
 export function TitleBar() {
-  const appWindow = getCurrentWindow();
+  const appWindowRef = useRef(getCurrentWindow());
+  const appWindow = appWindowRef.current;
   const [isMaximized, setIsMaximized] = useState(false);
 
   useEffect(() => {
@@ -19,7 +20,7 @@ export function TitleBar() {
     return () => {
       unlisten.then((fn) => fn());
     };
-  }, [appWindow]);
+  }, []); // Empty dependency - appWindow is stable via useRef
 
   const handleMinimize = () => appWindow.minimize();
   const handleMaximize = () => appWindow.toggleMaximize();
@@ -32,7 +33,7 @@ export function TitleBar() {
     >
       {/* Logo and app name - draggable area */}
       <div data-tauri-drag-region className="flex-1 flex items-center">
-        <img src={logoIcon} alt="Loikka" className="w-12 h-12" />
+        <img src={logoIcon} alt="Loikka" className="w-12 h-12" loading="eager" />
         <span
           className="text-xl text-foreground tracking-wide"
           style={{ fontFamily: 'Satoshi, sans-serif', fontWeight: 700 }}

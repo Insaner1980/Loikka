@@ -42,23 +42,27 @@ export const useCompetitionStore = create<CompetitionStore>((set, get) => ({
   loading: false,
   error: null,
 
-  fetchCompetitions: async () => {
+  fetchCompetitions: async (force = false) => {
+    const state = get();
+    // Skip if already loaded (unless forced)
+    if (!force && state.competitions.length > 0) {
+      return;
+    }
+    // Prevent concurrent fetches
+    if (state.loading) {
+      return;
+    }
     set({ loading: true, error: null });
     try {
       const competitions = await invoke<Competition[]>("get_all_competitions");
-      // Fetch participants for all competitions
-      const allParticipants: CompetitionParticipant[] = [];
-      for (const comp of competitions) {
-        try {
-          const participants = await invoke<CompetitionParticipant[]>(
-            "get_competition_participants",
-            { competitionId: comp.id }
-          );
-          allParticipants.push(...participants);
-        } catch {
-          // Ignore errors for individual competitions
-        }
-      }
+      // Fetch participants for all competitions in parallel (not sequentially!)
+      const participantPromises = competitions.map((comp) =>
+        invoke<CompetitionParticipant[]>("get_competition_participants", {
+          competitionId: comp.id,
+        }).catch(() => [] as CompetitionParticipant[])
+      );
+      const participantArrays = await Promise.all(participantPromises);
+      const allParticipants = participantArrays.flat();
       set({ competitions, participants: allParticipants, loading: false });
     } catch (error) {
       set({ error: getErrorMessage(error), loading: false });

@@ -458,6 +458,88 @@ pub async fn get_photo_years(app: AppHandle) -> Result<Vec<i32>, String> {
     Ok(rows)
 }
 
+/// Delete multiple photos at once
+#[tauri::command]
+pub async fn delete_photos_bulk(app: AppHandle, ids: Vec<i64>) -> Result<bool, String> {
+    let pool = get_pool(&app).await?;
+
+    for id in ids {
+        // Get the photo paths first
+        let row = sqlx::query("SELECT file_path, thumbnail_path FROM photos WHERE id = ?")
+            .bind(id)
+            .fetch_optional(&pool)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        if let Some(row) = row {
+            let file_path: String = row.get("file_path");
+            let thumbnail_path: Option<String> = row.get("thumbnail_path");
+
+            // Delete the files
+            if let Err(e) = fs::remove_file(&file_path) {
+                eprintln!("Failed to delete photo file: {}", e);
+            }
+
+            if let Some(thumb) = thumbnail_path {
+                if let Err(e) = fs::remove_file(&thumb) {
+                    eprintln!("Failed to delete thumbnail: {}", e);
+                }
+            }
+
+            // Delete from database
+            sqlx::query("DELETE FROM photos WHERE id = ?")
+                .bind(id)
+                .execute(&pool)
+                .await
+                .map_err(|e| e.to_string())?;
+        }
+    }
+
+    Ok(true)
+}
+
+/// Link multiple photos to a competition
+#[tauri::command(rename_all = "camelCase")]
+pub async fn link_photos_to_competition(
+    app: AppHandle,
+    photo_ids: Vec<i64>,
+    competition_id: i64,
+) -> Result<bool, String> {
+    let pool = get_pool(&app).await?;
+
+    for photo_id in photo_ids {
+        sqlx::query("UPDATE photos SET entity_type = 'competitions', entity_id = ? WHERE id = ?")
+            .bind(competition_id)
+            .bind(photo_id)
+            .execute(&pool)
+            .await
+            .map_err(|e| e.to_string())?;
+    }
+
+    Ok(true)
+}
+
+/// Link multiple photos to an athlete
+#[tauri::command(rename_all = "camelCase")]
+pub async fn link_photos_to_athlete(
+    app: AppHandle,
+    photo_ids: Vec<i64>,
+    athlete_id: i64,
+) -> Result<bool, String> {
+    let pool = get_pool(&app).await?;
+
+    for photo_id in photo_ids {
+        sqlx::query("UPDATE photos SET entity_type = 'athletes', entity_id = ? WHERE id = ?")
+            .bind(athlete_id)
+            .bind(photo_id)
+            .execute(&pool)
+            .await
+            .map_err(|e| e.to_string())?;
+    }
+
+    Ok(true)
+}
+
 /// Save an athlete profile photo (separate from the photos gallery)
 /// Returns the file path where the photo was saved
 #[tauri::command]

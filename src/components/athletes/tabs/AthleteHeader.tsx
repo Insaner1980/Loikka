@@ -57,6 +57,7 @@ export function AthleteHeader({
             src={toAssetUrl(athlete.photoPath)}
             alt={`${athlete.firstName} ${athlete.lastName}`}
             className="w-full h-full object-cover"
+            loading="eager"
           />
         </button>
       ) : (

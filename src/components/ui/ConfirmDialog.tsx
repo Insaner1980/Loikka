@@ -22,7 +22,6 @@ export function ConfirmDialog({
   message,
   confirmText = "OK",
   cancelText = "Peruuta",
-  variant = "default",
   loading = false,
 }: ConfirmDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -67,10 +66,8 @@ export function ConfirmDialog({
 
   if (!open) return null;
 
-  // Button styling based on variant
-  const confirmButtonClass = variant === "danger"
-    ? "bg-[var(--status-error)] hover:bg-[var(--status-error)]/90 text-white"
-    : "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--btn-primary-text)]";
+  // Button styling - always use accent color (blue) per UI spec
+  const confirmButtonClass = "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--btn-primary-text)]";
 
   return createPortal(
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">

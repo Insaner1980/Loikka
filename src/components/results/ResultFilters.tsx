@@ -1,8 +1,10 @@
+import { useMemo } from "react";
 import { X } from "lucide-react";
-import type { Athlete, ResultType } from "../../types";
-import { disciplines, categoryLabels, categoryOrder } from "../../data/disciplines";
+import type { Athlete, Result, ResultType } from "../../types";
+import { getDisciplineById } from "../../data/disciplines";
 import { getAgeCategory } from "../../lib/formatters";
 import { YEAR_RANGE } from "../../lib/constants";
+import { DisciplineFilterSelect, FilterSelect, type FilterOption } from "../ui";
 
 export interface ResultFiltersState {
   athleteId: number | null;
@@ -16,13 +18,28 @@ interface ResultFiltersProps {
   filters: ResultFiltersState;
   onFilterChange: (filters: ResultFiltersState) => void;
   athletes: Athlete[];
+  results: Result[];
 }
 
 export function ResultFilters({
   filters,
   onFilterChange,
   athletes,
+  results,
 }: ResultFiltersProps) {
+  // Get disciplines that have at least one result (filtered by selected athlete if any)
+  const disciplinesWithResults = useMemo(() => {
+    // Filter results by selected athlete if one is chosen
+    const filteredResults = filters.athleteId
+      ? results.filter((r) => r.athleteId === filters.athleteId)
+      : results;
+
+    const disciplineIds = new Set(filteredResults.map((r) => r.disciplineId));
+    return Array.from(disciplineIds)
+      .map((id) => getDisciplineById(id))
+      .filter((d) => d !== undefined);
+  }, [results, filters.athleteId]);
+
   const hasActiveFilters =
     filters.athleteId !== null ||
     filters.disciplineId !== null ||
@@ -52,106 +69,93 @@ export function ResultFilters({
     yearOptions.push(y);
   }
 
+  // Filter options for FilterSelect components
+  const athleteOptions: FilterOption[] = useMemo(() => [
+    { value: "all", label: "Kaikki urheilijat" },
+    ...athletes.map((a) => ({
+      value: a.id,
+      label: `${a.firstName} ${a.lastName}`,
+    })),
+  ], [athletes]);
+
+  const typeOptions: FilterOption[] = [
+    { value: "all", label: "Kaikki tyypit" },
+    { value: "competition", label: "Kilpailu" },
+    { value: "training", label: "Harjoitus" },
+  ];
+
+  const yearFilterOptions: FilterOption[] = useMemo(() => [
+    { value: "all", label: "Kaikki vuodet" },
+    ...yearOptions.map((y) => ({ value: y, label: String(y) })),
+  ], [yearOptions]);
+
+  const ageCategoryOptions: FilterOption[] = useMemo(() => [
+    { value: "all", label: "Kaikki ikäsarjat" },
+    ...ageCategories.map((c) => ({ value: c, label: c })),
+  ], [ageCategories]);
+
   return (
     <div className="flex flex-wrap items-center gap-3">
       {/* Athlete filter */}
-      <select
-        className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
-        value={filters.athleteId ?? ""}
-        onChange={(e) =>
+      <FilterSelect
+        value={filters.athleteId ?? "all"}
+        onChange={(value) =>
           onFilterChange({
             ...filters,
-            athleteId: e.target.value ? Number(e.target.value) : null,
+            athleteId: value === "all" ? null : (value as number),
           })
         }
-      >
-        <option value="">Kaikki urheilijat</option>
-        {athletes.map((athlete) => (
-          <option key={athlete.id} value={athlete.id}>
-            {athlete.firstName} {athlete.lastName}
-          </option>
-        ))}
-      </select>
+        options={athleteOptions}
+      />
 
       {/* Discipline filter */}
-      <select
-        className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
-        value={filters.disciplineId ?? ""}
-        onChange={(e) =>
+      <DisciplineFilterSelect
+        value={filters.disciplineId}
+        onChange={(value) =>
           onFilterChange({
             ...filters,
-            disciplineId: e.target.value ? Number(e.target.value) : null,
+            disciplineId: value,
           })
         }
-      >
-        <option value="">Kaikki lajit</option>
-        {categoryOrder.map((category) => (
-          <optgroup key={category} label={categoryLabels[category]}>
-            {disciplines
-              .filter((d) => d.category === category)
-              .map((discipline) => (
-                <option key={discipline.id} value={discipline.id}>
-                  {discipline.fullName}
-                </option>
-              ))}
-          </optgroup>
-        ))}
-      </select>
+        disciplines={disciplinesWithResults}
+      />
 
       {/* Type filter */}
-      <select
-        className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
-        value={filters.type ?? ""}
-        onChange={(e) =>
+      <FilterSelect
+        value={filters.type ?? "all"}
+        onChange={(value) =>
           onFilterChange({
             ...filters,
-            type: e.target.value ? (e.target.value as ResultType) : null,
+            type: value === "all" ? null : (value as ResultType),
           })
         }
-      >
-        <option value="">Kaikki tyypit</option>
-        <option value="competition">Kilpailu</option>
-        <option value="training">Harjoitus</option>
-      </select>
+        options={typeOptions}
+      />
 
       {/* Year filter */}
-      <select
-        className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
-        value={filters.year ?? ""}
-        onChange={(e) =>
+      <FilterSelect
+        value={filters.year ?? "all"}
+        onChange={(value) =>
           onFilterChange({
             ...filters,
-            year: e.target.value ? Number(e.target.value) : null,
+            year: value === "all" ? null : (value as number),
           })
         }
-      >
-        <option value="">Kaikki vuodet</option>
-        {yearOptions.map((year) => (
-          <option key={year} value={year}>
-            {year}
-          </option>
-        ))}
-      </select>
+        options={yearFilterOptions}
+      />
 
       {/* Age category filter */}
       {ageCategories.length > 0 && (
-        <select
-          className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
-          value={filters.ageCategory ?? ""}
-          onChange={(e) =>
+        <FilterSelect
+          value={filters.ageCategory ?? "all"}
+          onChange={(value) =>
             onFilterChange({
               ...filters,
-              ageCategory: e.target.value || null,
+              ageCategory: value === "all" ? null : (value as string),
             })
           }
-        >
-          <option value="">Kaikki ikäsarjat</option>
-          {ageCategories.map((category) => (
-            <option key={category} value={category}>
-              {category}
-            </option>
-          ))}
-        </select>
+          options={ageCategoryOptions}
+        />
       )}
 
       {/* Clear filters button */}

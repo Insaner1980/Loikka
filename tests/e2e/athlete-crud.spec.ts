@@ -104,7 +104,7 @@ test.describe("Athletes Page", () => {
 });
 
 test.describe("Keyboard Shortcuts", () => {
-  test("should open add dialog with Ctrl+N", async ({ page }) => {
+  test("should open add dialog with Ctrl+U", async ({ page }) => {
     await page.goto("/athletes");
     await page.waitForLoadState("networkidle");
 
@@ -114,8 +114,8 @@ test.describe("Keyboard Shortcuts", () => {
     // Focus the body to ensure keyboard events are captured
     await page.locator("body").click();
 
-    // Press Ctrl+N
-    await page.keyboard.press("Control+n");
+    // Press Ctrl+U
+    await page.keyboard.press("Control+u");
 
     // Dialog should open (with extended timeout for keyboard handling)
     const dialog = page.getByRole("dialog");

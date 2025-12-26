@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Plus, Camera, X, Trash2, Link, User } from "lucide-react";
 import { usePhotoStore, type PhotoWithDetails } from "../stores/usePhotoStore";
@@ -7,7 +7,8 @@ import { useCompetitionStore } from "../stores/useCompetitionStore";
 import { PhotoGrid } from "../components/photos/PhotoGrid";
 import { PhotoViewerEnhanced } from "../components/photos/PhotoViewerEnhanced";
 import { AddPhotoDialog } from "../components/photos/AddPhotoDialog";
-import { Dialog } from "../components/ui/Dialog";
+import { Dialog, FilterSelect, type FilterOption } from "../components/ui";
+import { useAddShortcut, useEscapeKey, useBackgroundDeselect } from "../hooks";
 import { YEAR_RANGE } from "../lib/constants";
 
 export function Photos() {
@@ -48,6 +49,9 @@ export function Photos() {
   // Track last selected index for Shift+click range selection
   const lastSelectedIndexRef = useRef<number | null>(null);
 
+  // Keyboard shortcut: Ctrl+U opens add dialog
+  useAddShortcut(() => setAddDialogOpen(true));
+
   // Athletes and competitions are fetched in Layout.tsx on app start
 
   // Apply URL params on initial mount
@@ -66,19 +70,12 @@ export function Photos() {
     fetchPhotos();
   }, []);
 
-  // Handle Esc key to exit selection mode
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && selectionMode) {
-        setSelectionMode(false);
-        clearSelection();
-        lastSelectedIndexRef.current = null;
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [selectionMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Esc exits selection mode
+  useEscapeKey(() => {
+    setSelectionMode(false);
+    clearSelection();
+    lastSelectedIndexRef.current = null;
+  }, selectionMode);
 
   // Handle checkbox click - enters selection mode and handles Shift+click
   const handleCheckboxClick = useCallback((index: number, event: React.MouseEvent) => {
@@ -203,6 +200,9 @@ export function Photos() {
     lastSelectedIndexRef.current = null;
   }, [setSelectionMode, clearSelection]);
 
+  // Click on empty area exits selection mode
+  const handleBackgroundClick = useBackgroundDeselect(selectionMode, handleCancelSelection);
+
   // Generate year options (fixed range)
   const currentYear = new Date().getFullYear();
   const startYear = YEAR_RANGE.START_YEAR;
@@ -215,8 +215,50 @@ export function Photos() {
   const selectedCount = selectedIds.size;
   const hasSelection = selectedCount > 0;
 
+  // Filter options for FilterSelect components
+  const athleteFilterOptions: FilterOption[] = useMemo(() => [
+    { value: "all", label: "Kaikki urheilijat" },
+    ...athletes.map((a) => ({
+      value: a.athlete.id,
+      label: `${a.athlete.firstName} ${a.athlete.lastName}`,
+    })),
+  ], [athletes]);
+
+  const competitionFilterOptions: FilterOption[] = useMemo(() => [
+    { value: "all", label: "Kaikki kilpailut" },
+    ...competitions.map((c) => ({
+      value: c.id,
+      label: c.name,
+    })),
+  ], [competitions]);
+
+  const yearFilterOptions: FilterOption[] = useMemo(() => [
+    { value: "all", label: "Kaikki vuodet" },
+    ...yearOptions.map((y) => ({
+      value: y,
+      label: String(y),
+    })),
+  ], [yearOptions]);
+
+  // Options for link dialogs
+  const linkCompetitionOptions: FilterOption[] = useMemo(() => [
+    { value: "", label: "Valitse kilpailu" },
+    ...competitions.map((c) => ({
+      value: c.id,
+      label: `${c.name} (${c.date})`,
+    })),
+  ], [competitions]);
+
+  const linkAthleteOptions: FilterOption[] = useMemo(() => [
+    { value: "", label: "Valitse urheilija" },
+    ...athletes.map((a) => ({
+      value: a.athlete.id,
+      label: `${a.athlete.firstName} ${a.athlete.lastName}`,
+    })),
+  ], [athletes]);
+
   return (
-    <div className="p-6 h-full flex flex-col">
+    <div className="p-6 h-full flex flex-col" onClick={handleBackgroundClick}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6 pb-5 border-b border-border-subtle">
         {selectionMode ? (
@@ -277,46 +319,25 @@ export function Photos() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
         {/* Athlete filter */}
-        <select
-          value={filters.athleteId || ""}
-          onChange={(e) => handleFilterChange("athleteId", e.target.value ? Number(e.target.value) : undefined)}
-          className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
-        >
-          <option value="">Kaikki urheilijat</option>
-          {athletes.map((a) => (
-            <option key={a.athlete.id} value={a.athlete.id}>
-              {a.athlete.firstName} {a.athlete.lastName}
-            </option>
-          ))}
-        </select>
+        <FilterSelect
+          value={filters.athleteId ?? "all"}
+          onChange={(value) => handleFilterChange("athleteId", value === "all" ? undefined : (value as number))}
+          options={athleteFilterOptions}
+        />
 
         {/* Competition filter */}
-        <select
-          value={filters.competitionId || ""}
-          onChange={(e) => handleFilterChange("competitionId", e.target.value ? Number(e.target.value) : undefined)}
-          className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
-        >
-          <option value="">Kaikki kilpailut</option>
-          {competitions.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
+        <FilterSelect
+          value={filters.competitionId ?? "all"}
+          onChange={(value) => handleFilterChange("competitionId", value === "all" ? undefined : (value as number))}
+          options={competitionFilterOptions}
+        />
 
         {/* Year filter */}
-        <select
-          value={filters.year || ""}
-          onChange={(e) => handleFilterChange("year", e.target.value ? Number(e.target.value) : undefined)}
-          className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
-        >
-          <option value="">Kaikki vuodet</option>
-          {yearOptions.map((y) => (
-            <option key={y} value={y}>
-              {y}
-            </option>
-          ))}
-        </select>
+        <FilterSelect
+          value={filters.year ?? "all"}
+          onChange={(value) => handleFilterChange("year", value === "all" ? undefined : (value as number))}
+          options={yearFilterOptions}
+        />
       </div>
 
       {/* Photo count */}
@@ -400,18 +421,12 @@ export function Photos() {
           <p className="text-body text-muted-foreground">
             Valitse kilpailu, johon haluat liittää {selectedCount} {selectedCount === 1 ? "kuvan" : "kuvaa"}.
           </p>
-          <select
+          <FilterSelect
             value={selectedCompetitionId}
-            onChange={(e) => setSelectedCompetitionId(e.target.value ? Number(e.target.value) : "")}
-            className="w-full bg-background border border-border rounded-lg px-3 py-2 text-body input-focus cursor-pointer"
-          >
-            <option value="">Valitse kilpailu</option>
-            {competitions.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name} ({c.date})
-              </option>
-            ))}
-          </select>
+            onChange={(value) => setSelectedCompetitionId(value === "" ? "" : (value as number))}
+            options={linkCompetitionOptions}
+            className="w-full"
+          />
           <div className="flex justify-end gap-3">
             <button
               onClick={() => setLinkCompetitionOpen(false)}
@@ -441,18 +456,12 @@ export function Photos() {
           <p className="text-body text-muted-foreground">
             Valitse urheilija, johon haluat liittää {selectedCount} {selectedCount === 1 ? "kuvan" : "kuvaa"}.
           </p>
-          <select
+          <FilterSelect
             value={selectedAthleteId}
-            onChange={(e) => setSelectedAthleteId(e.target.value ? Number(e.target.value) : "")}
-            className="w-full bg-background border border-border rounded-lg px-3 py-2 text-body input-focus cursor-pointer"
-          >
-            <option value="">Valitse urheilija</option>
-            {athletes.map((a) => (
-              <option key={a.athlete.id} value={a.athlete.id}>
-                {a.athlete.firstName} {a.athlete.lastName}
-              </option>
-            ))}
-          </select>
+            onChange={(value) => setSelectedAthleteId(value === "" ? "" : (value as number))}
+            options={linkAthleteOptions}
+            className="w-full"
+          />
           <div className="flex justify-end gap-3">
             <button
               onClick={() => setLinkAthleteOpen(false)}

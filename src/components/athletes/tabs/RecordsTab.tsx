@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { ResultBadge } from "../../results/ResultBadge";
 import { formatTime, formatDistance, formatDate, getStatusLabel } from "../../../lib/formatters";
-import { categoryLabels, categoryOrder } from "../../../data/disciplines";
+import { DisciplineFilterSelect, FilterSelect, type FilterOption } from "../../ui";
 import type { ResultWithDiscipline } from "./types";
 
 interface RecordsTabProps {
@@ -27,6 +27,12 @@ export function RecordsTab({ personalBests }: RecordsTabProps) {
     recordsForYearFilter.map((r) => new Date(r.date).getFullYear())
   )].sort((a, b) => b - a);
 
+  // Year filter options for FilterSelect
+  const yearFilterOptions: FilterOption[] = useMemo(() => [
+    { value: "all", label: "Kaikki kaudet" },
+    ...uniqueYears.map((y) => ({ value: y, label: String(y) })),
+  ], [uniqueYears]);
+
   // Apply both filters for display
   const filteredRecords = personalBests.filter((r) => {
     if (disciplineFilter && r.disciplineId !== disciplineFilter) return false;
@@ -39,43 +45,21 @@ export function RecordsTab({ personalBests }: RecordsTabProps) {
       {/* Filter row */}
       {personalBests.length > 0 && (
         <div className="flex gap-3">
-          <select
-            value={disciplineFilter ?? ""}
-            onChange={(e) => {
-              setDisciplineFilter(e.target.value ? parseInt(e.target.value) : null);
+          <DisciplineFilterSelect
+            value={disciplineFilter}
+            onChange={(value) => {
+              setDisciplineFilter(value);
               setSeasonFilter(null);
             }}
-            className="flex-1 px-3 py-2 bg-card border border-border-subtle rounded-lg text-sm input-focus cursor-pointer"
-          >
-            <option value="">Kaikki lajit</option>
-            {categoryOrder.map((category) => {
-              const categoryDisciplines = disciplines.filter(
-                (d) => d.category === category
-              );
-              if (categoryDisciplines.length === 0) return null;
-              return (
-                <optgroup key={category} label={categoryLabels[category]}>
-                  {categoryDisciplines.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.fullName}
-                    </option>
-                  ))}
-                </optgroup>
-              );
-            })}
-          </select>
-          <select
-            value={seasonFilter ?? ""}
-            onChange={(e) => setSeasonFilter(e.target.value ? parseInt(e.target.value) : null)}
-            className="flex-1 px-3 py-2 bg-card border border-border-subtle rounded-lg text-sm input-focus cursor-pointer"
-          >
-            <option value="">Kaikki kaudet</option>
-            {uniqueYears.map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
+            disciplines={disciplines}
+            className="flex-1"
+          />
+          <FilterSelect
+            value={seasonFilter ?? "all"}
+            onChange={(value) => setSeasonFilter(value === "all" ? null : (value as number))}
+            options={yearFilterOptions}
+            className="flex-1"
+          />
         </div>
       )}
 

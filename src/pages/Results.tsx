@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Plus, FileText, X, Trash2 } from "lucide-react";
 import { useResultStore, type ResultFilters } from "../stores/useResultStore";
 import { useAthleteStore } from "../stores/useAthleteStore";
@@ -12,6 +12,7 @@ import {
 import { ResultForm } from "../components/results/ResultForm";
 import { ResultEditDialog } from "../components/results/ResultEditDialog";
 import { Dialog } from "../components/ui/Dialog";
+import { useAddShortcut, useEscapeKey, useBackgroundDeselect } from "../hooks";
 import type { NewResult, MedalType, Result } from "../types";
 
 export function Results() {
@@ -35,23 +36,19 @@ export function Results() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
 
+  // Keyboard shortcut: Ctrl+U opens add dialog
+  useAddShortcut(() => setIsFormOpen(true));
+
+  // Esc exits selection mode
+  useEscapeKey(() => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  }, selectionMode);
+
   const handleEditResult = (result: Result) => {
     setSelectedResult(result);
     setIsEditDialogOpen(true);
   };
-
-  // Handle Esc key to exit selection mode
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && selectionMode) {
-        setSelectionMode(false);
-        setSelectedIds(new Set());
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [selectionMode]);
 
   // Toggle selection for a result
   const handleCheckboxClick = useCallback((resultId: number) => {
@@ -76,6 +73,9 @@ export function Results() {
     setSelectionMode(false);
     setSelectedIds(new Set());
   }, []);
+
+  // Click on empty area exits selection mode
+  const handleBackgroundClick = useBackgroundDeselect(selectionMode, handleCancelSelection);
 
   // Confirm bulk delete
   const handleBulkDelete = useCallback(async () => {
@@ -105,7 +105,7 @@ export function Results() {
   );
 
   return (
-    <div className="p-6 h-full flex flex-col">
+    <div className="p-6 h-full flex flex-col" onClick={handleBackgroundClick}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6 pb-5 border-b border-border-subtle">
         {selectionMode ? (
@@ -153,6 +153,7 @@ export function Results() {
           filters={filters}
           onFilterChange={setFilters}
           athletes={athleteList}
+          results={results}
         />
       </div>
 
@@ -209,6 +210,7 @@ export function Results() {
         open={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         title="Lisää tulos"
+        maxWidth="3xl"
       >
         <ResultForm
           onSave={async (

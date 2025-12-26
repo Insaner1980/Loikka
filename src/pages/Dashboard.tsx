@@ -326,7 +326,7 @@ export function Dashboard() {
           setSelectedCompetition(null);
         }}
         title="Muokkaa kilpailua"
-        maxWidth="lg"
+        maxWidth="3xl"
       >
         {selectedCompetition && (
           <div className="space-y-4">

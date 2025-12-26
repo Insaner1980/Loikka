@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Plus, List, CalendarDays, CalendarIcon, Trash2, X } from "lucide-react";
 import { format } from "date-fns";
 import { fi } from "date-fns/locale";
@@ -8,6 +8,7 @@ import { CalendarView } from "../components/competitions/CalendarView";
 import { CompetitionCard } from "../components/competitions/CompetitionCard";
 import { CompetitionForm } from "../components/competitions/CompetitionForm";
 import { Dialog, toast } from "../components/ui";
+import { useAddShortcut, useEscapeKey, useBackgroundDeselect } from "../hooks";
 import type { Competition, NewCompetition } from "../types";
 
 type ViewMode = "list" | "month";
@@ -36,6 +37,12 @@ export function Calendar() {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
+
+  // Keyboard shortcut: Ctrl+U opens add dialog
+  useAddShortcut(() => {
+    setEditingCompetition(null);
+    setIsFormOpen(true);
+  });
 
   // Data is fetched in Layout.tsx on app start
 
@@ -157,18 +164,11 @@ export function Calendar() {
       }));
   };
 
-  // Handle Esc key to exit selection mode
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && selectionMode) {
-        setSelectionMode(false);
-        setSelectedIds(new Set());
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [selectionMode]);
+  // Esc exits selection mode
+  useEscapeKey(() => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  }, selectionMode);
 
   // Toggle selection for a competition
   const handleCheckboxClick = useCallback((competitionId: number) => {
@@ -193,6 +193,9 @@ export function Calendar() {
     setSelectedIds(new Set());
   }, []);
 
+  // Click on empty area exits selection mode
+  const handleBackgroundClick = useBackgroundDeselect(selectionMode, handleCancelSelection);
+
   // Confirm bulk delete
   const handleBulkDelete = useCallback(async () => {
     const ids = Array.from(selectedIds);
@@ -211,7 +214,7 @@ export function Calendar() {
   const hasSelection = selectedCount > 0;
 
   return (
-    <div className="p-6 h-full flex flex-col">
+    <div className="p-6 h-full flex flex-col" onClick={handleBackgroundClick}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6 pb-5 border-b border-border-subtle">
         {selectionMode ? (
@@ -366,7 +369,7 @@ export function Calendar() {
         open={isFormOpen}
         onClose={handleCloseForm}
         title={editingCompetition ? "Muokkaa kilpailua" : "Lisää kilpailu"}
-        maxWidth="lg"
+        maxWidth="3xl"
       >
         <CompetitionForm
           competition={editingCompetition ?? undefined}

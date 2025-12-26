@@ -4,7 +4,7 @@ import { AthleteCard } from "../components/athletes/AthleteCard";
 import { AthleteForm } from "../components/athletes/AthleteForm";
 import { Dialog, EmptyState, SkeletonCard, toast } from "../components/ui";
 import { useAthleteStore } from "../stores/useAthleteStore";
-// import { useKeyboardShortcuts } from "../hooks"; // Temporarily disabled for debugging
+import { useAddShortcut } from "../hooks";
 import type { Athlete, NewAthlete } from "../types";
 
 export function Athletes() {
@@ -16,11 +16,11 @@ export function Athletes() {
   );
   const [saving, setSaving] = useState(false);
 
-  // Keyboard shortcuts - temporarily disabled for debugging
-  // useKeyboardShortcuts(() => {
-  //   setEditingAthlete(undefined);
-  //   setDialogOpen(true);
-  // });
+  // Keyboard shortcut: Ctrl+U opens add dialog
+  useAddShortcut(() => {
+    setEditingAthlete(undefined);
+    setDialogOpen(true);
+  });
 
   // Data is fetched in Layout.tsx on app start
 
@@ -101,7 +101,7 @@ export function Athletes() {
       )}
 
       {/* Add/Edit Dialog */}
-      <Dialog open={dialogOpen} onClose={handleCancel} title={dialogTitle}>
+      <Dialog open={dialogOpen} onClose={handleCancel} title={dialogTitle} maxWidth="2xl">
         <AthleteForm
           athlete={editingAthlete}
           onSave={handleSave}

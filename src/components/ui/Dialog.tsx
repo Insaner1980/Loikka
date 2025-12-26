@@ -7,14 +7,17 @@ interface DialogProps {
   onClose: () => void;
   title: string;
   children: ReactNode;
-  maxWidth?: "sm" | "md" | "lg" | "xl";
+  maxWidth?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "4xl";
 }
 
 const maxWidthClasses = {
-  sm: "max-w-sm",
-  md: "max-w-md",
-  lg: "max-w-lg",
-  xl: "max-w-xl",
+  sm: "max-w-sm",      // 384px
+  md: "max-w-md",      // 448px
+  lg: "max-w-lg",      // 512px
+  xl: "max-w-xl",      // 576px
+  "2xl": "max-w-2xl",  // 672px
+  "3xl": "max-w-3xl",  // 768px
+  "4xl": "max-w-4xl",  // 896px
 };
 
 export function Dialog({

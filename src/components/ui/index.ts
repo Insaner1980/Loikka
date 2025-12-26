@@ -14,3 +14,8 @@ export { TimeInput } from "./TimeInput";
 export { DistanceInput } from "./DistanceInput";
 export { DatePicker } from "./DatePicker";
 export { HoverCheckbox } from "./HoverCheckbox";
+export { SlidePanel } from "./SlidePanel";
+export { DisciplineSelect } from "./DisciplineSelect";
+export { DisciplineFilterSelect } from "./DisciplineFilterSelect";
+export { FilterSelect } from "./FilterSelect";
+export type { FilterOption } from "./FilterSelect";

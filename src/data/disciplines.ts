@@ -1,4 +1,4 @@
-import type { Discipline, DisciplineCategory } from "../types";
+import type { Discipline, DisciplineCategory, AgeCategory } from "../types";
 
 // Category labels in Finnish
 export const categoryLabels: Record<DisciplineCategory, string> = {
@@ -9,6 +9,7 @@ export const categoryLabels: Record<DisciplineCategory, string> = {
   jumps: "Hypyt",
   throws: "Heitot",
   combined: "Yhdistetyt",
+  walking: "Kävely",
 };
 
 // All disciplines with Finnish names
@@ -16,7 +17,7 @@ export const disciplines: Discipline[] = [
   // Sprints
   {
     id: 1,
-    name: "40m",
+    name: "40 m",
     fullName: "40 metriä",
     category: "sprints",
     unit: "time",
@@ -24,7 +25,7 @@ export const disciplines: Discipline[] = [
   },
   {
     id: 2,
-    name: "60m",
+    name: "60 m",
     fullName: "60 metriä",
     category: "sprints",
     unit: "time",
@@ -32,7 +33,7 @@ export const disciplines: Discipline[] = [
   },
   {
     id: 3,
-    name: "100m",
+    name: "100 m",
     fullName: "100 metriä",
     category: "sprints",
     unit: "time",
@@ -40,15 +41,31 @@ export const disciplines: Discipline[] = [
   },
   {
     id: 4,
-    name: "200m",
-    fullName: "200 metriä",
+    name: "150 m",
+    fullName: "150 metriä",
     category: "sprints",
     unit: "time",
     lowerIsBetter: true,
   },
   {
     id: 5,
-    name: "400m",
+    name: "200 m",
+    fullName: "200 metriä",
+    category: "sprints",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+  {
+    id: 6,
+    name: "300 m",
+    fullName: "300 metriä",
+    category: "sprints",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+  {
+    id: 7,
+    name: "400 m",
     fullName: "400 metriä",
     category: "sprints",
     unit: "time",
@@ -57,25 +74,41 @@ export const disciplines: Discipline[] = [
 
   // Middle Distance
   {
-    id: 6,
-    name: "800m",
+    id: 8,
+    name: "600 m",
+    fullName: "600 metriä",
+    category: "middleDistance",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+  {
+    id: 9,
+    name: "800 m",
     fullName: "800 metriä",
     category: "middleDistance",
     unit: "time",
     lowerIsBetter: true,
   },
   {
-    id: 7,
-    name: "1000m",
+    id: 10,
+    name: "1000 m",
     fullName: "1000 metriä",
     category: "middleDistance",
     unit: "time",
     lowerIsBetter: true,
   },
   {
-    id: 8,
-    name: "1500m",
+    id: 11,
+    name: "1500 m",
     fullName: "1500 metriä",
+    category: "middleDistance",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+  {
+    id: 12,
+    name: "2000 m",
+    fullName: "2000 metriä",
     category: "middleDistance",
     unit: "time",
     lowerIsBetter: true,
@@ -83,24 +116,24 @@ export const disciplines: Discipline[] = [
 
   // Long Distance
   {
-    id: 9,
-    name: "3000m",
+    id: 13,
+    name: "3000 m",
     fullName: "3000 metriä",
     category: "longDistance",
     unit: "time",
     lowerIsBetter: true,
   },
   {
-    id: 10,
-    name: "5000m",
+    id: 14,
+    name: "5000 m",
     fullName: "5000 metriä",
     category: "longDistance",
     unit: "time",
     lowerIsBetter: true,
   },
   {
-    id: 11,
-    name: "10000m",
+    id: 15,
+    name: "10000 m",
     fullName: "10000 metriä",
     category: "longDistance",
     unit: "time",
@@ -109,40 +142,48 @@ export const disciplines: Discipline[] = [
 
   // Hurdles
   {
-    id: 12,
-    name: "60m aj",
+    id: 16,
+    name: "60 m aidat",
     fullName: "60 metriä aidat",
     category: "hurdles",
     unit: "time",
     lowerIsBetter: true,
   },
   {
-    id: 13,
-    name: "80m aj",
+    id: 17,
+    name: "80 m aidat",
     fullName: "80 metriä aidat",
     category: "hurdles",
     unit: "time",
     lowerIsBetter: true,
   },
   {
-    id: 14,
-    name: "100m aj",
+    id: 18,
+    name: "100 m aidat",
     fullName: "100 metriä aidat",
     category: "hurdles",
     unit: "time",
     lowerIsBetter: true,
   },
   {
-    id: 15,
-    name: "300m aj",
+    id: 19,
+    name: "200 m aidat",
+    fullName: "200 metriä aidat",
+    category: "hurdles",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+  {
+    id: 20,
+    name: "300 m aidat",
     fullName: "300 metriä aidat",
     category: "hurdles",
     unit: "time",
     lowerIsBetter: true,
   },
   {
-    id: 16,
-    name: "400m aj",
+    id: 21,
+    name: "400 m aidat",
     fullName: "400 metriä aidat",
     category: "hurdles",
     unit: "time",
@@ -151,7 +192,7 @@ export const disciplines: Discipline[] = [
 
   // Jumps
   {
-    id: 17,
+    id: 22,
     name: "Pituus",
     fullName: "Pituushyppy",
     category: "jumps",
@@ -159,15 +200,7 @@ export const disciplines: Discipline[] = [
     lowerIsBetter: false,
   },
   {
-    id: 18,
-    name: "Kolmiloikka",
-    fullName: "Kolmiloikka",
-    category: "jumps",
-    unit: "distance",
-    lowerIsBetter: false,
-  },
-  {
-    id: 19,
+    id: 23,
     name: "Korkeus",
     fullName: "Korkeushyppy",
     category: "jumps",
@@ -175,7 +208,15 @@ export const disciplines: Discipline[] = [
     lowerIsBetter: false,
   },
   {
-    id: 20,
+    id: 24,
+    name: "Kolmiloikka",
+    fullName: "Kolmiloikka",
+    category: "jumps",
+    unit: "distance",
+    lowerIsBetter: false,
+  },
+  {
+    id: 25,
     name: "Seiväs",
     fullName: "Seiväshyppy",
     category: "jumps",
@@ -185,7 +226,7 @@ export const disciplines: Discipline[] = [
 
   // Throws
   {
-    id: 21,
+    id: 26,
     name: "Kuula",
     fullName: "Kuulantyöntö",
     category: "throws",
@@ -193,7 +234,7 @@ export const disciplines: Discipline[] = [
     lowerIsBetter: false,
   },
   {
-    id: 22,
+    id: 27,
     name: "Kiekko",
     fullName: "Kiekonheitto",
     category: "throws",
@@ -201,7 +242,7 @@ export const disciplines: Discipline[] = [
     lowerIsBetter: false,
   },
   {
-    id: 23,
+    id: 28,
     name: "Keihäs",
     fullName: "Keihäänheitto",
     category: "throws",
@@ -209,7 +250,7 @@ export const disciplines: Discipline[] = [
     lowerIsBetter: false,
   },
   {
-    id: 24,
+    id: 29,
     name: "Moukari",
     fullName: "Moukarinheitto",
     category: "throws",
@@ -217,7 +258,7 @@ export const disciplines: Discipline[] = [
     lowerIsBetter: false,
   },
   {
-    id: 25,
+    id: 30,
     name: "Pallo",
     fullName: "Pallonheitto",
     category: "throws",
@@ -227,22 +268,205 @@ export const disciplines: Discipline[] = [
 
   // Combined
   {
-    id: 26,
-    name: "5-ottelu",
-    fullName: "5-ottelu",
+    id: 31,
+    name: "3-ottelu",
+    fullName: "3-ottelu",
     category: "combined",
-    unit: "distance", // Points, but treated as distance (higher is better)
+    unit: "distance", // Points, higher is better
     lowerIsBetter: false,
   },
   {
-    id: 27,
+    id: 32,
+    name: "4-ottelu",
+    fullName: "4-ottelu",
+    category: "combined",
+    unit: "distance",
+    lowerIsBetter: false,
+  },
+  {
+    id: 33,
+    name: "5-ottelu",
+    fullName: "5-ottelu",
+    category: "combined",
+    unit: "distance",
+    lowerIsBetter: false,
+  },
+  {
+    id: 34,
     name: "7-ottelu",
     fullName: "7-ottelu",
     category: "combined",
     unit: "distance",
     lowerIsBetter: false,
   },
+
+  // Walking
+  {
+    id: 35,
+    name: "600 m kävely",
+    fullName: "600 metriä kävely",
+    category: "walking",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+  {
+    id: 36,
+    name: "800 m kävely",
+    fullName: "800 metriä kävely",
+    category: "walking",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+  {
+    id: 37,
+    name: "2000 m kävely",
+    fullName: "2000 metriä kävely",
+    category: "walking",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+  {
+    id: 38,
+    name: "3000 m kävely",
+    fullName: "3000 metriä kävely",
+    category: "walking",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+  {
+    id: 39,
+    name: "5000 m kävely",
+    fullName: "5000 metriä kävely",
+    category: "walking",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+  {
+    id: 40,
+    name: "10 km kävely",
+    fullName: "10 kilometriä kävely",
+    category: "walking",
+    unit: "time",
+    lowerIsBetter: true,
+  },
 ];
+
+// Disciplines available for each age category
+// Based on Finnish Athletics Federation (SUL) rules
+const disciplineIdsByAgeCategory: Record<AgeCategory, number[]> = {
+  // HIPPO-kisat, seurakilpailut (not in official statistics)
+  T3: [1, 22], // 40m, pituus
+  T4: [1, 22], // 40m, pituus
+  T5: [1, 22, 30], // 40m, pituus, pallo
+  T6: [1, 22, 30], // 40m, pituus, pallo
+  T7: [2, 22, 23, 30], // 60m, pituus, korkeus, pallo
+  T8: [2, 9, 22, 23, 30], // 60m, 800m, pituus, korkeus, pallo
+
+  // Official SUL statistics (T9+)
+  T9: [
+    1, 2, // 40m, 60m
+    8, 10, // 600m, 1000m
+    16, // 60m aj
+    22, 23, 25, // pituus, korkeus, seiväs
+    26, 27, 30, // kuula, kiekko, pallo
+    31, // 3-ottelu
+    35, 36, // kävely 600m, 800m
+  ],
+  T10: [
+    2, 4, // 60m, 150m
+    8, 9, 10, // 600m, 800m, 1000m
+    16, // 60m aj
+    22, 23, 25, // pituus, korkeus, seiväs
+    26, 27, 28, 30, // kuula, kiekko, keihäs, pallo
+    31, // 3-ottelu
+    35, 36, // kävely
+  ],
+  T11: [
+    2, 4, // 60m, 150m
+    8, 9, 10, // 600m, 800m, 1000m
+    16, // 60m aj
+    22, 23, 25, // pituus, korkeus, seiväs
+    26, 27, 28, 30, // kuula, kiekko, keihäs, pallo
+    31, // 3-ottelu
+    35, 36, // kävely
+  ],
+  T12: [
+    2, 3, 5, // 60m, 100m, 200m
+    9, 10, 11, // 800m, 1000m, 1500m
+    16, 19, // 60m aj, 200m aj
+    22, 23, 24, 25, // pituus, korkeus, kolmiloikka, seiväs
+    26, 27, 28, 29, // kuula, kiekko, keihäs, moukari
+    32, // 4-ottelu
+    37, // kävely 2000m
+  ],
+  T13: [
+    2, 3, 5, 6, // 60m, 100m, 200m, 300m
+    9, 10, 11, // 800m, 1000m, 1500m
+    16, 19, // 60m aj, 200m aj
+    22, 23, 24, 25, // pituus, korkeus, kolmiloikka, seiväs
+    26, 27, 28, 29, // kuula, kiekko, keihäs, moukari
+    32, // 4-ottelu
+    37, // kävely 2000m
+  ],
+  T14: [
+    3, 5, 6, 7, // 100m, 200m, 300m, 400m
+    9, 11, 12, // 800m, 1500m, 2000m
+    17, 20, // 80m aj, 300m aj
+    22, 23, 24, 25, // pituus, korkeus, kolmiloikka, seiväs
+    26, 27, 28, 29, // kuula, kiekko, keihäs, moukari
+    33, // 5-ottelu
+    37, // kävely 2000m
+  ],
+  T15: [
+    3, 5, 6, 7, // 100m, 200m, 300m, 400m
+    9, 11, 12, 13, // 800m, 1500m, 2000m, 3000m
+    17, 20, // 80m aj, 300m aj
+    22, 23, 24, 25, // pituus, korkeus, kolmiloikka, seiväs
+    26, 27, 28, 29, // kuula, kiekko, keihäs, moukari
+    33, // 5-ottelu
+    37, // kävely 2000m
+  ],
+
+  // Nuoret naiset (N17, N19, N22)
+  N17: [
+    3, 5, 7, // 100m, 200m, 400m
+    9, 11, 12, 13, 14, // 800m, 1500m, 2000m, 3000m, 5000m
+    18, 20, 21, // 100m aj, 300m aj, 400m aj
+    22, 23, 24, 25, // pituus, korkeus, kolmiloikka, seiväs
+    26, 27, 28, 29, // kuula, kiekko, keihäs, moukari
+    33, 34, // 5-ottelu, 7-ottelu
+    38, // kävely 3000m
+  ],
+  N19: [
+    3, 5, 7, // 100m, 200m, 400m
+    9, 11, 13, 14, // 800m, 1500m, 3000m, 5000m
+    18, 21, // 100m aj, 400m aj
+    22, 23, 24, 25, // pituus, korkeus, kolmiloikka, seiväs
+    26, 27, 28, 29, // kuula, kiekko, keihäs, moukari
+    34, // 7-ottelu
+    38, 39, // kävely 3000m, 5000m
+  ],
+  N22: [
+    3, 5, 7, // 100m, 200m, 400m
+    9, 11, 13, 14, 15, // 800m, 1500m, 3000m, 5000m, 10000m
+    18, 21, // 100m aj, 400m aj
+    22, 23, 24, 25, // pituus, korkeus, kolmiloikka, seiväs
+    26, 27, 28, 29, // kuula, kiekko, keihäs, moukari
+    34, // 7-ottelu
+    38, 39, 40, // kävely
+  ],
+
+  // Aikuiset naiset
+  N: [
+    3, 5, 7, // 100m, 200m, 400m
+    9, 11, 13, 14, 15, // 800m, 1500m, 3000m, 5000m, 10000m
+    18, 21, // 100m aj, 400m aj
+    22, 23, 24, 25, // pituus, korkeus, kolmiloikka, seiväs
+    26, 27, 28, 29, // kuula, kiekko, keihäs, moukari
+    34, // 7-ottelu
+    38, 39, 40, // kävely
+  ],
+};
 
 // Get disciplines grouped by category
 export function getDisciplinesByCategory(): Map<DisciplineCategory, Discipline[]> {
@@ -271,21 +495,123 @@ export const categoryOrder: DisciplineCategory[] = [
   "jumps",
   "throws",
   "combined",
+  "walking",
 ];
 
 // Disciplines that typically take over 1 minute (need minutes field in input)
 const DISCIPLINES_WITH_MINUTES = new Set([
-  5,  // 400m
-  6,  // 800m
-  7,  // 1000m
-  8,  // 1500m
-  9,  // 3000m
-  10, // 5000m
-  11, // 10000m
-  16, // 400m aj
+  7,  // 400m
+  8,  // 600m
+  9,  // 800m
+  10, // 1000m
+  11, // 1500m
+  12, // 2000m
+  13, // 3000m
+  14, // 5000m
+  15, // 10000m
+  21, // 400m aj
+  35, // 600m kävely
+  36, // 800m kävely
+  37, // 2000m kävely
+  38, // 3000m kävely
+  39, // 5000m kävely
+  40, // 10km kävely
 ]);
 
 // Check if a discipline needs minutes field in time input
 export function disciplineNeedsMinutes(disciplineId: number): boolean {
   return DISCIPLINES_WITH_MINUTES.has(disciplineId);
 }
+
+// Get age category from birth year and optional date
+// If date is provided, calculates the age at that date
+export function getAgeCategoryFromBirthYear(
+  birthYear: number,
+  date?: string
+): AgeCategory {
+  const targetYear = date ? new Date(date).getFullYear() : new Date().getFullYear();
+  const ageThisYear = targetYear - birthYear;
+
+  // Children too young for official categories
+  if (ageThisYear <= 3) return "T3";
+  if (ageThisYear <= 4) return "T4";
+  if (ageThisYear <= 5) return "T5";
+  if (ageThisYear <= 6) return "T6";
+  if (ageThisYear <= 7) return "T7";
+  if (ageThisYear <= 8) return "T8";
+  if (ageThisYear <= 9) return "T9";
+  if (ageThisYear <= 10) return "T10";
+  if (ageThisYear <= 11) return "T11";
+  if (ageThisYear <= 12) return "T12";
+  if (ageThisYear <= 13) return "T13";
+  if (ageThisYear <= 14) return "T14";
+  if (ageThisYear <= 15) return "T15";
+  if (ageThisYear <= 17) return "N17";
+  if (ageThisYear <= 19) return "N19";
+  if (ageThisYear <= 22) return "N22";
+  return "N";
+}
+
+// Get disciplines for a specific age category
+export function getDisciplinesForAgeCategory(category: AgeCategory): Discipline[] {
+  const ids = disciplineIdsByAgeCategory[category] || [];
+  return disciplines.filter((d) => ids.includes(d.id));
+}
+
+// Get disciplines for an athlete at a specific date
+export function getDisciplinesForAthlete(
+  birthYear: number,
+  date?: string
+): Discipline[] {
+  const category = getAgeCategoryFromBirthYear(birthYear, date);
+  return getDisciplinesForAgeCategory(category);
+}
+
+// Get disciplines grouped by category for a specific age category
+export function getDisciplinesByCategoryForAge(
+  birthYear: number,
+  date?: string
+): Map<DisciplineCategory, Discipline[]> {
+  const ageDisciplines = getDisciplinesForAthlete(birthYear, date);
+  const grouped = new Map<DisciplineCategory, Discipline[]>();
+
+  for (const discipline of ageDisciplines) {
+    const existing = grouped.get(discipline.category) || [];
+    existing.push(discipline);
+    grouped.set(discipline.category, existing);
+  }
+
+  return grouped;
+}
+
+// Check if a discipline is available for an age category
+export function isDisciplineAvailableForAge(
+  disciplineId: number,
+  birthYear: number,
+  date?: string
+): boolean {
+  const category = getAgeCategoryFromBirthYear(birthYear, date);
+  const ids = disciplineIdsByAgeCategory[category] || [];
+  return ids.includes(disciplineId);
+}
+
+// Age category labels in Finnish
+export const ageCategoryLabels: Record<AgeCategory, string> = {
+  T3: "T3 (3-vuotiaat)",
+  T4: "T4 (4-vuotiaat)",
+  T5: "T5 (5-vuotiaat)",
+  T6: "T6 (6-vuotiaat)",
+  T7: "T7 (7-vuotiaat)",
+  T8: "T8 (8-vuotiaat)",
+  T9: "T9 (9-vuotiaat)",
+  T10: "T10 (10-vuotiaat)",
+  T11: "T11 (11-vuotiaat)",
+  T12: "T12 (12-vuotiaat)",
+  T13: "T13 (13-vuotiaat)",
+  T14: "T14 (14-vuotiaat)",
+  T15: "T15 (15-vuotiaat)",
+  N17: "N17 (16-17-vuotiaat)",
+  N19: "N19 (18-19-vuotiaat)",
+  N22: "N22 (20-22-vuotiaat)",
+  N: "N (aikuiset)",
+};

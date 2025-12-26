@@ -6,7 +6,8 @@ import { getDisciplineById } from "../data/disciplines";
 import { GoalCard } from "../components/goals/GoalCard";
 import { GoalForm } from "../components/goals/GoalForm";
 import { GoalCelebrationModal } from "../components/goals/GoalCelebrationModal";
-import { Dialog, Confetti, toast } from "../components/ui";
+import { Dialog, Confetti, toast, FilterSelect, type FilterOption } from "../components/ui";
+import { useAddShortcut, useEscapeKey, useBackgroundDeselect } from "../hooks";
 import type { Goal, NewGoal, Athlete, Discipline } from "../types";
 
 interface CelebrationGoalData {
@@ -46,6 +47,9 @@ export function Goals() {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
+
+  // Keyboard shortcut: Ctrl+U opens add dialog
+  useAddShortcut(() => setIsFormOpen(true));
 
   // Data is fetched in Layout.tsx on app start
 
@@ -113,6 +117,21 @@ export function Goals() {
     return new Map(athletes.map((a) => [a.athlete.id, a.athlete]));
   }, [athletes]);
 
+  // Filter options for FilterSelect components
+  const athleteOptions: FilterOption[] = useMemo(() => [
+    { value: "all", label: "Kaikki urheilijat" },
+    ...athletes.map(({ athlete }) => ({
+      value: athlete.id,
+      label: `${athlete.firstName} ${athlete.lastName}`,
+    })),
+  ], [athletes]);
+
+  const statusOptions: FilterOption[] = [
+    { value: "active", label: "Aktiiviset" },
+    { value: "achieved", label: "Saavutetut" },
+    { value: "all", label: "Kaikki" },
+  ];
+
   // Filter and process goals
   const activeGoals = useMemo(() => {
     let filtered = getActiveGoals();
@@ -154,18 +173,11 @@ export function Goals() {
     setIsFormOpen(false);
   };
 
-  // Handle Esc key to exit selection mode
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && selectionMode) {
-        setSelectionMode(false);
-        setSelectedIds(new Set());
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [selectionMode]);
+  // Esc exits selection mode
+  useEscapeKey(() => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  }, selectionMode);
 
   // Toggle selection for a goal
   const handleCheckboxClick = useCallback((goalId: number) => {
@@ -190,6 +202,9 @@ export function Goals() {
     setSelectedIds(new Set());
   }, []);
 
+  // Click on empty area exits selection mode
+  const handleBackgroundClick = useBackgroundDeselect(selectionMode, handleCancelSelection);
+
   // Confirm bulk delete
   const handleBulkDelete = useCallback(async () => {
     const ids = Array.from(selectedIds);
@@ -208,7 +223,7 @@ export function Goals() {
   const hasSelection = selectedCount > 0;
 
   return (
-    <div className="p-6 h-full flex flex-col">
+    <div className="p-6 h-full flex flex-col" onClick={handleBackgroundClick}>
       {/* Header */}
       <div className="flex items-center justify-between mb-6 pb-5 border-b border-border-subtle">
         {selectionMode ? (
@@ -253,31 +268,18 @@ export function Goals() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
         {/* Athlete filter */}
-        <select
-          className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
-          value={athleteFilter ?? ""}
-          onChange={(e) =>
-            setAthleteFilter(e.target.value ? Number(e.target.value) : null)
-          }
-        >
-          <option value="">Kaikki urheilijat</option>
-          {athletes.map(({ athlete }) => (
-            <option key={athlete.id} value={athlete.id}>
-              {athlete.firstName} {athlete.lastName}
-            </option>
-          ))}
-        </select>
+        <FilterSelect
+          value={athleteFilter ?? "all"}
+          onChange={(value) => setAthleteFilter(value === "all" ? null : (value as number))}
+          options={athleteOptions}
+        />
 
         {/* Status filter */}
-        <select
-          className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
+        <FilterSelect
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-        >
-          <option value="active">Aktiiviset</option>
-          <option value="achieved">Saavutetut</option>
-          <option value="all">Kaikki</option>
-        </select>
+          onChange={(value) => setStatusFilter(value as StatusFilter)}
+          options={statusOptions}
+        />
       </div>
 
       {/* Content */}
@@ -397,6 +399,7 @@ export function Goals() {
         open={isFormOpen}
         onClose={() => setIsFormOpen(false)}
         title="Lisää tavoite"
+        maxWidth="2xl"
       >
         <GoalForm
           onSave={handleSaveGoal}

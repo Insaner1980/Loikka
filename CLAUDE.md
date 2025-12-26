@@ -343,7 +343,9 @@ export const useMyStore = create<MyStore>((set, get) => ({
 | Hook | Kuvaus |
 |------|--------|
 | `useReminders` | Kilpailumuistutukset ja notifikaatiot |
-| `useKeyboardShortcuts` | Pikanäppäimet (Ctrl+N lisää uusi, 1-8 navigointi) |
+| `useNavigationShortcuts` | Navigointipikanäppäimet (1-8), kutsutaan Layout:ssa |
+| `useAddShortcut` | Lisää uusi -pikanäppäin (Ctrl+U), sivukohtainen |
+| `useEscapeKey` | Esc-näppäin (peruuta/sulje), ehdollinen aktivointi |
 | `useCalendarKeyboard` | Kalenterin näppäinohjaus (←/→ kuukaudet, T tänään) |
 | `useTheme` | Teeman hallinta (vain dark) |
 | `useAthleteData` | Urheilijan tulokset, ennätykset, mitalit, tavoitteet |

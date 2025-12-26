@@ -15,7 +15,7 @@ import {
   Calculator,
 } from "lucide-react";
 import { formatTime, formatDistance, formatDate } from "../../../lib/formatters";
-import { categoryLabels, categoryOrder } from "../../../data/disciplines";
+import { DisciplineFilterSelect, FilterSelect, type FilterOption } from "../../ui";
 import type { ResultWithDiscipline } from "./types";
 
 interface ProgressTabProps {
@@ -49,6 +49,12 @@ export function ProgressTab({ results }: ProgressTabProps) {
     )].sort((a, b) => b - a),
     [disciplineResults]
   );
+
+  // Season filter options for FilterSelect
+  const seasonFilterOptions: FilterOption[] = useMemo(() => [
+    { value: "all", label: "Kaikki kaudet" },
+    ...uniqueYears.map((year) => ({ value: year, label: String(year) })),
+  ], [uniqueYears]);
 
   // Get the selected discipline
   const selectedDiscipline = disciplineFilter
@@ -202,46 +208,24 @@ export function ProgressTab({ results }: ProgressTabProps) {
     <div className="space-y-6">
       {/* Filter row */}
       <div className="flex gap-3">
-        <select
-          value={disciplineFilter ?? ""}
-          onChange={(e) => {
-            setDisciplineFilter(e.target.value ? parseInt(e.target.value) : null);
+        <DisciplineFilterSelect
+          value={disciplineFilter}
+          onChange={(value) => {
+            setDisciplineFilter(value);
             setSeasonFilter(null);
           }}
-          className="flex-1 px-3 py-2 bg-card border border-border-subtle rounded-lg text-sm input-focus cursor-pointer"
-        >
-          <option value="">Valitse laji</option>
-          {categoryOrder.map((category) => {
-            const categoryDisciplines = disciplines.filter(
-              (d) => d.category === category
-            );
-            if (categoryDisciplines.length === 0) return null;
-            return (
-              <optgroup key={category} label={categoryLabels[category]}>
-                {categoryDisciplines.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.fullName}
-                  </option>
-                ))}
-              </optgroup>
-            );
-          })}
-        </select>
+          disciplines={disciplines}
+          placeholder="Valitse laji"
+          showPlaceholderOption={false}
+          className="flex-1"
+        />
         {disciplineFilter && (
-          <select
-            value={seasonFilter ?? ""}
-            onChange={(e) =>
-              setSeasonFilter(e.target.value ? parseInt(e.target.value) : null)
-            }
-            className="flex-1 px-3 py-2 bg-card border border-border-subtle rounded-lg text-sm input-focus cursor-pointer"
-          >
-            <option value="">Kaikki kaudet</option>
-            {uniqueYears.map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
+          <FilterSelect
+            value={seasonFilter ?? "all"}
+            onChange={(value) => setSeasonFilter(value === "all" ? null : (value as number))}
+            options={seasonFilterOptions}
+            className="flex-1"
+          />
         )}
       </div>
 

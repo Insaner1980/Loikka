@@ -105,6 +105,7 @@ export const CompetitionCard = memo(function CompetitionCard({
 
   return (
     <div
+      data-card
       onClick={handleCardClick}
       className={`group relative rounded-xl bg-card border p-4 transition-colors duration-150 flex flex-col ${
         isSelected

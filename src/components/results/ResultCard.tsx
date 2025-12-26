@@ -127,6 +127,7 @@ export const ResultCard = memo(function ResultCard({
 
   return (
     <div
+      data-card
       onClick={handleCardClick}
       className={`group relative rounded-xl bg-card border transition-colors duration-150 ${
         isSelected

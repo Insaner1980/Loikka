@@ -113,7 +113,7 @@ export function DatePicker({
     if (isOpen && containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       const dropdownWidth = 280;
-      const dropdownHeight = 340; // approximate height
+      const dropdownHeight = 295; // approximate height (without Today button)
 
       // Find the dialog container to constrain within
       const dialog = containerRef.current.closest('[role="dialog"]');
@@ -252,18 +252,6 @@ export function DatePicker({
     });
   };
 
-  // Go to today
-  const goToToday = () => {
-    const today = new Date();
-    if (!isDateDisabled(today)) {
-      onChange(format(today, "yyyy-MM-dd"));
-      setCurrentMonth(today);
-      setIsOpen(false);
-    } else {
-      setCurrentMonth(today);
-    }
-  };
-
   // Selected date for highlighting
   const selectedDate = value ? new Date(value) : undefined;
 
@@ -370,16 +358,6 @@ export function DatePicker({
             })}
           </div>
 
-          {/* Today button */}
-          <div className="mt-3 pt-3 border-t border-border">
-            <button
-              type="button"
-              onClick={goToToday}
-              className="w-full py-1.5 text-sm text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors cursor-pointer"
-            >
-              Tänään
-            </button>
-          </div>
         </div>,
         document.body
       )}

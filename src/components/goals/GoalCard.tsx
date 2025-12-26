@@ -74,6 +74,7 @@ export const GoalCard = memo(function GoalCard({
 
   return (
     <div
+      data-card
       onClick={handleCardClick}
       className={`group relative rounded-xl p-4 border transition-colors duration-150 bg-card ${
         isSelected

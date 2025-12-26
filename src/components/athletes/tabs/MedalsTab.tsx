@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { formatTime, formatDistance, formatDate } from "../../../lib/formatters";
+import { getDisciplineById } from "../../../data/disciplines";
+import { DisciplineFilterSelect, FilterSelect, type FilterOption } from "../../ui";
 import type { Medal } from "../../../types";
 import type { ResultWithDiscipline } from "./types";
 
@@ -22,13 +24,15 @@ export function MedalsTab({ medals, results, onMedalClick }: MedalsTabProps) {
   const [competitionFilter, setCompetitionFilter] = useState<string | null>(null);
   const [seasonFilter, setSeasonFilter] = useState<number | null>(null);
 
-  // Get unique disciplines from medals
-  const disciplinesMap = new Map(
-    medals
-      .filter(m => m.disciplineId && m.disciplineName)
-      .map(m => [m.disciplineId!, { id: m.disciplineId!, name: m.disciplineName! }])
-  );
-  const disciplines = [...disciplinesMap.values()].sort((a, b) => a.id - b.id);
+  // Get unique disciplines from medals (full discipline objects)
+  const disciplines = useMemo(() => {
+    const uniqueIds = new Set(
+      medals.filter(m => m.disciplineId).map(m => m.disciplineId!)
+    );
+    return Array.from(uniqueIds)
+      .map(id => getDisciplineById(id))
+      .filter(d => d !== undefined);
+  }, [medals]);
 
   // Filter by discipline first (for competition options)
   const medalsForCompetitionFilter = disciplineFilter
@@ -48,6 +52,17 @@ export function MedalsTab({ medals, results, onMedalClick }: MedalsTabProps) {
     medalsForYearFilter.map(m => new Date(m.date).getFullYear())
   )].sort((a, b) => b - a);
 
+  // Filter options for FilterSelect components
+  const competitionOptions: FilterOption[] = useMemo(() => [
+    { value: "all", label: "Kaikki kilpailut" },
+    ...competitions.map(name => ({ value: name, label: name })),
+  ], [competitions]);
+
+  const yearFilterOptions: FilterOption[] = useMemo(() => [
+    { value: "all", label: "Kaudet" },
+    ...uniqueYears.map(y => ({ value: y, label: String(y) })),
+  ], [uniqueYears]);
+
   // Apply all filters for display
   const filteredMedals = medals.filter(m => {
     if (disciplineFilter && m.disciplineId !== disciplineFilter) return false;
@@ -61,36 +76,23 @@ export function MedalsTab({ medals, results, onMedalClick }: MedalsTabProps) {
       {/* Filter row */}
       {medals.length > 0 && (
         <div className="flex gap-3">
-          <select
-            value={disciplineFilter ?? ""}
-            onChange={(e) => setDisciplineFilter(e.target.value ? parseInt(e.target.value) : null)}
-            className="flex-1 px-3 py-2 bg-card border border-border-subtle rounded-lg text-sm input-focus cursor-pointer"
-          >
-            <option value="">Kaikki lajit</option>
-            {disciplines.map(d => (
-              <option key={d.id} value={d.id}>{d.name}</option>
-            ))}
-          </select>
-          <select
-            value={competitionFilter ?? ""}
-            onChange={(e) => setCompetitionFilter(e.target.value || null)}
-            className="flex-1 px-3 py-2 bg-card border border-border-subtle rounded-lg text-sm input-focus cursor-pointer"
-          >
-            <option value="">Kaikki kilpailut</option>
-            {competitions.map(name => (
-              <option key={name} value={name}>{name}</option>
-            ))}
-          </select>
-          <select
-            value={seasonFilter ?? ""}
-            onChange={(e) => setSeasonFilter(e.target.value ? parseInt(e.target.value) : null)}
-            className="w-28 px-3 py-2 bg-card border border-border-subtle rounded-lg text-sm input-focus cursor-pointer"
-          >
-            <option value="">Kaudet</option>
-            {uniqueYears.map(year => (
-              <option key={year} value={year}>{year}</option>
-            ))}
-          </select>
+          <DisciplineFilterSelect
+            value={disciplineFilter}
+            onChange={setDisciplineFilter}
+            disciplines={disciplines}
+            className="flex-1"
+          />
+          <FilterSelect
+            value={competitionFilter ?? "all"}
+            onChange={(value) => setCompetitionFilter(value === "all" ? null : (value as string))}
+            options={competitionOptions}
+            className="flex-1"
+          />
+          <FilterSelect
+            value={seasonFilter ?? "all"}
+            onChange={(value) => setSeasonFilter(value === "all" ? null : (value as number))}
+            options={yearFilterOptions}
+          />
         </div>
       )}
 

@@ -1,13 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { useAthleteStore } from "../../stores/useAthleteStore";
 import {
-  disciplines,
-  categoryLabels,
-  categoryOrder,
   getDisciplineById,
   disciplineNeedsMinutes,
 } from "../../data/disciplines";
-import { TimeInput, DistanceInput, DatePicker } from "../ui";
+import { TimeInput, DistanceInput, DatePicker, DisciplineSelect, FilterSelect, type FilterOption } from "../ui";
 import type { Goal, NewGoal } from "../../types";
 
 interface GoalFormProps {
@@ -44,6 +41,22 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
       fetchAthletes();
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Get selected athlete's birth year for discipline filtering
+  const selectedAthleteBirthYear = useMemo(() => {
+    if (!selectedAthleteId) return undefined;
+    const athleteData = athletes.find((a) => a.athlete.id === selectedAthleteId);
+    return athleteData?.athlete.birthYear;
+  }, [selectedAthleteId, athletes]);
+
+  // Athlete options for FilterSelect
+  const athleteOptions: FilterOption[] = useMemo(() => [
+    { value: "", label: "Valitse urheilija" },
+    ...athletes.map(({ athlete }) => ({
+      value: athlete.id,
+      label: `${athlete.firstName} ${athlete.lastName}`,
+    })),
+  ], [athletes]);
 
   // Get selected discipline
   const selectedDiscipline = useMemo(() => {
@@ -108,7 +121,7 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-4">
       {/* Athlete selector */}
       <div>
         <label
@@ -117,24 +130,13 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
         >
           Urheilija <span className="text-error">*</span>
         </label>
-        <select
-          id="athlete"
+        <FilterSelect
           value={selectedAthleteId}
-          onChange={(e) =>
-            setSelectedAthleteId(e.target.value ? parseInt(e.target.value) : "")
-          }
+          onChange={(value) => setSelectedAthleteId(value === "" ? "" : (value as number))}
+          options={athleteOptions}
           disabled={!!athleteId}
-          className={`w-full px-3 py-2 bg-background border rounded-lg input-focus cursor-pointer ${
-            errors.athleteId ? "border-error" : "border-border"
-          } ${athleteId ? "opacity-60" : ""}`}
-        >
-          <option value="">Valitse urheilija</option>
-          {athletes.map(({ athlete }) => (
-            <option key={athlete.id} value={athlete.id}>
-              {athlete.firstName} {athlete.lastName}
-            </option>
-          ))}
-        </select>
+          className={`w-full ${errors.athleteId ? "border-error" : ""}`}
+        />
         {errors.athleteId && (
           <p className="mt-1 text-sm text-error">{errors.athleteId}</p>
         )}
@@ -148,32 +150,13 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
         >
           Laji <span className="text-error">*</span>
         </label>
-        <select
-          id="discipline"
+        <DisciplineSelect
           value={disciplineId}
-          onChange={(e) =>
-            setDisciplineId(e.target.value ? parseInt(e.target.value) : "")
-          }
-          className={`w-full px-3 py-2 bg-background border rounded-lg input-focus cursor-pointer ${
-            errors.disciplineId ? "border-error" : "border-border"
-          }`}
-        >
-          <option value="">Valitse laji</option>
-          {categoryOrder.map((category) => {
-            const categoryDisciplines = disciplines.filter(
-              (d) => d.category === category
-            );
-            return (
-              <optgroup key={category} label={categoryLabels[category]}>
-                {categoryDisciplines.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.fullName}
-                  </option>
-                ))}
-              </optgroup>
-            );
-          })}
-        </select>
+          onChange={setDisciplineId}
+          birthYear={selectedAthleteBirthYear}
+          required
+          className={errors.disciplineId ? "border-error" : ""}
+        />
         {errors.disciplineId && (
           <p className="mt-1 text-sm text-error">{errors.disciplineId}</p>
         )}
@@ -227,7 +210,7 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
           min={new Date().toISOString().split("T")[0]}
         />
         <p className="mt-1 text-xs text-muted-foreground">
-          Valinnainen. Aseta päivämäärä, johon mennessä tavoite tulisi saavuttaa.
+          Valinnainen.
         </p>
       </div>
 

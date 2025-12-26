@@ -227,6 +227,7 @@ export function AthleteDetail() {
         open={editDialogOpen}
         onClose={() => setEditDialogOpen(false)}
         title="Muokkaa urheilijaa"
+        maxWidth="2xl"
       >
         <AthleteForm
           athlete={athlete}
@@ -240,7 +241,7 @@ export function AthleteDetail() {
         open={resultDialogOpen}
         onClose={() => setResultDialogOpen(false)}
         title="Lisää tulos"
-        maxWidth="lg"
+        maxWidth="3xl"
       >
         <ResultForm
           athleteId={athleteId}

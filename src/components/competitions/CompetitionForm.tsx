@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Users } from "lucide-react";
 import { useAthleteStore } from "../../stores/useAthleteStore";
 import { useCompetitionStore } from "../../stores/useCompetitionStore";
-import { disciplines, categoryOrder } from "../../data/disciplines";
+import { categoryOrder, getDisciplinesForAthlete } from "../../data/disciplines";
 import { getTodayISO } from "../../lib/formatters";
 import { COMPETITION_LEVEL_OPTIONS } from "../../lib/constants";
 import { DatePicker } from "../ui/DatePicker";
+import { FilterSelect, type FilterOption } from "../ui/FilterSelect";
 import { AutocompleteInput } from "../shared";
 import type { Competition, NewCompetition, CompetitionLevel } from "../../types";
 
@@ -73,6 +74,15 @@ export function CompetitionForm({
 
   // Get unique competition names for autocomplete
   const uniqueCompetitionNames = [...new Set(competitions.map((c) => c.name))];
+
+  // Competition level options for FilterSelect
+  const competitionLevelOptions: FilterOption[] = useMemo(() => [
+    { value: "", label: "Valitse taso" },
+    ...COMPETITION_LEVEL_OPTIONS.map((option) => ({
+      value: option.value,
+      label: option.label,
+    })),
+  ], []);
 
   const toggleParticipant = (athleteId: number) => {
     setSelectedParticipants((prev) => {
@@ -154,43 +164,38 @@ export function CompetitionForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Row 1: Name and Level */}
-      <div className="grid grid-cols-2 gap-4">
-        {/* Name */}
-        <AutocompleteInput
-          id="name"
-          value={name}
-          onChange={setName}
-          suggestions={uniqueCompetitionNames}
-          label="Nimi"
-          required
-          placeholder="esim. Tampereen aluemestaruus"
-          error={errors.name}
-        />
+      {/* Row 1: Name (2 cols) + Level */}
+      <div className="grid grid-cols-3 gap-4">
+        {/* Name - spans 2 columns */}
+        <div className="col-span-2">
+          <AutocompleteInput
+            id="name"
+            value={name}
+            onChange={setName}
+            suggestions={uniqueCompetitionNames}
+            label="Nimi"
+            required
+            placeholder="esim. Tampereen aluemestaruus"
+            error={errors.name}
+          />
+        </div>
 
         {/* Competition level */}
         <div>
           <label htmlFor="level" className="block text-sm font-medium mb-1.5">
             Kilpailutaso
           </label>
-          <select
-            id="level"
+          <FilterSelect
             value={level}
-            onChange={(e) => setLevel(e.target.value as CompetitionLevel | "")}
-            className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus cursor-pointer"
-          >
-            <option value="">Valitse taso</option>
-            {COMPETITION_LEVEL_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+            onChange={(value) => setLevel(value as CompetitionLevel | "")}
+            options={competitionLevelOptions}
+            className="w-full"
+          />
         </div>
       </div>
 
-      {/* Row 2: Date fields */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* Row 2: Date + EndDate + Location */}
+      <div className="grid grid-cols-3 gap-4">
         <div>
           <label htmlFor="date" className="block text-sm font-medium mb-1.5">
             Päivämäärä <span className="text-error">*</span>
@@ -221,10 +226,7 @@ export function CompetitionForm({
             <p className="mt-1 text-sm text-error">{errors.endDate}</p>
           )}
         </div>
-      </div>
 
-      {/* Row 3: Location and Address */}
-      <div className="grid grid-cols-2 gap-4">
         {/* Location */}
         <div>
           <label htmlFor="location" className="block text-sm font-medium mb-1.5">
@@ -236,10 +238,14 @@ export function CompetitionForm({
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="esim. Tampere"
+            autoComplete="off"
             className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
           />
         </div>
+      </div>
 
+      {/* Row 3: Address + Notes (2 cols) */}
+      <div className="grid grid-cols-3 gap-4">
         {/* Address */}
         <div>
           <label htmlFor="address" className="block text-sm font-medium mb-1.5">
@@ -254,21 +260,21 @@ export function CompetitionForm({
             className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
           />
         </div>
-      </div>
 
-      {/* Notes */}
-      <div>
-        <label htmlFor="notes" className="block text-sm font-medium mb-1.5">
-          Muistiinpanot
-        </label>
-        <input
-          type="text"
-          id="notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Valinnainen lisätieto..."
-          className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
-        />
+        {/* Notes - spans 2 columns */}
+        <div className="col-span-2">
+          <label htmlFor="notes" className="block text-sm font-medium mb-1.5">
+            Muistiinpanot
+          </label>
+          <input
+            type="text"
+            id="notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Valinnainen lisätieto..."
+            className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
+          />
+        </div>
       </div>
 
       {/* Participants section */}
@@ -305,38 +311,41 @@ export function CompetitionForm({
                   </label>
 
                   {/* Discipline selector - only shown when athlete is selected */}
-                  {isSelected && (
-                    <div className="pl-6 mt-2">
-                      <div className="flex flex-wrap gap-1">
-                        {categoryOrder.map((category) => {
-                          const categoryDisciplines = disciplines.filter(
-                            (d) => d.category === category
-                          );
-                          return categoryDisciplines.map((discipline) => {
-                            const isChecked = selectedDisciplines.includes(
-                              discipline.id
+                  {isSelected && (() => {
+                    const athleteDisciplines = getDisciplinesForAthlete(athlete.birthYear, date);
+                    return (
+                      <div className="pl-6 mt-2">
+                        <div className="flex flex-wrap gap-1">
+                          {categoryOrder.map((category) => {
+                            const categoryDisciplines = athleteDisciplines.filter(
+                              (d) => d.category === category
                             );
-                            return (
-                              <button
-                                key={discipline.id}
-                                type="button"
-                                onClick={() =>
-                                  toggleDiscipline(athlete.id, discipline.id)
-                                }
-                                className={`px-2 py-1 text-xs rounded-full border transition-colors ${
-                                  isChecked
-                                    ? "bg-[var(--accent-muted)] text-foreground border-[var(--accent)]"
-                                    : "bg-card border-border hover:border-border-hover"
-                                }`}
-                              >
-                                {discipline.name}
-                              </button>
-                            );
-                          });
-                        })}
+                            return categoryDisciplines.map((discipline) => {
+                              const isChecked = selectedDisciplines.includes(
+                                discipline.id
+                              );
+                              return (
+                                <button
+                                  key={discipline.id}
+                                  type="button"
+                                  onClick={() =>
+                                    toggleDiscipline(athlete.id, discipline.id)
+                                  }
+                                  className={`px-2 py-1 text-xs rounded-full border transition-colors ${
+                                    isChecked
+                                      ? "bg-[var(--accent-muted)] text-foreground border-[var(--accent)]"
+                                      : "bg-card border-border hover:border-border-hover"
+                                  }`}
+                                >
+                                  {discipline.name}
+                                </button>
+                              );
+                            });
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
                 </div>
               );
             })}

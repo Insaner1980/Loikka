@@ -1,4 +1,6 @@
-import { useAutocomplete } from "../../hooks";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
+import { useAutocomplete, calculateDropdownPosition } from "../../hooks";
 
 interface AutocompleteInputProps {
   /** Input id for accessibility */
@@ -45,6 +47,15 @@ export function AutocompleteInput({
     handleFocus,
   } = useAutocomplete(suggestions);
 
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+
+  // Calculate dropdown position when showing suggestions
+  useEffect(() => {
+    if (showSuggestions && inputRef.current) {
+      setDropdownStyle(calculateDropdownPosition(inputRef.current));
+    }
+  }, [showSuggestions, inputRef]);
+
   // Sync external value with internal hook
   const handleInputChange = (newValue: string) => {
     handleChange(newValue);
@@ -77,11 +88,12 @@ export function AutocompleteInput({
           error ? "border-error" : "border-border"
         } ${disabled ? "opacity-60" : ""} ${className}`}
       />
-      {/* Autocomplete suggestions dropdown */}
-      {showSuggestions && filteredSuggestions.length > 0 && (
+      {/* Autocomplete suggestions dropdown - rendered as portal */}
+      {showSuggestions && filteredSuggestions.length > 0 && createPortal(
         <div
           ref={suggestionsRef}
-          className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto"
+          style={dropdownStyle}
+          className="dropdown-menu"
         >
           {filteredSuggestions.map((suggestion, index) => (
             <button
@@ -93,7 +105,8 @@ export function AutocompleteInput({
               {suggestion}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
       {error && <p className="mt-1 text-sm text-error">{error}</p>}
     </div>

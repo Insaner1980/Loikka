@@ -111,6 +111,7 @@ function PhotoThumbnail({
 
   return (
     <div
+      data-card
       className="group cursor-pointer"
       onClick={handleImageClick}
     >

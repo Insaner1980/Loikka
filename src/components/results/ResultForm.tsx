@@ -3,19 +3,14 @@ import { useAthleteStore } from "../../stores/useAthleteStore";
 import { useResultStore } from "../../stores/useResultStore";
 import { useCompetitionStore } from "../../stores/useCompetitionStore";
 import { useDisciplineFields } from "../../hooks";
-import {
-  disciplines,
-  categoryLabels,
-  categoryOrder,
-  disciplineNeedsMinutes,
-} from "../../data/disciplines";
+import { disciplineNeedsMinutes } from "../../data/disciplines";
 import { getTodayISO } from "../../lib/formatters";
 import {
   HURDLE_HEIGHTS,
   RESULT_STATUSES,
   COMPETITION_LEVEL_OPTIONS,
 } from "../../lib/constants";
-import { TimeInput, DistanceInput, DatePicker } from "../ui";
+import { TimeInput, DistanceInput, DatePicker, DisciplineSelect, FilterSelect, type FilterOption } from "../ui";
 import { AutocompleteInput } from "../shared";
 import type { NewResult, MedalType, ResultType, CompetitionLevel, ResultStatus } from "../../types";
 
@@ -63,6 +58,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
   // State for potential PB/SB checks
   const [potentialBests, setPotentialBests] = useState({ isPB: false, isSB: false });
 
+  
   // Clear errors when fields change
   useEffect(() => {
     if (errors.value && resultValue !== null && resultValue > 0) {
@@ -101,6 +97,13 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
     return [...new Set([...calendarNames, ...resultNames])].sort();
   }, [competitions, results]);
 
+  // Get selected athlete's birth year for discipline filtering
+  const selectedAthleteBirthYear = useMemo(() => {
+    if (!selectedAthleteId) return undefined;
+    const athleteData = athletes.find((a) => a.athlete.id === selectedAthleteId);
+    return athleteData?.athlete.birthYear;
+  }, [selectedAthleteId, athletes]);
+
   // Use shared discipline fields hook
   const {
     selectedDiscipline,
@@ -110,6 +113,46 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
     equipmentType,
     availableWeights,
   } = useDisciplineFields(disciplineId);
+
+  // Filter options for FilterSelect components
+  const athleteOptions: FilterOption[] = useMemo(() => [
+    { value: "", label: "Valitse urheilija" },
+    ...athletes.map(({ athlete }) => ({
+      value: athlete.id,
+      label: `${athlete.firstName} ${athlete.lastName}`,
+    })),
+  ], [athletes]);
+
+  const competitionLevelOptions: FilterOption[] = useMemo(() => [
+    { value: "", label: "Valitse taso" },
+    ...COMPETITION_LEVEL_OPTIONS.map((option) => ({
+      value: option.value,
+      label: option.label,
+    })),
+  ], []);
+
+  const equipmentWeightOptions: FilterOption[] = useMemo(() => [
+    { value: "", label: "Valitse paino" },
+    ...availableWeights.map((weight) => ({
+      value: weight,
+      label: equipmentType === "keihäs" ? `${weight} g` : `${weight} kg`,
+    })),
+  ], [availableWeights, equipmentType]);
+
+  const hurdleHeightOptions: FilterOption[] = useMemo(() => [
+    { value: "", label: "Valitse korkeus" },
+    ...HURDLE_HEIGHTS.map((height) => ({
+      value: height,
+      label: `${height} cm`,
+    })),
+  ], []);
+
+  const statusOptions: FilterOption[] = useMemo(() =>
+    RESULT_STATUSES.map((status) => ({
+      value: status.value,
+      label: status.label,
+    })),
+  []);
 
   // Reset equipment fields, result value, and potential bests when discipline changes
   useEffect(() => {
@@ -257,8 +300,8 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Row 1: Athlete and Discipline */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* Row 1: Athlete, Discipline, Date */}
+      <div className="grid grid-cols-3 gap-4">
         {/* Athlete selector */}
         <div>
           <label
@@ -267,24 +310,13 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
           >
             Urheilija <span className="text-error">*</span>
           </label>
-          <select
-            id="athlete"
+          <FilterSelect
             value={selectedAthleteId}
-            onChange={(e) =>
-              setSelectedAthleteId(e.target.value ? parseInt(e.target.value) : "")
-            }
+            onChange={(value) => setSelectedAthleteId(value === "" ? "" : (value as number))}
+            options={athleteOptions}
             disabled={!!athleteId}
-            className={`w-full px-3 py-2 bg-background border rounded-lg input-focus cursor-pointer ${
-              errors.athleteId ? "border-error" : "border-border"
-            } ${athleteId ? "opacity-60" : ""}`}
-          >
-            <option value="">Valitse urheilija</option>
-            {athletes.map(({ athlete }) => (
-              <option key={athlete.id} value={athlete.id}>
-                {athlete.firstName} {athlete.lastName}
-              </option>
-            ))}
-          </select>
+            className={`w-full ${errors.athleteId ? "border-error" : ""}`}
+          />
           {errors.athleteId && (
             <p className="mt-1 text-sm text-error">{errors.athleteId}</p>
           )}
@@ -298,40 +330,38 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
           >
             Laji <span className="text-error">*</span>
           </label>
-          <select
-            id="discipline"
+          <DisciplineSelect
             value={disciplineId}
-            onChange={(e) =>
-              setDisciplineId(e.target.value ? parseInt(e.target.value) : "")
-            }
-            className={`w-full px-3 py-2 bg-background border rounded-lg input-focus cursor-pointer ${
-              errors.disciplineId ? "border-error" : "border-border"
-            }`}
-          >
-            <option value="">Valitse laji</option>
-            {categoryOrder.map((category) => {
-              const categoryDisciplines = disciplines.filter(
-                (d) => d.category === category
-              );
-              return (
-                <optgroup key={category} label={categoryLabels[category]}>
-                  {categoryDisciplines.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.fullName}
-                    </option>
-                  ))}
-                </optgroup>
-              );
-            })}
-          </select>
+            onChange={setDisciplineId}
+            birthYear={selectedAthleteBirthYear}
+            date={date}
+            required
+            className={errors.disciplineId ? "border-error" : ""}
+          />
           {errors.disciplineId && (
             <p className="mt-1 text-sm text-error">{errors.disciplineId}</p>
           )}
         </div>
+
+        {/* Date */}
+        <div>
+          <label htmlFor="date" className="block text-sm font-medium mb-1.5">
+            Päivämäärä <span className="text-error">*</span>
+          </label>
+          <DatePicker
+            id="date"
+            value={date}
+            onChange={setDate}
+            error={!!errors.date}
+          />
+          {errors.date && (
+            <p className="mt-1 text-sm text-error">{errors.date}</p>
+          )}
+        </div>
       </div>
 
-      {/* Row 2: Result value and Date */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* Row 2: Result value, Result status, Wind/Equipment */}
+      <div className="grid grid-cols-3 gap-4">
         {/* Result value */}
         <div>
           <label htmlFor="value" className="block text-sm font-medium mb-1.5">
@@ -362,18 +392,12 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
                 error={!!errors.value}
               />
             )}
-            {/* OE/KE/SE indicators - only show when result value is actually entered */}
+            {/* OE/KE/SE indicators */}
             {selectedDiscipline && statusRequiresValue && resultValue !== null && resultValue > 0 && (potentialBests.isPB || potentialBests.isSB || isNationalRecord) && (
               <div className="flex gap-1 mt-1">
-                {potentialBests.isPB && (
-                  <span className="badge-pb">OE!</span>
-                )}
-                {potentialBests.isSB && (
-                  <span className="badge-sb">KE!</span>
-                )}
-                {isNationalRecord && (
-                  <span className="badge-nr">SE</span>
-                )}
+                {potentialBests.isPB && <span className="badge-pb">OE!</span>}
+                {potentialBests.isSB && <span className="badge-sb">KE!</span>}
+                {isNationalRecord && <span className="badge-nr">SE</span>}
               </div>
             )}
           </div>
@@ -382,25 +406,89 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
           )}
         </div>
 
-        {/* Date */}
+        {/* Result Status */}
         <div>
-          <label htmlFor="date" className="block text-sm font-medium mb-1.5">
-            Päivämäärä <span className="text-error">*</span>
+          <label htmlFor="status" className="block text-sm font-medium mb-1.5">
+            Tila
           </label>
-          <DatePicker
-            id="date"
-            value={date}
-            onChange={setDate}
-            error={!!errors.date}
+          <FilterSelect
+            value={resultStatus}
+            onChange={(value) => setResultStatus(value as ResultStatus)}
+            options={statusOptions}
+            className="w-full"
           />
-          {errors.date && (
-            <p className="mt-1 text-sm text-error">{errors.date}</p>
+        </div>
+
+        {/* Wind field (conditional) or Equipment/Hurdle */}
+        <div>
+          {showWindField ? (
+            <>
+              <label htmlFor="wind" className="block text-sm font-medium mb-1.5">
+                Tuuli (m/s)
+              </label>
+              <input
+                type="text"
+                id="wind"
+                value={wind}
+                onChange={(e) => setWind(e.target.value)}
+                placeholder="esim. +1.8"
+                className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
+              />
+            </>
+          ) : isThrowDiscipline && equipmentType ? (
+            <>
+              <label htmlFor="equipmentWeight" className="block text-sm font-medium mb-1.5">
+                Välineen paino
+              </label>
+              <FilterSelect
+                value={equipmentWeight}
+                onChange={(value) => setEquipmentWeight(value === "" ? "" : (value as number))}
+                options={equipmentWeightOptions}
+                className="w-full"
+              />
+            </>
+          ) : isHurdleDiscipline ? (
+            <>
+              <label htmlFor="hurdleHeight" className="block text-sm font-medium mb-1.5">
+                Aidan korkeus
+              </label>
+              <FilterSelect
+                value={hurdleHeight}
+                onChange={(value) => setHurdleHeight(value === "" ? "" : (value as number))}
+                options={hurdleHeightOptions}
+                className="w-full"
+              />
+            </>
+          ) : (
+            <>
+              <label className="block text-sm font-medium mb-1.5 text-transparent">-</label>
+              <div className="h-[42px]" />
+            </>
           )}
         </div>
       </div>
 
-      {/* Row 3: Result type and Location */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* Row 3: Hurdle spacing (if hurdle discipline) */}
+      {isHurdleDiscipline && (
+        <div className="grid grid-cols-3 gap-4">
+          <div className="col-start-3">
+            <label htmlFor="hurdleSpacing" className="block text-sm font-medium mb-1.5">
+              Aitaväli (m)
+            </label>
+            <input
+              type="text"
+              id="hurdleSpacing"
+              value={hurdleSpacing}
+              onChange={(e) => setHurdleSpacing(e.target.value)}
+              placeholder="esim. 8.0"
+              className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Row 4: Type, Location, Placement/empty */}
+      <div className="grid grid-cols-3 gap-4">
         {/* Result type */}
         <div>
           <label className="block text-sm font-medium mb-1.5">Tyyppi</label>
@@ -444,205 +532,97 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
             className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
           />
         </div>
-      </div>
 
-      {/* Competition-only fields */}
-      {resultType === "competition" && (
-        <>
-          {/* Row 4: Competition name (full width) */}
-          <AutocompleteInput
-            id="competitionName"
-            value={competitionName}
-            onChange={setCompetitionName}
-            suggestions={uniqueCompetitionNames}
-            label="Kilpailun nimi"
-            required
-            placeholder="esim. Tampereen aluemestaruus"
-            error={errors.competitionName}
-          />
-
-          {/* Row 5: Competition level and Placement */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Competition level */}
-            <div>
-              <label
-                htmlFor="competitionLevel"
-                className="block text-sm font-medium mb-1.5"
-              >
-                Kilpailutaso
-              </label>
-              <select
-                id="competitionLevel"
-                value={competitionLevel}
-                onChange={(e) => setCompetitionLevel(e.target.value as CompetitionLevel | "")}
-                className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus cursor-pointer"
-              >
-                <option value="">Valitse taso</option>
-                {COMPETITION_LEVEL_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Placement */}
-            <div>
-              <label htmlFor="placement" className="block text-sm font-medium mb-1.5">
-                Sijoitus
-              </label>
-              <input
-                type="number"
-                id="placement"
-                value={placement}
-                onChange={(e) =>
-                  setPlacement(e.target.value ? parseInt(e.target.value) : "")
-                }
-                min={1}
-                placeholder={statusRequiresValue ? "esim. 1" : "-"}
-                disabled={!statusRequiresValue}
-                className={`w-full px-3 py-2 bg-background border border-border rounded-lg input-focus ${
-                  !statusRequiresValue ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-              />
-            </div>
-          </div>
-        </>
-      )}
-
-      {/* Result Status */}
-      <div>
-        <label className="block text-sm font-medium mb-1.5">Tuloksen tila</label>
-        <div className="flex flex-wrap gap-3 h-auto min-h-[42px] items-center">
-          {RESULT_STATUSES.map((status) => (
-            <label key={status.value} className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="resultStatus"
-                value={status.value}
-                checked={resultStatus === status.value}
-                onChange={() => setResultStatus(status.value as ResultStatus)}
-                className="w-4 h-4 text-primary focus:ring-primary"
-              />
-              <span className={resultStatus !== "valid" && status.value === resultStatus ? "text-muted-foreground" : ""}>
-                {status.label}
-              </span>
+        {/* Placement (competition only) */}
+        {resultType === "competition" ? (
+          <div>
+            <label htmlFor="placement" className="block text-sm font-medium mb-1.5">
+              Sijoitus
             </label>
-          ))}
-        </div>
+            <input
+              type="number"
+              id="placement"
+              value={placement}
+              onChange={(e) =>
+                setPlacement(e.target.value ? parseInt(e.target.value) : "")
+              }
+              min={1}
+              placeholder={statusRequiresValue ? "esim. 1" : "-"}
+              disabled={!statusRequiresValue}
+              className={`w-full px-3 py-2 bg-background border border-border rounded-lg input-focus ${
+                !statusRequiresValue ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            />
+          </div>
+        ) : (
+          <div />
+        )}
       </div>
 
-      {/* Conditional fields based on discipline */}
-      {(showWindField || isThrowDiscipline || isHurdleDiscipline) && (
-        <div className="grid grid-cols-2 gap-4">
-          {/* Wind field for sprints, hurdles, jumps */}
-          {showWindField && (
-            <div>
-              <label htmlFor="wind" className="block text-sm font-medium mb-1.5">
-                Tuuli (m/s)
-              </label>
-              <input
-                type="text"
-                id="wind"
-                value={wind}
-                onChange={(e) => setWind(e.target.value)}
-                placeholder="esim. +1.8 tai -0.5"
-                className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
-              />
-              <p className="mt-1 text-xs text-muted-foreground">Valinnainen. Myötätuuli +, vastatuuli -</p>
-            </div>
-          )}
+      {/* Competition-only fields: Name and Level */}
+      {resultType === "competition" && (
+        <div className="grid grid-cols-3 gap-4">
+          {/* Competition name - spans 2 columns */}
+          <div className="col-span-2">
+            <AutocompleteInput
+              id="competitionName"
+              value={competitionName}
+              onChange={setCompetitionName}
+              suggestions={uniqueCompetitionNames}
+              label="Kilpailun nimi"
+              required
+              placeholder="esim. Tampereen aluemestaruus"
+              error={errors.competitionName}
+            />
+          </div>
 
-          {/* Equipment weight for throws */}
-          {isThrowDiscipline && equipmentType && (
-            <div>
-              <label htmlFor="equipmentWeight" className="block text-sm font-medium mb-1.5">
-                Välineen paino
-              </label>
-              <select
-                id="equipmentWeight"
-                value={equipmentWeight}
-                onChange={(e) => setEquipmentWeight(e.target.value ? parseFloat(e.target.value) : "")}
-                className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus cursor-pointer"
-              >
-                <option value="">Valitse paino</option>
-                {availableWeights.map((weight) => (
-                  <option key={weight} value={weight}>
-                    {equipmentType === "keihäs" ? `${weight} g` : `${weight} kg`}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Hurdle height */}
-          {isHurdleDiscipline && (
-            <div>
-              <label htmlFor="hurdleHeight" className="block text-sm font-medium mb-1.5">
-                Aidan korkeus
-              </label>
-              <select
-                id="hurdleHeight"
-                value={hurdleHeight}
-                onChange={(e) => setHurdleHeight(e.target.value ? parseInt(e.target.value) : "")}
-                className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus cursor-pointer"
-              >
-                <option value="">Valitse korkeus</option>
-                {HURDLE_HEIGHTS.map((height) => (
-                  <option key={height} value={height}>
-                    {height} cm
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          {/* Hurdle spacing (optional) */}
-          {isHurdleDiscipline && (
-            <div>
-              <label htmlFor="hurdleSpacing" className="block text-sm font-medium mb-1.5">
-                Aitaväli (m)
-              </label>
-              <input
-                type="text"
-                id="hurdleSpacing"
-                value={hurdleSpacing}
-                onChange={(e) => setHurdleSpacing(e.target.value)}
-                placeholder="esim. 8.0"
-                className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
-              />
-              <p className="mt-1 text-xs text-muted-foreground">Valinnainen</p>
-            </div>
-          )}
+          {/* Competition level */}
+          <div>
+            <label
+              htmlFor="competitionLevel"
+              className="block text-sm font-medium mb-1.5"
+            >
+              Kilpailutaso
+            </label>
+            <FilterSelect
+              value={competitionLevel}
+              onChange={(value) => setCompetitionLevel(value as CompetitionLevel | "")}
+              options={competitionLevelOptions}
+              className="w-full"
+            />
+          </div>
         </div>
       )}
 
-      {/* Notes (full width) */}
-      <div>
-        <label htmlFor="notes" className="block text-sm font-medium mb-1.5">
-          Muistiinpanot
-        </label>
-        <input
-          type="text"
-          id="notes"
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          placeholder="Valinnainen lisätieto..."
-          className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
-        />
-      </div>
-
-      {/* National Record checkbox */}
-      <div className="flex items-center gap-3">
-        <label className="flex items-center gap-2 cursor-pointer">
+      {/* Row: Notes and SE checkbox */}
+      <div className="grid grid-cols-3 gap-4">
+        {/* Notes - spans 2 columns */}
+        <div className="col-span-2">
+          <label htmlFor="notes" className="block text-sm font-medium mb-1.5">
+            Muistiinpanot
+          </label>
           <input
-            type="checkbox"
-            checked={isNationalRecord}
-            onChange={(e) => setIsNationalRecord(e.target.checked)}
-            className="w-4 h-4 text-primary focus:ring-primary rounded"
+            type="text"
+            id="notes"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Valinnainen lisätieto..."
+            className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
           />
-          <span className="text-sm font-medium">Suomen ennätys (SE)</span>
-        </label>
+        </div>
+
+        {/* National Record checkbox */}
+        <div className="flex items-end pb-2">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isNationalRecord}
+              onChange={(e) => setIsNationalRecord(e.target.checked)}
+              className="w-4 h-4 text-primary focus:ring-primary rounded"
+            />
+            <span className="text-sm font-medium">Suomen ennätys (SE)</span>
+          </label>
+        </div>
       </div>
 
       {/* Buttons */}

@@ -1,10 +1,13 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { ImagePlus, X, Loader2, ChevronDown } from "lucide-react";
 import { open } from "@tauri-apps/plugin-dialog";
 import { invoke } from "@tauri-apps/api/core";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { Dialog } from "../ui/Dialog";
 import { toast } from "../ui/Toast";
+import { FilterSelect, type FilterOption } from "../ui/FilterSelect";
+import { calculateDropdownPosition } from "../../hooks";
 import type { Athlete, Competition } from "../../types";
 
 interface AddPhotoDialogProps {
@@ -37,11 +40,28 @@ export function AddPhotoDialog({
 
   const competitionInputRef = useRef<HTMLInputElement>(null);
   const competitionDropdownRef = useRef<HTMLDivElement>(null);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+
+  // Calculate dropdown position when opening
+  useEffect(() => {
+    if (competitionDropdownOpen && competitionInputRef.current) {
+      setDropdownStyle(calculateDropdownPosition(competitionInputRef.current));
+    }
+  }, [competitionDropdownOpen]);
 
   // Filter competitions based on input
   const filteredCompetitions = competitions.filter((c) =>
     c.name.toLowerCase().includes(competitionName.toLowerCase())
   );
+
+  // Athlete options for FilterSelect
+  const athleteOptions: FilterOption[] = useMemo(() => [
+    { value: "", label: "Valitse urheilija" },
+    ...athletes.map((a) => ({
+      value: a.id,
+      label: `${a.firstName} ${a.lastName}`,
+    })),
+  ], [athletes]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -161,7 +181,7 @@ export function AddPhotoDialog({
   };
 
   return (
-    <Dialog open={isOpen} onClose={handleClose} title="Lisää kuva">
+    <Dialog open={isOpen} onClose={handleClose} title="Lisää kuva" maxWidth="2xl">
       <div className="space-y-4">
         {/* Photo selector */}
         <div>
@@ -173,7 +193,7 @@ export function AddPhotoDialog({
               <img
                 src={previewUrl}
                 alt="Esikatselu"
-                className="w-full max-h-64 object-contain rounded-lg bg-card"
+                className="w-full max-h-48 object-contain rounded-lg bg-card"
                 loading="eager"
               />
               <button
@@ -189,7 +209,7 @@ export function AddPhotoDialog({
           ) : (
             <button
               onClick={handleSelectFile}
-              className="w-full h-40 border-2 border-dashed border-border hover:border-[var(--accent)]/50 rounded-lg flex flex-col items-center justify-center gap-2 transition-colors cursor-pointer"
+              className="w-full h-32 border-2 border-dashed border-border hover:border-[var(--accent)]/50 rounded-lg flex flex-col items-center justify-center gap-2 transition-colors cursor-pointer"
             >
               <ImagePlus size={32} className="text-muted-foreground" />
               <span className="text-sm text-muted-foreground">
@@ -199,81 +219,78 @@ export function AddPhotoDialog({
           )}
         </div>
 
-        {/* Athlete selector */}
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">
-            Urheilija <span className="text-error">*</span>
-          </label>
-          <select
-            value={athleteId}
-            onChange={(e) => {
-              setAthleteId(e.target.value ? Number(e.target.value) : "");
-            }}
-            className="w-full bg-card border border-border rounded-lg px-4 py-2.5 text-sm input-focus cursor-pointer"
-            disabled={!!preselectedAthleteId}
-          >
-            <option value="">Valitse urheilija</option>
-            {athletes.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.firstName} {a.lastName}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Competition selector - combobox with free text */}
-        <div className="relative">
-          <label className="block text-sm font-medium text-foreground mb-2">
-            Kilpailu
-          </label>
-          <div className="relative">
-            <input
-              ref={competitionInputRef}
-              type="text"
-              value={competitionName}
-              onChange={(e) => handleCompetitionInputChange(e.target.value)}
-              onFocus={() => setCompetitionDropdownOpen(true)}
-              placeholder="Kirjoita tai valitse kilpailu"
-              autoComplete="off"
-              className="w-full bg-card border border-border rounded-lg px-4 py-2.5 text-sm input-focus pr-10"
-              disabled={!!preselectedCompetitionId}
+        {/* Row: Athlete + Competition */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* Athlete selector */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Urheilija <span className="text-error">*</span>
+            </label>
+            <FilterSelect
+              value={athleteId}
+              onChange={(value) => setAthleteId(value === "" ? "" : (value as number))}
+              options={athleteOptions}
+              disabled={!!preselectedAthleteId}
+              className="w-full"
             />
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setCompetitionDropdownOpen(!competitionDropdownOpen);
-              }}
-              className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground cursor-pointer"
-              disabled={!!preselectedCompetitionId}
-            >
-              <ChevronDown size={18} className={`transition-transform ${competitionDropdownOpen ? "rotate-180" : ""}`} />
-            </button>
           </div>
 
-          {/* Dropdown list */}
-          {competitionDropdownOpen && filteredCompetitions.length > 0 && (
-            <div
-              ref={competitionDropdownRef}
-              className="absolute z-50 w-full mt-1 bg-card border border-border rounded-lg shadow-lg max-h-48 overflow-y-auto"
-            >
-              {filteredCompetitions.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => handleSelectCompetition(c)}
-                  className={`w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors cursor-pointer ${
-                    competitionId === c.id ? "bg-muted text-foreground" : "text-muted-foreground"
-                  }`}
-                >
-                  {c.name}
-                </button>
-              ))}
+          {/* Competition selector - combobox with free text */}
+          <div className="relative">
+            <label className="block text-sm font-medium text-foreground mb-2">
+              Kilpailu
+            </label>
+            <div className="relative">
+              <input
+                ref={competitionInputRef}
+                type="text"
+                value={competitionName}
+                onChange={(e) => handleCompetitionInputChange(e.target.value)}
+                onFocus={() => setCompetitionDropdownOpen(true)}
+                placeholder="Kirjoita tai valitse kilpailu"
+                autoComplete="off"
+                className="w-full bg-card border border-border rounded-lg px-4 py-2.5 text-sm input-focus pr-10"
+                disabled={!!preselectedCompetitionId}
+              />
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCompetitionDropdownOpen(!competitionDropdownOpen);
+                }}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground cursor-pointer"
+                disabled={!!preselectedCompetitionId}
+              >
+                <ChevronDown size={18} className={`transition-transform ${competitionDropdownOpen ? "rotate-180" : ""}`} />
+              </button>
             </div>
-          )}
-          <p className="text-xs text-muted-foreground mt-1">
-            Voit valita olemassa olevan tai kirjoittaa uuden nimen
-          </p>
+
+            {/* Dropdown list - rendered as portal */}
+            {competitionDropdownOpen && filteredCompetitions.length > 0 && createPortal(
+              <div
+                ref={competitionDropdownRef}
+                style={dropdownStyle}
+                className="dropdown-menu"
+              >
+                {filteredCompetitions.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => handleSelectCompetition(c)}
+                    className={`w-full text-left px-4 py-2.5 text-sm hover:bg-muted transition-colors cursor-pointer ${
+                      competitionId === c.id ? "bg-muted text-foreground" : "text-muted-foreground"
+                    }`}
+                  >
+                    {c.name}
+                  </button>
+                ))}
+              </div>,
+              document.body
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              Voit valita olemassa olevan tai kirjoittaa uuden nimen
+            </p>
+          </div>
         </div>
 
         {/* Error message */}

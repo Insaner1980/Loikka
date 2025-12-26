@@ -6,7 +6,14 @@ export type DisciplineCategory =
   | "hurdles"
   | "jumps"
   | "throws"
-  | "combined";
+  | "combined"
+  | "walking";
+
+// Age categories for Finnish youth athletics
+export type AgeCategory =
+  | "T3" | "T4" | "T5" | "T6" | "T7" | "T8"
+  | "T9" | "T10" | "T11" | "T12" | "T13" | "T14" | "T15"
+  | "N17" | "N19" | "N22" | "N";
 
 // Measurement units
 export type MeasurementUnit = "time" | "distance";

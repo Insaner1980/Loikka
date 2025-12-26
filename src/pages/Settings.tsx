@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { Download, Upload } from "lucide-react";
-import { SettingsSection, GoogleDriveSettings } from "../components/settings";
+import { Download, Upload, HelpCircle } from "lucide-react";
+import { SettingsSection, GoogleDriveSettings, HelpPanel } from "../components/settings";
 import { toast } from "../components/ui";
 import { exportData, importData } from "../lib";
 
 export function Settings() {
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -79,7 +80,19 @@ export function Settings() {
 
         {/* Google Drive section */}
         <GoogleDriveSettings />
+
+        {/* Help button */}
+        <button
+          onClick={() => setIsHelpOpen(true)}
+          className="w-full flex items-center gap-3 px-4 py-3 bg-card border border-border-subtle rounded-lg hover:border-border-hover transition-colors duration-150 cursor-pointer"
+        >
+          <HelpCircle size={20} className="text-muted-foreground" />
+          <span className="font-medium">Käyttöohje</span>
+        </button>
       </div>
+
+      {/* Help Panel */}
+      <HelpPanel open={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
     </div>
   );
 }

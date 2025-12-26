@@ -2,10 +2,11 @@ import { useState, useEffect, useMemo } from "react";
 import { BarChart3 } from "lucide-react";
 import { useResultStore } from "../stores/useResultStore";
 import { useAthleteStore } from "../stores/useAthleteStore";
-import { getDisciplineById, categoryLabels, categoryOrder } from "../data/disciplines";
+import { getDisciplineById } from "../data/disciplines";
 import { ProgressChart } from "../components/statistics/ProgressChart";
 import { SeasonStats } from "../components/statistics/SeasonStats";
 import { ComparisonChart } from "../components/statistics/ComparisonChart";
+import { DisciplineFilterSelect, FilterSelect, type FilterOption } from "../components/ui";
 import { YEAR_RANGE } from "../lib/constants";
 
 export function Statistics() {
@@ -79,6 +80,19 @@ export function Statistics() {
     return years;
   }, []);
 
+  // Filter options for FilterSelect components
+  const athleteOptions: FilterOption[] = useMemo(() => [
+    { value: "", label: "Valitse urheilija" },
+    ...athletes.map(({ athlete }) => ({
+      value: athlete.id,
+      label: `${athlete.firstName} ${athlete.lastName}`,
+    })),
+  ], [athletes]);
+
+  const yearFilterOptions: FilterOption[] = useMemo(() =>
+    yearOptions.map((y) => ({ value: y, label: `Kausi ${y}` })),
+  [yearOptions]);
+
   // Get data for charts
   // Note: Store functions are NOT in dependencies - they change every render
   const chartData = useMemo(() => {
@@ -122,71 +136,30 @@ export function Statistics() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
         {/* Athlete selector */}
-        <select
-          className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
+        <FilterSelect
           value={selectedAthleteId ?? ""}
-          onChange={(e) =>
-            setSelectedAthleteId(
-              e.target.value ? Number(e.target.value) : null
-            )
+          onChange={(value) =>
+            setSelectedAthleteId(value === "" ? null : (value as number))
           }
-        >
-          <option value="">Valitse urheilija</option>
-          {athletes.map(({ athlete }) => (
-            <option key={athlete.id} value={athlete.id}>
-              {athlete.firstName} {athlete.lastName}
-            </option>
-          ))}
-        </select>
+          options={athleteOptions}
+        />
 
         {/* Discipline selector */}
-        <select
-          className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
-          value={selectedDisciplineId ?? ""}
-          onChange={(e) =>
-            setSelectedDisciplineId(
-              e.target.value ? Number(e.target.value) : null
-            )
-          }
-          disabled={availableDisciplines.length === 0}
-        >
-          <option value="">Valitse laji</option>
-          {availableDisciplines.length > 0 ? (
-            categoryOrder.map((category) => {
-              const categoryDisciplines = availableDisciplines.filter(
-                (d) => d && d.category === category
-              );
-              if (categoryDisciplines.length === 0) return null;
-              return (
-                <optgroup key={category} label={categoryLabels[category]}>
-                  {categoryDisciplines.map(
-                    (discipline) =>
-                      discipline && (
-                        <option key={discipline.id} value={discipline.id}>
-                          {discipline.fullName}
-                        </option>
-                      )
-                  )}
-                </optgroup>
-              );
-            })
-          ) : (
-            <option disabled>Ei tuloksia</option>
-          )}
-        </select>
+        <DisciplineFilterSelect
+          value={selectedDisciplineId}
+          onChange={setSelectedDisciplineId}
+          disciplines={availableDisciplines.filter((d) => d !== undefined)}
+          placeholder="Valitse laji"
+          showPlaceholderOption={false}
+          minWidth={120}
+        />
 
         {/* Year selector */}
-        <select
-          className="bg-card border border-border rounded-md px-3 py-2 text-body input-focus cursor-pointer"
+        <FilterSelect
           value={selectedYear}
-          onChange={(e) => setSelectedYear(Number(e.target.value))}
-        >
-          {yearOptions.map((year) => (
-            <option key={year} value={year}>
-              Kausi {year}
-            </option>
-          ))}
-        </select>
+          onChange={(value) => setSelectedYear(value as number)}
+          options={yearFilterOptions}
+        />
       </div>
 
       {/* Content */}

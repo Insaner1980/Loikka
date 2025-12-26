@@ -6,6 +6,7 @@ import type { Athlete, NewAthlete } from "../../types";
 import { toAssetUrl } from "../../lib/formatters";
 import { ATHLETE_BIRTH_YEAR } from "../../lib/constants";
 import { toast } from "../ui/Toast";
+import { FilterSelect, type FilterOption } from "../ui/FilterSelect";
 
 interface AthleteFormProps {
   athlete?: Athlete;
@@ -21,10 +22,15 @@ interface FormErrors {
 }
 
 // Generate birth year options
-const birthYearOptions = Array.from(
+const birthYearValues = Array.from(
   { length: ATHLETE_BIRTH_YEAR.MAX - ATHLETE_BIRTH_YEAR.MIN + 1 },
   (_, i) => ATHLETE_BIRTH_YEAR.MAX - i
 );
+
+const birthYearOptions: FilterOption[] = [
+  { value: "", label: "Valitse vuosi" },
+  ...birthYearValues.map((year) => ({ value: year, label: String(year) })),
+];
 
 export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: AthleteFormProps) {
   const [firstName, setFirstName] = useState(athlete?.firstName || "");
@@ -155,9 +161,9 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+    <form onSubmit={handleSubmit} className="space-y-4">
       {/* Photo picker */}
-      <div className="flex justify-center">
+      <div className="flex justify-center pb-2">
         <div className="relative">
           <button
             type="button"
@@ -192,89 +198,85 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
         </div>
       </div>
 
-      {/* First name */}
-      <div>
-        <label
-          htmlFor="firstName"
-          className="block text-body font-medium text-muted-foreground mb-1.5"
-        >
-          Etunimi <span className="text-error">*</span>
-        </label>
-        <input
-          type="text"
-          id="firstName"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          className={`w-full px-3 py-2 text-sm bg-background border rounded-md input-focus ${
-            errors.firstName ? "border-error" : "border-border-subtle"
-          }`}
-          placeholder="Esim. Eemeli"
-        />
-        {errors.firstName && (
-          <p className="mt-1.5 text-xs text-error">{errors.firstName}</p>
-        )}
+      {/* Row 1: First name + Last name */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* First name */}
+        <div>
+          <label
+            htmlFor="firstName"
+            className="block text-body font-medium text-muted-foreground mb-1.5"
+          >
+            Etunimi <span className="text-error">*</span>
+          </label>
+          <input
+            type="text"
+            id="firstName"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            className={`w-full px-3 py-2 text-sm bg-background border rounded-md input-focus ${
+              errors.firstName ? "border-error" : "border-border-subtle"
+            }`}
+            placeholder="Esim. Eemeli"
+          />
+          {errors.firstName && (
+            <p className="mt-1.5 text-xs text-error">{errors.firstName}</p>
+          )}
+        </div>
+
+        {/* Last name */}
+        <div>
+          <label htmlFor="lastName" className="block text-body font-medium text-muted-foreground mb-1.5">
+            Sukunimi <span className="text-error">*</span>
+          </label>
+          <input
+            type="text"
+            id="lastName"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            className={`w-full px-3 py-2 text-sm bg-background border rounded-md input-focus ${
+              errors.lastName ? "border-error" : "border-border-subtle"
+            }`}
+            placeholder="Esim. Virtanen"
+          />
+          {errors.lastName && (
+            <p className="mt-1.5 text-xs text-error">{errors.lastName}</p>
+          )}
+        </div>
       </div>
 
-      {/* Last name */}
-      <div>
-        <label htmlFor="lastName" className="block text-body font-medium text-muted-foreground mb-1.5">
-          Sukunimi <span className="text-error">*</span>
-        </label>
-        <input
-          type="text"
-          id="lastName"
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          className={`w-full px-3 py-2 text-sm bg-background border rounded-md input-focus ${
-            errors.lastName ? "border-error" : "border-border-subtle"
-          }`}
-          placeholder="Esim. Virtanen"
-        />
-        {errors.lastName && (
-          <p className="mt-1.5 text-xs text-error">{errors.lastName}</p>
-        )}
-      </div>
+      {/* Row 2: Birth year + Club name */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* Birth year */}
+        <div>
+          <label htmlFor="birthYear" className="block text-body font-medium text-muted-foreground mb-1.5">
+            Syntymävuosi <span className="text-error">*</span>
+          </label>
+          <FilterSelect
+            value={birthYear}
+            onChange={(value) => setBirthYear(value === "" ? "" : (value as number))}
+            options={birthYearOptions}
+            className={`w-full ${errors.birthYear ? "border-error" : ""}`}
+          />
+          {errors.birthYear && (
+            <p className="mt-1.5 text-xs text-error">{errors.birthYear}</p>
+          )}
+        </div>
 
-      {/* Birth year */}
-      <div>
-        <label htmlFor="birthYear" className="block text-body font-medium text-muted-foreground mb-1.5">
-          Syntymävuosi <span className="text-error">*</span>
-        </label>
-        <select
-          id="birthYear"
-          value={birthYear}
-          onChange={(e) =>
-            setBirthYear(e.target.value ? parseInt(e.target.value) : "")
-          }
-          className={`w-full px-3 py-2 text-sm bg-background border rounded-md input-focus cursor-pointer ${
-            errors.birthYear ? "border-error" : "border-border-subtle"
-          }`}
-        >
-          <option value="">Valitse vuosi</option>
-          {birthYearOptions.map((year) => (
-            <option key={year} value={year}>
-              {year}
-            </option>
-          ))}
-        </select>
-        {errors.birthYear && (
-          <p className="mt-1.5 text-xs text-error">{errors.birthYear}</p>
-        )}
-      </div>
-
-      {/* Club name */}
-      <div>
-        <label htmlFor="clubName" className="block text-body font-medium text-muted-foreground mb-1.5">
-          Seura
-        </label>
-        <input
-          type="text"
-          id="clubName"
-          value={clubName}
-          onChange={(e) => setClubName(e.target.value)}
-          className="w-full px-3 py-2 text-sm bg-background border border-border-subtle rounded-md input-focus"
-          placeholder="Esim. Tampereen Pyrintö"
-        />
+        {/* Club name */}
+        <div>
+          <label htmlFor="clubName" className="block text-body font-medium text-muted-foreground mb-1.5">
+            Seura
+          </label>
+          <input
+            type="text"
+            id="clubName"
+            value={clubName}
+            onChange={(e) => setClubName(e.target.value)}
+            autoComplete="off"
+            className="w-full px-3 py-2 text-sm bg-background border border-border-subtle rounded-md input-focus"
+            placeholder="Esim. Tampereen Pyrintö"
+          />
+        </div>
       </div>
 
       {/* Buttons */}

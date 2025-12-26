@@ -4,7 +4,7 @@ Tämä dokumentti määrittelee Loikka-sovelluksen käyttöliittymän suunnittel
 
 ## Design Philosophy
 
-**Premium minimalistinen teema** - Tukee sekä tummaa että vaaleaa teemaa.
+**Premium minimalistinen teema** - Vain tumma teema.
 
 Periaatteet:
 - Hillityt värit, vahva kontrasti tekstissä
@@ -144,55 +144,6 @@ export const TOAST = {
 | `--overlay-bg` | `rgba(0, 0, 0, 0.8)` | Dialog backdrop |
 | `--overlay-light` | `rgba(0, 0, 0, 0.5)` | Kevyempi overlay |
 | `--overlay-gradient` | `linear-gradient(to top, rgba(0,0,0,0.8), transparent)` | Kuvan päällä oleva gradient |
-
----
-
-### Light Theme
-
-#### Taustat
-
-| Muuttuja | Arvo |
-|----------|------|
-| `--bg-base` | `#FFFFFF` |
-| `--bg-surface` | `#F9FAFB` |
-| `--bg-elevated` | `#F3F4F6` |
-| `--bg-hover` | `#E5E7EB` |
-
-#### Reunat
-
-| Muuttuja | Arvo |
-|----------|------|
-| `--border-subtle` | `rgba(0, 0, 0, 0.04)` |
-| `--border-default` | `rgba(0, 0, 0, 0.08)` |
-| `--border-hover` | `rgba(0, 0, 0, 0.15)` |
-
-#### Teksti
-
-| Muuttuja | Arvo |
-|----------|------|
-| `--text-primary` | `#111827` |
-| `--text-secondary` | `#6B7280` |
-| `--text-muted` | `#9CA3AF` |
-| `--text-placeholder` | `#9CA3AF` |
-| `--text-initials` | `#D1D5DB` |
-
-#### Korostusväri
-
-| Muuttuja | Arvo |
-|----------|------|
-| `--accent` | `#2563EB` |
-| `--accent-hover` | `#1D4ED8` |
-| `--accent-muted` | `rgba(37, 99, 235, 0.1)` |
-| `--btn-primary-text` | `#FFFFFF` |
-
-#### Tilavärit (Light)
-
-| Muuttuja | Arvo |
-|----------|------|
-| `--status-success` | `#059669` |
-| `--status-warning` | `#D97706` |
-| `--status-orange` | `#EA580C` |
-| `--status-error` | `#DC2626` |
 
 ---
 
@@ -396,6 +347,43 @@ Kaikki fontikoot on määritelty `@theme`-lohkossa `index.css`:ssä:
   background: rgba(128, 128, 128, 0.1);
 }
 ```
+
+#### Dropdown Menu (`.dropdown-menu`)
+
+Keskitetty CSS-luokka kaikille portal-pohjaisille pudotusvalikoille:
+
+```css
+.dropdown-menu {
+  z-index: 10001;
+  overflow-y: auto;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: fade-in 0.2s ease-out forwards;
+}
+```
+
+Käyttö:
+```tsx
+{isOpen && createPortal(
+  <div
+    ref={dropdownRef}
+    style={dropdownStyle}
+    className="dropdown-menu"
+  >
+    {/* Options */}
+  </div>,
+  document.body
+)}
+```
+
+Käytetään komponenteissa:
+- `DisciplineSelect` - Lajivalitsin (lomakkeet)
+- `DisciplineFilterSelect` - Lajin suodatusvalitsin
+- `FilterSelect` - Yleinen suodatusvalitsin
+- `AutocompleteInput` - Autocomplete-ehdotukset
+- `AddPhotoDialog` - Kilpailuvalitsin
 
 ---
 
@@ -673,11 +661,13 @@ Ajastus (vakioista `TOAST`):
 
 ---
 
-### SegmentedControl (Teemavalitsin)
+### SegmentedControl
 
-- Käytetään Asetukset-sivulla teeman valintaan
+- Yleiskäyttöinen segmentoitu valitsin
 - Aktiivinen: `bg-[var(--accent)] text-[var(--btn-primary-text)]`
 - Inaktiivinen: `text-muted-foreground hover:text-foreground`
+
+**Huom:** Teemavalitsin on poistettu (vain tumma teema käytössä).
 
 ---
 
@@ -772,21 +762,11 @@ style={{ animationDelay: `${index * 50}ms` }}
 
 ---
 
-## Teeman vaihtaminen
+## Teema
 
-Teema tallennetaan `localStorage`-avaimen `loikka-theme` alle.
+Sovellus käyttää ainoastaan tummaa teemaa. Vaalea teema on poistettu.
 
-```typescript
-// useTheme hook
-const { theme, setTheme } = useTheme();
-
-// Arvot: 'light' | 'dark'
-// Oletus: 'dark'
-```
-
-CSS-luokka `<html>` -elementissä:
-- Dark: `class="dark"` tai ei luokkaa
-- Light: `class="light"`
+CSS-luokka `<html>` -elementissä: `class="dark"`
 
 ---
 

@@ -346,9 +346,32 @@ export const useMyStore = create<MyStore>((set, get) => ({
 | `useNavigationShortcuts` | Navigointipikanäppäimet (1-8), kutsutaan Layout:ssa |
 | `useAddShortcut` | Lisää uusi -pikanäppäin (Ctrl+U), sivukohtainen |
 | `useEscapeKey` | Esc-näppäin (peruuta/sulje), ehdollinen aktivointi |
-| `useCalendarKeyboard` | Kalenterin näppäinohjaus (←/→ kuukaudet, T tänään) |
+| `useCalendarKeyboard` | Kalenterin näppäinohjaus (←/→ kuukaudet) |
 | `useTheme` | Teeman hallinta (vain dark) |
 | `useAthleteData` | Urheilijan tulokset, ennätykset, mitalit, tavoitteet |
+| `useDropdownPosition` | Pudotusvalikon sijoittelu dialog/ikkunan rajojen sisään |
+| `useBackgroundDeselect` | Valintatilan poisto taustaa klikkaamalla |
+
+### UI-komponentit (ui/)
+
+| Komponentti | Kuvaus |
+|-------------|--------|
+| `Dialog` | Modaalinen dialog-ikkuna |
+| `Toast` | Ilmoitusviestit |
+| `DatePicker` | Päivämäärävalitsin |
+| `DisciplineSelect` | Lajivalitsin lomakkeissa (ikäluokkasuodatus) |
+| `DisciplineFilterSelect` | Lajin suodatusvalitsin (kategorioittain) |
+| `FilterSelect` | Yleinen suodatusvalitsin |
+| `SlidePanel` | Sivusta liukuva paneeli |
+
+### Keskitetyt CSS-luokat
+
+| Luokka | Käyttö |
+|--------|--------|
+| `.btn-primary` | Primary-painike (sininen) |
+| `.btn-secondary` | Secondary-painike (läpinäkyvä) |
+| `.input-focus` | Input-fokustyyli |
+| `.dropdown-menu` | Portal-pohjaiset pudotusvalikot |
 
 ### Muotoilufunktiot (formatters.ts)
 
@@ -419,16 +442,18 @@ className="hover:bg-card-hover transition-colors duration-150"
 | Tiedosto | Kuvaus |
 |----------|--------|
 | `src/types/index.ts` | Kaikki TypeScript-tyypit |
-| `src/data/disciplines.ts` | Lajitiedot ja kategorialabelit |
+| `src/data/disciplines.ts` | Lajitiedot, ikäluokkasuodatus, kategorialabelit |
 | `src/lib/constants.ts` | Sovelluksen vakiot |
 | `src/lib/formatters.ts` | Aika, matka, päivämäärä, asset URL, nimikirjaimet, päivälaskuri |
 | `src/lib/googleDrive.ts` | Google Drive -autentikointi ja API |
-| `src/index.css` | Tailwind v4 -konfiguraatio ja teemat |
+| `src/hooks/useDropdownPosition.ts` | Pudotusvalikoiden sijoitteluhook |
+| `src/index.css` | Tailwind v4 -konfiguraatio, teemat, keskitetyt CSS-luokat |
 | `src-tauri/src/db/schema.sql` | Tietokantaskeema |
 | `src-tauri/src/db/seed_disciplines.sql` | Lajien seed-data |
 | `src-tauri/src/commands/*.rs` | Tauri-komennot |
 | `src-tauri/capabilities/default.json` | Tauri-oikeudet ja -rajoitukset |
-| `docs/UI_SPEC.md` | Käyttöliittymän spesifikaatio |
+| `UI_SPEC.md` | Käyttöliittymän spesifikaatio |
+| `docs/DISCIPLINES_BY_AGE.md` | Lajit ikäluokittain -dokumentaatio |
 
 ## Toteutetut ominaisuudet
 
@@ -444,6 +469,7 @@ className="hover:bg-card-hover transition-colors duration-150"
 - [x] Oma otsikkopalkki (decorations: false)
 - [x] Tumma teema
 - [x] Tietojen vienti/tuonti (JSON)
+- [x] Lajien ikäluokkasuodatus (getDisciplinesForAthlete)
 
 ## Keskeneräiset ominaisuudet
 

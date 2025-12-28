@@ -126,7 +126,7 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
       <div>
         <label
           htmlFor="athlete"
-          className="block text-sm font-medium mb-1.5"
+          className="block text-body font-medium mb-1.5"
         >
           Urheilija <span className="text-error">*</span>
         </label>
@@ -138,7 +138,7 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
           className={`w-full ${errors.athleteId ? "border-error" : ""}`}
         />
         {errors.athleteId && (
-          <p className="mt-1 text-sm text-error">{errors.athleteId}</p>
+          <p className="mt-1 text-body text-error">{errors.athleteId}</p>
         )}
       </div>
 
@@ -146,7 +146,7 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
       <div>
         <label
           htmlFor="discipline"
-          className="block text-sm font-medium mb-1.5"
+          className="block text-body font-medium mb-1.5"
         >
           Laji <span className="text-error">*</span>
         </label>
@@ -158,7 +158,7 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
           className={errors.disciplineId ? "border-error" : ""}
         />
         {errors.disciplineId && (
-          <p className="mt-1 text-sm text-error">{errors.disciplineId}</p>
+          <p className="mt-1 text-body text-error">{errors.disciplineId}</p>
         )}
       </div>
 
@@ -166,12 +166,12 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
       <div>
         <label
           htmlFor="targetValue"
-          className="block text-sm font-medium mb-1.5"
+          className="block text-body font-medium mb-1.5"
         >
           {getValueLabel()} <span className="text-error">*</span>
         </label>
         {!selectedDiscipline ? (
-          <p className="text-sm text-muted-foreground py-2">
+          <p className="text-body text-muted-foreground py-2">
             Valitse ensin laji
           </p>
         ) : selectedDiscipline.unit === "time" ? (
@@ -191,7 +191,7 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
           />
         )}
         {errors.targetValue && (
-          <p className="mt-1 text-sm text-error">{errors.targetValue}</p>
+          <p className="mt-1 text-body text-error">{errors.targetValue}</p>
         )}
       </div>
 
@@ -199,7 +199,7 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
       <div>
         <label
           htmlFor="targetDate"
-          className="block text-sm font-medium mb-1.5"
+          className="block text-body font-medium mb-1.5"
         >
           Tavoitepäivä
         </label>
@@ -209,7 +209,7 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
           onChange={setTargetDate}
           min={new Date().toISOString().split("T")[0]}
         />
-        <p className="mt-1 text-xs text-muted-foreground">
+        <p className="mt-1 text-caption text-muted-foreground">
           Valinnainen.
         </p>
       </div>

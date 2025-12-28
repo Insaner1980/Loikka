@@ -54,7 +54,7 @@ export function EmptyState({
   return (
     <div className="flex flex-col items-center justify-center py-16 px-4 text-center animate-fade-in">
       <Icon size={48} className="text-icon-muted mb-5" />
-      <h2 className="text-sm font-medium text-muted-foreground mb-1.5">{title}</h2>
+      <h2 className="text-body font-medium text-muted-foreground mb-1.5">{title}</h2>
       <p className="text-body text-tertiary mb-6 max-w-md">{description}</p>
       {action && (
         <button

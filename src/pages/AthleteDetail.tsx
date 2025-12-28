@@ -296,7 +296,7 @@ export function AthleteDetail() {
         maxWidth="sm"
       >
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body text-muted-foreground">
             Haluatko varmasti poistaa tämän kuvan? Tätä toimintoa ei voi perua.
           </p>
           <div className="flex justify-end gap-2">

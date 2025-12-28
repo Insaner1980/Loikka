@@ -290,7 +290,7 @@ export function Calendar() {
             {upcomingCompetitions.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
                 <CalendarIcon size={48} className="mb-4 text-tertiary" />
-                <p className="text-sm font-medium">Ei tulevia kilpailuja</p>
+                <p className="text-body font-medium">Ei tulevia kilpailuja</p>
                 <p className="text-body text-tertiary mt-1">
                   Lisää ensimmäinen kilpailu painamalla yllä olevaa nappia
                 </p>
@@ -327,7 +327,7 @@ export function Calendar() {
             <div>
               {selectedDate ? (
                 <>
-                  <h3 className="text-sm font-medium mb-4 text-foreground">
+                  <h3 className="text-body font-medium mb-4 text-foreground">
                     {format(selectedDate, "EEEE d. MMMM yyyy", { locale: fi })}
                   </h3>
                   {selectedDateCompetitions.length === 0 ? (

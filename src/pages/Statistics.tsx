@@ -7,7 +7,6 @@ import { ProgressChart } from "../components/statistics/ProgressChart";
 import { SeasonStats } from "../components/statistics/SeasonStats";
 import { ComparisonChart } from "../components/statistics/ComparisonChart";
 import { DisciplineFilterSelect, FilterSelect, type FilterOption } from "../components/ui";
-import { YEAR_RANGE } from "../lib/constants";
 
 export function Statistics() {
   const {
@@ -24,9 +23,7 @@ export function Statistics() {
   const [selectedDisciplineId, setSelectedDisciplineId] = useState<
     number | null
   >(null);
-  const [selectedYear, setSelectedYear] = useState<number>(
-    new Date().getFullYear()
-  );
+  const [selectedYear, setSelectedYear] = useState<number | null>(null);
 
   // Data is fetched in Layout.tsx on app start
 
@@ -68,17 +65,35 @@ export function Statistics() {
     }
   }, [availableDisciplines, selectedDisciplineId]);
 
-  // Generate fixed year options from START_YEAR to next year
-  const yearOptions = useMemo(() => {
-    const currentYear = new Date().getFullYear();
-    const startYear = YEAR_RANGE.START_YEAR;
-    const endYear = currentYear + YEAR_RANGE.YEARS_AHEAD;
-    const years: number[] = [];
-    for (let y = endYear; y >= startYear; y--) {
-      years.push(y);
+  // Get years that have results for the selected athlete and discipline
+  const yearsWithResults = useMemo(() => {
+    if (selectedAthleteId === null) return [];
+
+    // Filter results by athlete and optionally discipline
+    let filteredResults = results.filter(
+      (r) =>
+        r.athleteId === selectedAthleteId &&
+        (r.status === "valid" || r.status === undefined || r.status === null)
+    );
+
+    if (selectedDisciplineId !== null) {
+      filteredResults = filteredResults.filter(
+        (r) => r.disciplineId === selectedDisciplineId
+      );
     }
-    return years;
-  }, []);
+
+    const years = new Set(filteredResults.map((r) => new Date(r.date).getFullYear()));
+    return Array.from(years).sort((a, b) => b - a); // Descending order
+  }, [results, selectedAthleteId, selectedDisciplineId]);
+
+  // Auto-select first year when available years change
+  useEffect(() => {
+    if (yearsWithResults.length > 0) {
+      if (selectedYear === null || !yearsWithResults.includes(selectedYear)) {
+        setSelectedYear(yearsWithResults[0]); // Select most recent year
+      }
+    }
+  }, [yearsWithResults, selectedYear]);
 
   // Filter options for FilterSelect components
   const athleteOptions: FilterOption[] = useMemo(() => [
@@ -90,8 +105,8 @@ export function Statistics() {
   ], [athletes]);
 
   const yearFilterOptions: FilterOption[] = useMemo(() =>
-    yearOptions.map((y) => ({ value: y, label: `Kausi ${y}` })),
-  [yearOptions]);
+    yearsWithResults.map((y) => ({ value: y, label: `Kausi ${y}` })),
+  [yearsWithResults]);
 
   // Get data for charts
   // Note: Store functions are NOT in dependencies - they change every render
@@ -101,7 +116,7 @@ export function Statistics() {
   }, [selectedAthleteId, selectedDisciplineId, results]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const seasonStats = useMemo(() => {
-    if (selectedAthleteId === null || selectedDisciplineId === null) {
+    if (selectedAthleteId === null || selectedDisciplineId === null || selectedYear === null) {
       return {
         bestResult: null,
         averageResult: null,
@@ -154,12 +169,14 @@ export function Statistics() {
           minWidth={120}
         />
 
-        {/* Year selector */}
-        <FilterSelect
-          value={selectedYear}
-          onChange={(value) => setSelectedYear(value as number)}
-          options={yearFilterOptions}
-        />
+        {/* Year selector - only show if there are years with results */}
+        {yearFilterOptions.length > 0 && (
+          <FilterSelect
+            value={selectedYear ?? ""}
+            onChange={(value) => setSelectedYear(value as number)}
+            options={yearFilterOptions}
+          />
+        )}
       </div>
 
       {/* Content */}
@@ -167,8 +184,8 @@ export function Statistics() {
         {!hasData ? (
           <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
             <BarChart3 size={48} className="mb-4 opacity-50" />
-            <p className="text-lg font-medium">Ei tilastoja näytettäväksi</p>
-            <p className="text-sm">
+            <p className="text-title font-medium">Ei tilastoja näytettäväksi</p>
+            <p className="text-body">
               {athletes.length === 0
                 ? "Lisää urheilija aloittaaksesi"
                 : selectedAthleteId === null
@@ -186,7 +203,7 @@ export function Statistics() {
             )}
 
             {/* Season Stats */}
-            {selectedDiscipline && (
+            {selectedDiscipline && selectedYear !== null && (
               <SeasonStats
                 stats={seasonStats}
                 discipline={selectedDiscipline}

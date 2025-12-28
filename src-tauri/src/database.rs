@@ -98,6 +98,18 @@ async fn run_migrations(pool: &DbPool) -> Result<(), String> {
         run_migration_v10(pool).await?;
     }
 
+    if current_version < 11 {
+        run_migration_v11(pool).await?;
+    }
+
+    if current_version < 12 {
+        run_migration_v12(pool).await?;
+    }
+
+    if current_version < 13 {
+        run_migration_v13(pool).await?;
+    }
+
     Ok(())
 }
 
@@ -450,6 +462,275 @@ async fn run_migration_v10(pool: &DbPool) -> Result<(), String> {
         .execute(pool)
         .await
         .map_err(|e| format!("Failed to record migration v10: {}", e))?;
+
+    Ok(())
+}
+
+async fn run_migration_v11(pool: &DbPool) -> Result<(), String> {
+    // Seed test data for development/testing
+    let seed = include_str!("db/seed_test_data.sql");
+
+    for statement in seed.split(';') {
+        let stmt = statement.trim();
+        if !stmt.is_empty() && !stmt.starts_with("--") {
+            // Skip if empty or comment-only
+            let clean_stmt = stmt.lines()
+                .filter(|line| !line.trim().starts_with("--"))
+                .collect::<Vec<_>>()
+                .join("\n");
+
+            if !clean_stmt.trim().is_empty() {
+                sqlx::query(&clean_stmt)
+                    .execute(pool)
+                    .await
+                    .map_err(|e| format!("Migration v11 failed: {} - SQL: {}", e, clean_stmt))?;
+            }
+        }
+    }
+
+    sqlx::query("INSERT INTO _migrations (version, description) VALUES (11, 'seed_test_data')")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Failed to record migration v11: {}", e))?;
+
+    Ok(())
+}
+
+async fn run_migration_v12(pool: &DbPool) -> Result<(), String> {
+    // Add custom_level_name column to results table
+    let has_results_custom_level: bool = sqlx::query_scalar(
+        "SELECT COUNT(*) > 0 FROM pragma_table_info('results') WHERE name = 'custom_level_name'"
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(|e| format!("Migration v12 failed checking custom_level_name column in results: {}", e))?;
+
+    if !has_results_custom_level {
+        sqlx::query("ALTER TABLE results ADD COLUMN custom_level_name TEXT")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v12 failed adding custom_level_name column to results: {}", e))?;
+    }
+
+    // Add custom_level_name column to competitions table
+    let has_competitions_custom_level: bool = sqlx::query_scalar(
+        "SELECT COUNT(*) > 0 FROM pragma_table_info('competitions') WHERE name = 'custom_level_name'"
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(|e| format!("Migration v12 failed checking custom_level_name column in competitions: {}", e))?;
+
+    if !has_competitions_custom_level {
+        sqlx::query("ALTER TABLE competitions ADD COLUMN custom_level_name TEXT")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v12 failed adding custom_level_name column to competitions: {}", e))?;
+    }
+
+    sqlx::query("INSERT INTO _migrations (version, description) VALUES (12, 'add_custom_level_name')")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Failed to record migration v12: {}", e))?;
+
+    Ok(())
+}
+
+async fn run_migration_v13(pool: &DbPool) -> Result<(), String> {
+    // Recreate results table with updated CHECK constraint that includes 'muu'
+    // SQLite doesn't support ALTER TABLE to modify CHECK constraints
+
+    // Check if results table exists (it might have been dropped in a partial migration)
+    let results_exists: bool = sqlx::query_scalar(
+        "SELECT COUNT(*) > 0 FROM sqlite_master WHERE type='table' AND name='results'"
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(|e| format!("Migration v13 failed checking if results exists: {}", e))?;
+
+    // Check if results_new already exists (from a partial migration)
+    let results_new_exists: bool = sqlx::query_scalar(
+        "SELECT COUNT(*) > 0 FROM sqlite_master WHERE type='table' AND name='results_new'"
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(|e| format!("Migration v13 failed checking if results_new exists: {}", e))?;
+
+    // Handle partial migration state: results_new exists but results doesn't
+    if results_new_exists && !results_exists {
+        // Just rename results_new to results
+        sqlx::query("ALTER TABLE results_new RENAME TO results")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v13 failed renaming results_new (recovery): {}", e))?;
+    } else if results_exists {
+        // Normal case: results exists, need to migrate
+
+        // Drop results_new if it exists from a failed attempt
+        if results_new_exists {
+            sqlx::query("DROP TABLE results_new")
+                .execute(pool)
+                .await
+                .map_err(|e| format!("Migration v13 failed dropping old results_new: {}", e))?;
+        }
+
+        // Step 1: Create new results table with correct CHECK constraint
+        sqlx::query(r#"
+            CREATE TABLE results_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                athlete_id INTEGER NOT NULL,
+                discipline_id INTEGER NOT NULL,
+                date TEXT NOT NULL,
+                value REAL NOT NULL,
+                type TEXT NOT NULL CHECK (type IN ('competition', 'training')),
+                competition_name TEXT,
+                competition_level TEXT CHECK (competition_level IS NULL OR competition_level IN ('seurakisat', 'koululaiskisat', 'seuran_sisaiset', 'seuraottelut', 'piirikisat', 'pm', 'hallikisat', 'aluekisat', 'pohjola_seuracup', 'sm', 'muu')),
+                custom_level_name TEXT,
+                location TEXT,
+                placement INTEGER,
+                notes TEXT,
+                is_personal_best INTEGER NOT NULL DEFAULT 0,
+                is_season_best INTEGER NOT NULL DEFAULT 0,
+                is_national_record INTEGER NOT NULL DEFAULT 0,
+                wind REAL,
+                status TEXT CHECK (status IS NULL OR status IN ('valid', 'nm', 'dns', 'dnf', 'dq')),
+                equipment_weight REAL,
+                hurdle_height INTEGER,
+                hurdle_spacing REAL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                FOREIGN KEY (athlete_id) REFERENCES athletes(id) ON DELETE CASCADE,
+                FOREIGN KEY (discipline_id) REFERENCES disciplines(id) ON DELETE RESTRICT
+            )
+        "#)
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Migration v13 failed creating results_new table: {}", e))?;
+
+        // Step 2: Copy data from old table to new table
+        sqlx::query(r#"
+            INSERT INTO results_new (id, athlete_id, discipline_id, date, value, type, competition_name, competition_level, custom_level_name, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing, created_at)
+            SELECT id, athlete_id, discipline_id, date, value, type, competition_name, competition_level, custom_level_name, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing, created_at
+            FROM results
+        "#)
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Migration v13 failed copying results data: {}", e))?;
+
+        // Step 3: Drop old table
+        sqlx::query("DROP TABLE results")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v13 failed dropping old results table: {}", e))?;
+
+        // Step 4: Rename new table
+        sqlx::query("ALTER TABLE results_new RENAME TO results")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v13 failed renaming results_new: {}", e))?;
+    }
+
+    // Recreate indexes (always do this to ensure they exist)
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_results_athlete ON results(athlete_id)")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Migration v13 failed creating idx_results_athlete: {}", e))?;
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_results_discipline ON results(discipline_id)")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Migration v13 failed creating idx_results_discipline: {}", e))?;
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_results_date ON results(date)")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Migration v13 failed creating idx_results_date: {}", e))?;
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_results_athlete_discipline ON results(athlete_id, discipline_id)")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Migration v13 failed creating idx_results_athlete_discipline: {}", e))?;
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_results_personal_best ON results(athlete_id, discipline_id, is_personal_best)")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Migration v13 failed creating idx_results_personal_best: {}", e))?;
+
+    // Now do the same for competitions table
+    let competitions_exists: bool = sqlx::query_scalar(
+        "SELECT COUNT(*) > 0 FROM sqlite_master WHERE type='table' AND name='competitions'"
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(|e| format!("Migration v13 failed checking if competitions exists: {}", e))?;
+
+    let competitions_new_exists: bool = sqlx::query_scalar(
+        "SELECT COUNT(*) > 0 FROM sqlite_master WHERE type='table' AND name='competitions_new'"
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(|e| format!("Migration v13 failed checking if competitions_new exists: {}", e))?;
+
+    if competitions_new_exists && !competitions_exists {
+        sqlx::query("ALTER TABLE competitions_new RENAME TO competitions")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v13 failed renaming competitions_new (recovery): {}", e))?;
+    } else if competitions_exists {
+        if competitions_new_exists {
+            sqlx::query("DROP TABLE competitions_new")
+                .execute(pool)
+                .await
+                .map_err(|e| format!("Migration v13 failed dropping old competitions_new: {}", e))?;
+        }
+
+        sqlx::query(r#"
+            CREATE TABLE competitions_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                date TEXT NOT NULL,
+                end_date TEXT,
+                location TEXT,
+                address TEXT,
+                level TEXT CHECK (level IS NULL OR level IN ('seurakisat', 'koululaiskisat', 'seuran_sisaiset', 'seuraottelut', 'piirikisat', 'pm', 'hallikisat', 'aluekisat', 'pohjola_seuracup', 'sm', 'muu')),
+                custom_level_name TEXT,
+                notes TEXT,
+                reminder_enabled INTEGER NOT NULL DEFAULT 0,
+                reminder_days_before INTEGER,
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            )
+        "#)
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Migration v13 failed creating competitions_new table: {}", e))?;
+
+        sqlx::query(r#"
+            INSERT INTO competitions_new (id, name, date, end_date, location, address, level, custom_level_name, notes, reminder_enabled, reminder_days_before, created_at)
+            SELECT id, name, date, end_date, location, address, level, custom_level_name, notes, reminder_enabled, reminder_days_before, created_at
+            FROM competitions
+        "#)
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Migration v13 failed copying competitions data: {}", e))?;
+
+        sqlx::query("DROP TABLE competitions")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v13 failed dropping old competitions table: {}", e))?;
+
+        sqlx::query("ALTER TABLE competitions_new RENAME TO competitions")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v13 failed renaming competitions_new: {}", e))?;
+    }
+
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_competitions_date ON competitions(date)")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Migration v13 failed creating idx_competitions_date: {}", e))?;
+
+    sqlx::query("INSERT INTO _migrations (version, description) VALUES (13, 'fix_check_constraint_add_muu')")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Failed to record migration v13: {}", e))?;
 
     Ok(())
 }

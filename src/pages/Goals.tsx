@@ -1,28 +1,19 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { Plus, Target, ChevronDown, ChevronUp, Check, X, Trash2 } from "lucide-react";
+import { useState, useMemo, useCallback } from "react";
 import { useGoalStore } from "../stores/useGoalStore";
 import { useAthleteStore } from "../stores/useAthleteStore";
-import { getDisciplineById } from "../data/disciplines";
-import { GoalCard } from "../components/goals/GoalCard";
-import { GoalForm } from "../components/goals/GoalForm";
-import { GoalCelebrationModal } from "../components/goals/GoalCelebrationModal";
-import { Dialog, Confetti, toast, FilterSelect, type FilterOption } from "../components/ui";
-import { useAddShortcut, useEscapeKey, useBackgroundDeselect } from "../hooks";
-import type { Goal, NewGoal, Athlete, Discipline } from "../types";
-
-interface CelebrationGoalData {
-  goal: Goal;
-  currentBest: number | null;
-  progress: number;
-  remaining: number | null;
-  athlete?: Athlete;
-  discipline?: Discipline;
-}
-
-type StatusFilter = "active" | "achieved" | "all";
-
-// Key for storing celebrated goal IDs in localStorage
-const CELEBRATED_GOALS_KEY = "loikka-celebrated-goals";
+import {
+  GoalForm,
+  GoalsHeader,
+  GoalsFilters,
+  ActiveGoalsList,
+  AchievedGoalsList,
+  AchievedEmptyState,
+  GoalCelebrationModal,
+  type StatusFilter,
+} from "../components/goals";
+import { Dialog, Confetti, toast } from "../components/ui";
+import { useAddShortcut, useEscapeKey, useBackgroundDeselect, useGoalCelebration } from "../hooks";
+import type { NewGoal } from "../types";
 
 export function Goals() {
   const {
@@ -35,102 +26,35 @@ export function Goals() {
   } = useGoalStore();
   const { athletes } = useAthleteStore();
 
+  // Filters
   const [athleteFilter, setAthleteFilter] = useState<number | null>(null);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
   const [showAchieved, setShowAchieved] = useState(true);
+
+  // Dialog state
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [showCelebrationModal, setShowCelebrationModal] = useState(false);
-  const [celebrationGoals, setCelebrationGoals] = useState<CelebrationGoalData[]>([]);
 
   // Selection mode state
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [bulkDeleteConfirmOpen, setBulkDeleteConfirmOpen] = useState(false);
 
+  // Celebration hook
+  const {
+    showConfetti,
+    showCelebrationModal,
+    celebrationGoals,
+    closeCelebrationModal,
+    onConfettiComplete,
+  } = useGoalCelebration();
+
   // Keyboard shortcut: Ctrl+U opens add dialog
   useAddShortcut(() => setIsFormOpen(true));
-
-  // Data is fetched in Layout.tsx on app start
-
-  // Get celebrated goal IDs from localStorage
-  const getCelebratedGoals = useCallback((): Set<number> => {
-    try {
-      const stored = localStorage.getItem(CELEBRATED_GOALS_KEY);
-      return stored ? new Set(JSON.parse(stored)) : new Set();
-    } catch {
-      return new Set();
-    }
-  }, []);
-
-  // Save celebrated goal ID to localStorage
-  const markGoalAsCelebrated = useCallback((goalId: number) => {
-    const celebrated = getCelebratedGoals();
-    celebrated.add(goalId);
-    localStorage.setItem(CELEBRATED_GOALS_KEY, JSON.stringify([...celebrated]));
-  }, [getCelebratedGoals]);
-
-  // Check for newly completed goals that haven't been celebrated yet
-  useEffect(() => {
-    if (goals.length === 0 || athletes.length === 0) return;
-
-    const celebrated = getCelebratedGoals();
-    const athleteMapLocal = new Map(athletes.map((a) => [a.athlete.id, a.athlete]));
-
-    // Find goals that are completed (status = achieved OR progress >= 100) but not yet celebrated
-    const newlyCompleted = goals.filter((goal) => {
-      if (celebrated.has(goal.id)) return false;
-
-      // Check if goal is achieved by status
-      if (goal.status === "achieved") return true;
-
-      // Check if goal is achieved by progress (100%)
-      const goalWithProgress = getGoalWithProgress(goal);
-      return goalWithProgress.progress >= 100;
-    });
-
-    if (newlyCompleted.length > 0) {
-      // Prepare data for celebration modal
-      const celebrationData: CelebrationGoalData[] = newlyCompleted.map((goal) => {
-        const goalWithProgress = getGoalWithProgress(goal);
-        return {
-          goal,
-          currentBest: goalWithProgress.currentBest,
-          progress: goalWithProgress.progress,
-          remaining: goalWithProgress.remaining,
-          athlete: athleteMapLocal.get(goal.athleteId),
-          discipline: getDisciplineById(goal.disciplineId),
-        };
-      });
-
-      setCelebrationGoals(celebrationData);
-      setShowCelebrationModal(true);
-      setShowConfetti(true);
-
-      // Mark all newly completed goals as celebrated
-      newlyCompleted.forEach((goal) => markGoalAsCelebrated(goal.id));
-    }
-  }, [goals, athletes]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Map athlete ID to athlete data
   const athleteMap = useMemo(() => {
     return new Map(athletes.map((a) => [a.athlete.id, a.athlete]));
   }, [athletes]);
-
-  // Filter options for FilterSelect components
-  const athleteOptions: FilterOption[] = useMemo(() => [
-    { value: "all", label: "Kaikki urheilijat" },
-    ...athletes.map(({ athlete }) => ({
-      value: athlete.id,
-      label: `${athlete.firstName} ${athlete.lastName}`,
-    })),
-  ], [athletes]);
-
-  const statusOptions: FilterOption[] = [
-    { value: "active", label: "Aktiiviset" },
-    { value: "achieved", label: "Saavutetut" },
-    { value: "all", label: "Kaikki" },
-  ];
 
   // Filter and process goals
   const activeGoals = useMemo(() => {
@@ -220,177 +144,61 @@ export function Goals() {
   }, [selectedIds, deleteGoal]);
 
   const selectedCount = selectedIds.size;
-  const hasSelection = selectedCount > 0;
 
   return (
     <div className="p-6 h-full flex flex-col" onClick={handleBackgroundClick}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6 pb-5 border-b border-border-subtle">
-        {selectionMode ? (
-          <>
-            {/* Selection mode header */}
-            <h1 className="text-title font-medium text-foreground">
-              {hasSelection ? `${selectedCount} valittu` : "Valitse tavoitteita"}
-            </h1>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setBulkDeleteConfirmOpen(true)}
-                disabled={!hasSelection}
-                className="btn-secondary btn-press"
-              >
-                <Trash2 size={16} />
-                Poista
-              </button>
-              <button
-                onClick={handleCancelSelection}
-                className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                aria-label="Peruuta valinta"
-              >
-                <X size={18} />
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            {/* Normal header */}
-            <h1 className="text-title font-medium text-foreground">Tavoitteet</h1>
-            <button
-              onClick={() => setIsFormOpen(true)}
-              className="btn-primary btn-press"
-            >
-              <Plus size={18} />
-              Lisää tavoite
-            </button>
-          </>
-        )}
-      </div>
+      <GoalsHeader
+        selectionMode={selectionMode}
+        selectedCount={selectedCount}
+        onAddClick={() => setIsFormOpen(true)}
+        onDeleteClick={() => setBulkDeleteConfirmOpen(true)}
+        onCancelSelection={handleCancelSelection}
+      />
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3 mb-6">
-        {/* Athlete filter */}
-        <FilterSelect
-          value={athleteFilter ?? "all"}
-          onChange={(value) => setAthleteFilter(value === "all" ? null : (value as number))}
-          options={athleteOptions}
-        />
-
-        {/* Status filter */}
-        <FilterSelect
-          value={statusFilter}
-          onChange={(value) => setStatusFilter(value as StatusFilter)}
-          options={statusOptions}
-        />
-      </div>
+      <GoalsFilters
+        athletes={athletes}
+        athleteFilter={athleteFilter}
+        statusFilter={statusFilter}
+        onAthleteFilterChange={setAthleteFilter}
+        onStatusFilterChange={setStatusFilter}
+      />
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
         {/* Active goals */}
         {(statusFilter === "active" || statusFilter === "all") && (
           <div className="mb-8">
-            {displayGoals.active.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
-                <Target size={48} className="mb-4 text-tertiary" />
-                <p className="text-sm font-medium">Ei aktiivisia tavoitteita</p>
-                <p className="text-body text-tertiary mt-1">
-                  {athleteFilter !== null
-                    ? "Ei tavoitteita tälle urheilijalle"
-                    : "Lisää ensimmäinen tavoite painamalla yllä olevaa nappia"}
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {displayGoals.active.map((goalWithProgress) => (
-                  <GoalCard
-                    key={goalWithProgress.id}
-                    goal={goalWithProgress}
-                    currentBest={goalWithProgress.currentBest}
-                    progress={goalWithProgress.progress}
-                    remaining={goalWithProgress.remaining}
-                    athlete={athleteMap.get(goalWithProgress.athleteId)}
-                    discipline={getDisciplineById(goalWithProgress.disciplineId)}
-                    selectionMode={selectionMode}
-                    isSelected={selectedIds.has(goalWithProgress.id)}
-                    onCheckboxClick={() => handleCheckboxClick(goalWithProgress.id)}
-                  />
-                ))}
-              </div>
-            )}
+            <ActiveGoalsList
+              goals={displayGoals.active}
+              athleteFilter={athleteFilter}
+              athleteMap={athleteMap}
+              selectionMode={selectionMode}
+              selectedIds={selectedIds}
+              onCheckboxClick={handleCheckboxClick}
+            />
           </div>
         )}
 
         {/* Achieved goals */}
         {(statusFilter === "achieved" || statusFilter === "all") &&
           displayGoals.achieved.length > 0 && (
-            <div>
-              {/* Collapsible header */}
-              {statusFilter === "all" && (
-                <button
-                  onClick={() => setShowAchieved(!showAchieved)}
-                  className="flex items-center gap-2 mb-4 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-150 cursor-pointer"
-                >
-                  {showAchieved ? (
-                    <ChevronDown size={16} />
-                  ) : (
-                    <ChevronUp size={16} />
-                  )}
-                  <span>Saavutetut tavoitteet</span>
-                  <span className="text-body font-normal text-tertiary">
-                    ({displayGoals.achieved.length})
-                  </span>
-                </button>
-              )}
-
-              {(statusFilter !== "all" || showAchieved) && (
-                <>
-                  {statusFilter === "achieved" && (
-                    <h2 className="flex items-center gap-2 mb-4 text-sm font-medium text-foreground">
-                      <Check size={16} className="text-success" />
-                      Saavutetut tavoitteet
-                    </h2>
-                  )}
-
-                  {displayGoals.achieved.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-32 text-muted-foreground bg-card rounded-lg">
-                      <p className="text-body">
-                        Ei vielä saavutettuja tavoitteita
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                      {displayGoals.achieved.map((goalWithProgress) => (
-                        <GoalCard
-                          key={goalWithProgress.id}
-                          goal={goalWithProgress}
-                          currentBest={goalWithProgress.currentBest}
-                          progress={goalWithProgress.progress}
-                          remaining={goalWithProgress.remaining}
-                          athlete={athleteMap.get(goalWithProgress.athleteId)}
-                          discipline={getDisciplineById(
-                            goalWithProgress.disciplineId
-                          )}
-                          selectionMode={selectionMode}
-                          isSelected={selectedIds.has(goalWithProgress.id)}
-                          onCheckboxClick={() => handleCheckboxClick(goalWithProgress.id)}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
+            <AchievedGoalsList
+              goals={displayGoals.achieved}
+              statusFilter={statusFilter}
+              showAchieved={showAchieved}
+              onToggleShowAchieved={() => setShowAchieved(!showAchieved)}
+              athleteMap={athleteMap}
+              selectionMode={selectionMode}
+              selectedIds={selectedIds}
+              onCheckboxClick={handleCheckboxClick}
+            />
           )}
 
         {/* Empty state for achieved filter */}
         {statusFilter === "achieved" && displayGoals.achieved.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-48 text-muted-foreground">
-            <Check size={48} className="mb-4 text-tertiary" />
-            <p className="text-sm font-medium">
-              Ei saavutettuja tavoitteita
-            </p>
-            <p className="text-body text-tertiary mt-1">
-              Saavutetut tavoitteet näkyvät täällä
-            </p>
-          </div>
+          <AchievedEmptyState />
         )}
       </div>
 
@@ -410,14 +218,14 @@ export function Goals() {
       {/* Celebration modal for achieved goals */}
       <GoalCelebrationModal
         open={showCelebrationModal}
-        onClose={() => setShowCelebrationModal(false)}
+        onClose={closeCelebrationModal}
         achievedGoals={celebrationGoals}
       />
 
       {/* Confetti celebration for achieved goals */}
       <Confetti
         active={showConfetti}
-        onComplete={() => setShowConfetti(false)}
+        onComplete={onConfettiComplete}
       />
 
       {/* Bulk Delete Confirmation Dialog */}

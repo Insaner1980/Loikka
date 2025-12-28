@@ -89,7 +89,7 @@ export function PhotoGallery({
     return (
       <div className="flex items-center overflow-hidden rounded-lg bg-elevated">
         <div className="w-1 self-stretch bg-[var(--accent)]" />
-        <div className="px-3 py-2 text-sm text-foreground">Virhe kuvien latauksessa: {error}</div>
+        <div className="px-3 py-2 text-body text-foreground">Virhe kuvien latauksessa: {error}</div>
       </div>
     );
   }
@@ -122,7 +122,7 @@ export function PhotoGallery({
             ) : (
               <>
                 <Plus size={24} className="text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">Lisää kuva</span>
+                <span className="text-caption text-muted-foreground">Lisää kuva</span>
               </>
             )}
           </button>
@@ -170,7 +170,7 @@ export function PhotoGallery({
           <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
             <ImageIcon size={24} className="text-muted-foreground" />
           </div>
-          <p className="text-sm text-muted-foreground">Ei kuvia</p>
+          <p className="text-body text-muted-foreground">Ei kuvia</p>
         </div>
       )}
 

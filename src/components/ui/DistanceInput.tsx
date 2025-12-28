@@ -111,7 +111,7 @@ export function DistanceInput({
     }
   };
 
-  const inputClassName = `w-full text-center bg-background border rounded-lg input-focus ${
+  const inputClassName = `w-full text-center bg-card border rounded-lg input-focus ${
     error ? "border-error" : "border-border"
   } ${disabled ? "opacity-60 cursor-not-allowed" : ""}`;
 
@@ -122,6 +122,7 @@ export function DistanceInput({
           ref={metersRef}
           type="text"
           inputMode="numeric"
+          autoComplete="one-time-code"
           value={meters}
           onChange={handleMetersChange}
           onKeyDown={(e) => handleKeyDown(e, "meters")}
@@ -130,14 +131,15 @@ export function DistanceInput({
           className={`${inputClassName} w-14 px-2 py-2`}
           aria-label="Metrit"
         />
-        <span className="text-xs text-muted-foreground mt-1">m</span>
+        <span className="text-caption text-muted-foreground mt-1">m</span>
       </div>
-      <span className="text-lg font-medium text-muted-foreground pb-5">.</span>
+      <span className="text-title font-medium text-muted-foreground pb-5">.</span>
       <div className="flex flex-col items-center">
         <input
           ref={centimetersRef}
           type="text"
           inputMode="numeric"
+          autoComplete="one-time-code"
           value={centimeters}
           onChange={handleCentimetersChange}
           onFocus={handleCentimetersFocus}
@@ -148,7 +150,7 @@ export function DistanceInput({
           className={`${inputClassName} w-14 px-2 py-2`}
           aria-label="Senttimetrit"
         />
-        <span className="text-xs text-muted-foreground mt-1">cm</span>
+        <span className="text-caption text-muted-foreground mt-1">cm</span>
       </div>
     </div>
   );

@@ -140,7 +140,7 @@ Tulokset-sivulla näet kaikki tulokset taulukkona. Voit:
    - **Tulos** (katso muoto alla)
    - **Päivämäärä**
    - **Tyyppi** (kilpailu/harjoitus)
-   - **Kilpailun taso** (SM, PM, Piiri jne.) - valinnainen
+   - **Kilpailun taso** (Seurakisat, PM, SM jne.) - valinnainen
 
 ### Tulosmuodot
 
@@ -199,7 +199,7 @@ Kilpailut-sivulla näet tulevat ja menneet kilpailut. Kilpailukortissa näkyy:
 - Kilpailun nimi
 - Päivämäärä ja paikka
 - Osallistuvat urheilijat
-- Kilpailun taso (SM, PM, Piiri jne.)
+- Kilpailun taso (Seurakisat, PM, SM jne.)
 
 ### Kilpailun lisääminen
 
@@ -208,22 +208,23 @@ Kilpailut-sivulla näet tulevat ja menneet kilpailut. Kilpailukortissa näkyy:
    - **Kilpailun nimi** (esim. "Piirinmestaruudet")
    - **Päivämäärä**
    - **Paikka** (valinnainen)
-   - **Taso** (SM, PM, KLL, Piiri, Seura, Alue, Muu)
+   - **Taso** (Seurakisat, Koululaiskisat, PM, SM jne.)
    - **Lajit** - Valitse mitkä lajit kilpailussa on
    - **Osallistujat** - Valitse ketkä urheilijat osallistuvat
 3. Tallenna
 
 ### Kilpailun taso
 
-| Taso | Selitys |
-|------|---------|
-| SM | Suomen mestaruuskilpailut |
-| PM | Pohjoismaiden mestaruuskilpailut |
-| KLL | Koululiikuntaliitto |
-| Piiri | Piirin kilpailut |
-| Alue | Aluekilpailut |
-| Seura | Seuran sisäiset kilpailut |
-| Muu | Muut kilpailut (esim. kutsukisat) |
+- Seurakisat
+- Koululaiskisat
+- Seuran sisäiset kisat
+- Seuraottelut
+- Piirikisat
+- Piirinmestaruuskilpailut (PM)
+- Hallikisat
+- Aluekisat
+- Pohjola Seuracup
+- SM-kilpailut
 
 ---
 

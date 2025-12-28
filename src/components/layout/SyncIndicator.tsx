@@ -2,7 +2,6 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Cloud, CloudOff, Loader2, AlertCircle, CheckCircle } from "lucide-react";
 import { useSyncStore } from "../../stores/useSyncStore";
-import { Tooltip } from "../ui/Tooltip";
 
 export function SyncIndicator() {
   const navigate = useNavigate();
@@ -34,23 +33,6 @@ export function SyncIndicator() {
     }
   };
 
-  const getTooltipText = () => {
-    if (!authStatus.isAuthenticated) {
-      return "Google Drive: Ei yhdistetty";
-    }
-
-    switch (syncStatus) {
-      case "syncing":
-        return "Synkronoidaan...";
-      case "success":
-        return "Synkronoitu";
-      case "error":
-        return "Synkronointivirhe";
-      default:
-        return "Google Drive: Yhdistetty";
-    }
-  };
-
   const getStatusDot = () => {
     if (!authStatus.isAuthenticated) {
       return null;
@@ -67,15 +49,12 @@ export function SyncIndicator() {
   };
 
   return (
-    <Tooltip content={getTooltipText()}>
-      <button
-        onClick={handleClick}
-        className="relative w-10 h-10 flex items-center justify-center rounded-xl hover:bg-muted transition-colors"
-        aria-label={getTooltipText()}
-      >
-        {getIcon()}
-        {getStatusDot()}
-      </button>
-    </Tooltip>
+    <button
+      onClick={handleClick}
+      className="relative w-10 h-10 flex items-center justify-center rounded-xl hover:bg-muted transition-colors"
+    >
+      {getIcon()}
+      {getStatusDot()}
+    </button>
   );
 }

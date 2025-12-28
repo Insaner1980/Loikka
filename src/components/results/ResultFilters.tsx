@@ -1,9 +1,8 @@
 import { useMemo } from "react";
 import { X } from "lucide-react";
 import type { Athlete, Result, ResultType } from "../../types";
-import { getDisciplineById } from "../../data/disciplines";
+import { getDisciplineById, sortAgeCategories } from "../../data/disciplines";
 import { getAgeCategory } from "../../lib/formatters";
-import { YEAR_RANGE } from "../../lib/constants";
 import { DisciplineFilterSelect, FilterSelect, type FilterOption } from "../ui";
 
 export interface ResultFiltersState {
@@ -57,17 +56,18 @@ export function ResultFilters({
     });
   };
 
-  // Get unique age categories from athletes
-  const ageCategories = [...new Set(athletes.map((a) => getAgeCategory(a.birthYear)))].sort();
+  // Get unique age categories from athletes (sorted youngest to oldest)
+  const ageCategories = sortAgeCategories([...new Set(athletes.map((a) => getAgeCategory(a.birthYear)))]);
 
-  // Generate year options (fixed range)
-  const currentYear = new Date().getFullYear();
-  const startYear = YEAR_RANGE.START_YEAR;
-  const endYear = currentYear + YEAR_RANGE.YEARS_AHEAD;
-  const yearOptions: number[] = [];
-  for (let y = endYear; y >= startYear; y--) {
-    yearOptions.push(y);
-  }
+  // Get years that have results (filtered by selected athlete if any)
+  const yearsWithResults = useMemo(() => {
+    const filteredResults = filters.athleteId
+      ? results.filter((r) => r.athleteId === filters.athleteId)
+      : results;
+
+    const years = new Set(filteredResults.map((r) => new Date(r.date).getFullYear()));
+    return Array.from(years).sort((a, b) => b - a); // Descending order
+  }, [results, filters.athleteId]);
 
   // Filter options for FilterSelect components
   const athleteOptions: FilterOption[] = useMemo(() => [
@@ -86,8 +86,8 @@ export function ResultFilters({
 
   const yearFilterOptions: FilterOption[] = useMemo(() => [
     { value: "all", label: "Kaikki vuodet" },
-    ...yearOptions.map((y) => ({ value: y, label: String(y) })),
-  ], [yearOptions]);
+    ...yearsWithResults.map((y) => ({ value: y, label: String(y) })),
+  ], [yearsWithResults]);
 
   const ageCategoryOptions: FilterOption[] = useMemo(() => [
     { value: "all", label: "Kaikki ikäsarjat" },

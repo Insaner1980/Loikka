@@ -43,7 +43,7 @@ export function PhotoGrid({
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         {emptyIcon && <div className="mb-4">{emptyIcon}</div>}
-        <h2 className="text-sm font-medium text-muted-foreground mb-1.5">{emptyMessage}</h2>
+        <h2 className="text-body font-medium text-muted-foreground mb-1.5">{emptyMessage}</h2>
         {emptySubMessage && (
           <p className="text-body text-tertiary">{emptySubMessage}</p>
         )}
@@ -150,7 +150,7 @@ function PhotoThumbnail({
 
       {/* Caption below */}
       <div className="mt-1.5 px-0.5">
-        <p className="text-xs text-muted-foreground truncate">
+        <p className="text-caption text-muted-foreground truncate">
           {dateStr}
           {displayName && ` · ${displayName}`}
         </p>

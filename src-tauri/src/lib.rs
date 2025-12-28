@@ -21,12 +21,6 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_notification::init());
 
-    // MCP Bridge plugin - temporarily disabled for freeze debugging
-    // #[cfg(debug_assertions)]
-    // {
-    //     builder = builder.plugin(tauri_plugin_mcp_bridge::init());
-    // }
-
     builder
         .manage(AppDatabase::new())
         .setup(|app| {

@@ -150,7 +150,7 @@ export function TimeInput({
     }
   };
 
-  const inputClassName = `w-full text-center bg-background border rounded-lg input-focus ${
+  const inputClassName = `w-full text-center bg-card border rounded-lg input-focus ${
     error ? "border-error" : "border-border"
   } ${disabled ? "opacity-60 cursor-not-allowed" : ""}`;
 
@@ -163,6 +163,7 @@ export function TimeInput({
               ref={minutesRef}
               type="text"
               inputMode="numeric"
+              autoComplete="one-time-code"
               value={minutes}
               onChange={handleMinutesChange}
               onKeyDown={(e) => handleKeyDown(e, "minutes")}
@@ -173,9 +174,9 @@ export function TimeInput({
               className={`${inputClassName} w-12 px-2 py-2`}
               aria-label="Minuutit"
             />
-            <span className="text-xs text-muted-foreground mt-1">min</span>
+            <span className="text-caption text-muted-foreground mt-1">min</span>
           </div>
-          <span className="text-lg font-medium text-muted-foreground pb-5">:</span>
+          <span className="text-title font-medium text-muted-foreground pb-5">:</span>
         </>
       )}
       <div className="flex flex-col items-center">
@@ -183,6 +184,7 @@ export function TimeInput({
           ref={secondsRef}
           type="text"
           inputMode="numeric"
+          autoComplete="one-time-code"
           value={seconds}
           onChange={handleSecondsChange}
           onKeyDown={(e) => handleKeyDown(e, "seconds")}
@@ -193,14 +195,15 @@ export function TimeInput({
           className={`${inputClassName} ${showMinutes ? "w-12" : "w-16"} px-2 py-2`}
           aria-label="Sekunnit"
         />
-        <span className="text-xs text-muted-foreground mt-1">s</span>
+        <span className="text-caption text-muted-foreground mt-1">s</span>
       </div>
-      <span className="text-lg font-medium text-muted-foreground pb-5">.</span>
+      <span className="text-title font-medium text-muted-foreground pb-5">.</span>
       <div className="flex flex-col items-center">
         <input
           ref={hundredthsRef}
           type="text"
           inputMode="numeric"
+          autoComplete="one-time-code"
           value={hundredths}
           onChange={handleHundredthsChange}
           onKeyDown={(e) => handleKeyDown(e, "hundredths")}
@@ -211,7 +214,7 @@ export function TimeInput({
           className={`${inputClassName} w-12 px-2 py-2`}
           aria-label="Sadasosat"
         />
-        <span className="text-xs text-muted-foreground mt-1">1/100</span>
+        <span className="text-caption text-muted-foreground mt-1">1/100</span>
       </div>
     </div>
   );

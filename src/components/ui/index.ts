@@ -1,7 +1,7 @@
 // UI components
 export { Dialog } from "./Dialog";
 export { ConfirmDialog } from "./ConfirmDialog";
-export { Tooltip } from "./Tooltip";
+export { ErrorBoundary } from "./ErrorBoundary";
 export { ToastContainer, toast } from "./Toast";
 export type { ToastType } from "./Toast";
 export { ErrorMessage } from "./ErrorMessage";

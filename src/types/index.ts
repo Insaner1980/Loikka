@@ -32,14 +32,17 @@ export type MedalType = "gold" | "silver" | "bronze";
 
 // Competition level
 export type CompetitionLevel =
-  | "seura"       // Seuran kisat
-  | "seuraottelu" // Seuraottelu
-  | "piiri"       // Piirikisat
-  | "pm"          // Piirimestaruus
-  | "alue"        // Aluemestaruus
-  | "sm"          // Suomenmestaruus
-  | "kll"         // Koululiikuntaliitto
-  | "muu";        // Muu
+  | "seurakisat"        // Seurakisat
+  | "koululaiskisat"    // Koululaiskisat
+  | "seuran_sisaiset"   // Seuran sisäiset kisat
+  | "seuraottelut"      // Seuraottelut
+  | "piirikisat"        // Piirikisat
+  | "pm"                // Piirinmestaruuskilpailut (PM)
+  | "hallikisat"        // Hallikisat
+  | "aluekisat"         // Aluekisat
+  | "pohjola_seuracup"  // Pohjola Seuracup
+  | "sm"                // SM-kilpailut
+  | "muu";              // Muu (custom level)
 
 // Sync states (for Google Drive connection status in database)
 export type SyncState = "notConfigured" | "synced" | "pending" | "error";
@@ -87,6 +90,7 @@ export interface Result {
   type: ResultType;
   competitionName?: string;
   competitionLevel?: CompetitionLevel;
+  customLevelName?: string; // Custom level name when competitionLevel is "muu"
   location?: string;
   placement?: number;
   notes?: string;
@@ -110,6 +114,7 @@ export interface Competition {
   location?: string;
   address?: string;
   level?: CompetitionLevel;
+  customLevelName?: string; // Custom level name when level is "muu"
   notes?: string;
   reminderEnabled: boolean;
   reminderDaysBefore?: number;
@@ -157,13 +162,19 @@ export interface Photo {
   entityType: PhotoEntityType;
   entityId: number;
   filePath: string;
-  thumbnailPath?: string;
+  thumbnailPath: string | null;
   originalName: string;
-  width?: number;
-  height?: number;
+  width: number | null;
+  height: number | null;
   sizeBytes: number;
   eventName?: string;
   createdAt: string;
+}
+
+// Photo with related entity details (from get_all_photos)
+export interface PhotoWithDetails extends Photo {
+  athleteName: string | null;
+  competitionName: string | null;
 }
 
 // Sync Status

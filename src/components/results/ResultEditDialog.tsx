@@ -56,6 +56,7 @@ export function ResultEditDialog({
   const [resultType, setResultType] = useState<ResultType>("competition");
   const [competitionName, setCompetitionName] = useState("");
   const [competitionLevel, setCompetitionLevel] = useState<CompetitionLevel | "">("");
+  const [customLevelName, setCustomLevelName] = useState("");
   const [location, setLocation] = useState("");
   const [placement, setPlacement] = useState<number | "">("");
   const [notes, setNotes] = useState("");
@@ -101,6 +102,7 @@ export function ResultEditDialog({
       setResultType(result.type);
       setCompetitionName(result.competitionName || "");
       setCompetitionLevel(result.competitionLevel || "");
+      setCustomLevelName(result.customLevelName || "");
       setLocation(result.location || "");
       setPlacement(result.placement || "");
       setNotes(result.notes || "");
@@ -243,6 +245,7 @@ export function ResultEditDialog({
         type: resultType,
         competitionName: resultType === "competition" ? competitionName.trim() : undefined,
         competitionLevel: resultType === "competition" && competitionLevel ? competitionLevel : undefined,
+        customLevelName: resultType === "competition" && competitionLevel === "muu" ? customLevelName.trim() || undefined : undefined,
         location: location.trim() || undefined,
         placement: resultType === "competition" && placement ? (placement as number) : undefined,
         notes: notes.trim() || undefined,
@@ -406,7 +409,8 @@ export function ResultEditDialog({
                     value={wind}
                     onChange={(e) => setWind(e.target.value)}
                     placeholder="esim. +1.8"
-                    className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
+                    autoComplete="one-time-code"
+                    className="w-full px-3 py-2 bg-card border border-border rounded-lg input-focus"
                   />
                 </>
               ) : isThrowDiscipline && availableWeights.length > 0 ? (
@@ -455,7 +459,8 @@ export function ResultEditDialog({
                   value={hurdleSpacing}
                   onChange={(e) => setHurdleSpacing(e.target.value)}
                   placeholder="esim. 8.0"
-                  className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
+                  autoComplete="one-time-code"
+                  className="w-full px-3 py-2 bg-card border border-border rounded-lg input-focus"
                 />
               </div>
             </div>
@@ -503,7 +508,8 @@ export function ResultEditDialog({
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="esim. Tampere"
-                className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
+                autoComplete="one-time-code"
+                className="w-full px-3 py-2 bg-card border border-border rounded-lg input-focus"
               />
             </div>
 
@@ -523,7 +529,8 @@ export function ResultEditDialog({
                   min={1}
                   placeholder={statusRequiresValue ? "esim. 1" : "-"}
                   disabled={!statusRequiresValue}
-                  className={`w-full px-3 py-2 bg-background border border-border rounded-lg input-focus ${
+                  autoComplete="one-time-code"
+                  className={`w-full px-3 py-2 bg-card border border-border rounded-lg input-focus ${
                     !statusRequiresValue ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 />
@@ -535,34 +542,54 @@ export function ResultEditDialog({
 
           {/* Competition-only fields: Name and Level */}
           {resultType === "competition" && (
-            <div className="grid grid-cols-3 gap-4">
-              {/* Competition name - spans 2 columns */}
-              <div className="col-span-2">
-                <AutocompleteInput
-                  id="competitionName"
-                  value={competitionName}
-                  onChange={setCompetitionName}
-                  suggestions={uniqueCompetitionNames}
-                  label="Kilpailun nimi"
-                  required
-                  placeholder="esim. Kalevan kisat"
-                  error={errors.competitionName}
-                />
+            <>
+              <div className="grid grid-cols-3 gap-4">
+                {/* Competition name - spans 2 columns */}
+                <div className="col-span-2">
+                  <AutocompleteInput
+                    id="competitionName"
+                    value={competitionName}
+                    onChange={setCompetitionName}
+                    suggestions={uniqueCompetitionNames}
+                    label="Kilpailun nimi"
+                    required
+                    placeholder="esim. Kalevan kisat"
+                    error={errors.competitionName}
+                  />
+                </div>
+
+                {/* Competition level */}
+                <div>
+                  <label htmlFor="competitionLevel" className="block text-sm font-medium mb-1.5">
+                    Kilpailutaso
+                  </label>
+                  <FilterSelect
+                    value={competitionLevel}
+                    onChange={(value) => setCompetitionLevel(value as CompetitionLevel | "")}
+                    options={competitionLevelOptions}
+                    className="w-full"
+                  />
+                </div>
               </div>
 
-              {/* Competition level */}
-              <div>
-                <label htmlFor="competitionLevel" className="block text-sm font-medium mb-1.5">
-                  Kilpailutaso
-                </label>
-                <FilterSelect
-                  value={competitionLevel}
-                  onChange={(value) => setCompetitionLevel(value as CompetitionLevel | "")}
-                  options={competitionLevelOptions}
-                  className="w-full"
-                />
-              </div>
-            </div>
+              {/* Custom level name - shown only when "Muu" is selected */}
+              {competitionLevel === "muu" && (
+                <div>
+                  <label htmlFor="customLevelName" className="block text-sm font-medium mb-1.5">
+                    Kilpailutason nimi
+                  </label>
+                  <input
+                    type="text"
+                    id="customLevelName"
+                    value={customLevelName}
+                    onChange={(e) => setCustomLevelName(e.target.value)}
+                    placeholder="esim. Kansainvälinen kutsukilpailu"
+                    autoComplete="one-time-code"
+                    className="w-full px-3 py-2 bg-card border border-border rounded-lg input-focus"
+                  />
+                </div>
+              )}
+            </>
           )}
 
           {/* Row: Notes and SE checkbox */}
@@ -578,7 +605,8 @@ export function ResultEditDialog({
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Valinnainen lisätieto..."
-                className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
+                autoComplete="one-time-code"
+                className="w-full px-3 py-2 bg-card border border-border rounded-lg input-focus"
               />
             </div>
 

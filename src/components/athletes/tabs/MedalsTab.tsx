@@ -124,17 +124,17 @@ export function MedalsTab({ medals, results, onMedalClick }: MedalsTabProps) {
                   <div
                     className={`w-12 h-12 rounded-full ${medalClasses[medal.type]} shadow-lg flex items-center justify-center`}
                   >
-                    <span className="text-lg font-bold text-black/70">{medalNumber[medal.type]}</span>
+                    <span className="text-title font-bold text-medal-text">{medalNumber[medal.type]}</span>
                   </div>
                 </div>
 
                 {/* Center: Discipline + result */}
                 <div className="flex-1 flex flex-col items-center justify-center py-1">
-                  <span className="text-sm font-medium text-foreground text-center">
+                  <span className="text-body font-medium text-foreground text-center">
                     {medal.disciplineName || "Tuntematon laji"}
                   </span>
                   {linkedResult && (
-                    <span className="text-lg font-bold tabular-nums text-foreground mt-1">
+                    <span className="text-title font-bold tabular-nums text-foreground mt-1">
                       {linkedResult.discipline.unit === "time"
                         ? formatTime(linkedResult.value)
                         : formatDistance(linkedResult.value)}
@@ -146,7 +146,7 @@ export function MedalsTab({ medals, results, onMedalClick }: MedalsTabProps) {
                 <div className="h-px w-full bg-border my-3" />
 
                 {/* Bottom: Competition, date, location */}
-                <div className="text-sm text-muted-foreground text-center">
+                <div className="text-body text-muted-foreground text-center">
                   <div className="truncate">{medal.competitionName}</div>
                   <div className="mt-0.5">
                     {formatDate(medal.date)}

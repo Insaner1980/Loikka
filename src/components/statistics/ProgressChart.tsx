@@ -43,8 +43,8 @@ function CustomTooltip({ active, payload, discipline }: CustomTooltipProps) {
 
   return (
     <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
-      <p className="text-sm text-muted-foreground">{formattedDate}</p>
-      <p className="text-lg font-bold">{formattedValue}</p>
+      <p className="text-body text-muted-foreground">{formattedDate}</p>
+      <p className="text-title font-bold">{formattedValue}</p>
       {(dataPoint.isPersonalBest || dataPoint.isSeasonBest || dataPoint.isNationalRecord) && (
         <div className="flex gap-1 mt-1">
           {dataPoint.isPersonalBest && <span className="badge-pb">OE</span>}
@@ -99,7 +99,7 @@ export function ProgressChart({ data, discipline }: ProgressChartProps) {
 
   return (
     <div className="bg-card rounded-xl border border-border p-4">
-      <h3 className="text-sm font-medium text-foreground mb-4">Kehitys</h3>
+      <h3 className="text-body font-medium text-foreground mb-4">Kehitys</h3>
       <div className="h-96">
           <LineChart
             data={chartData}

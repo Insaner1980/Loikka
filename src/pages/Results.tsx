@@ -162,7 +162,7 @@ export function Results() {
         {resultsByDate.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
             <FileText size={48} className="mb-4 text-tertiary" />
-            <p className="text-sm font-medium">Ei tuloksia</p>
+            <p className="text-body font-medium">Ei tuloksia</p>
             <p className="text-body text-tertiary mt-1">
               {filters.athleteId !== null ||
               filters.disciplineId !== null ||
@@ -179,7 +179,7 @@ export function Results() {
               <div key={date}>
                 {/* Date header */}
                 <div className="sticky top-0 bg-background py-2 mb-3 border-b border-border-subtle">
-                  <h2 className="text-xs font-medium text-tertiary">
+                  <h2 className="text-caption font-medium text-tertiary">
                     {formatDate(date)}
                   </h2>
                 </div>

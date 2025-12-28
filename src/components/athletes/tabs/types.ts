@@ -1,8 +1,7 @@
-import type { Result, Medal, Goal, Discipline, Athlete } from "../../../types";
+import type { Medal, Goal, Athlete, ResultWithDiscipline } from "../../../types";
 
-export interface ResultWithDiscipline extends Result {
-  discipline: Discipline;
-}
+// Re-export for backwards compatibility
+export type { ResultWithDiscipline };
 
 export interface TabProps {
   athlete: Athlete;

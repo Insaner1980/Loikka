@@ -156,11 +156,18 @@ export const useGoalStore = create<GoalStore>((set, get) => ({
     const discipline = getDisciplineById(goal.disciplineId);
     if (!discipline) return 0;
 
+    // Prevent division by zero
+    if (goal.targetValue === 0) return currentBest === 0 ? 100 : 0;
+
     if (discipline.lowerIsBetter) {
       if (currentBest <= goal.targetValue) return 100;
 
       const estimatedStart = goal.targetValue * 1.2;
       const totalImprovement = estimatedStart - goal.targetValue;
+
+      // Prevent division by zero (happens when targetValue is very small)
+      if (totalImprovement === 0) return 0;
+
       const achievedImprovement = estimatedStart - currentBest;
 
       return Math.max(

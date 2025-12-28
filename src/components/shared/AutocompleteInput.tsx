@@ -82,9 +82,9 @@ export function AutocompleteInput({
         onChange={(e) => handleInputChange(e.target.value)}
         onFocus={handleFocus}
         placeholder={placeholder}
-        autoComplete="off"
+        autoComplete="one-time-code"
         disabled={disabled}
-        className={`w-full px-3 py-2 bg-background border rounded-lg input-focus ${
+        className={`w-full px-3 py-2 bg-card border rounded-lg input-focus ${
           error ? "border-error" : "border-border"
         } ${disabled ? "opacity-60" : ""} ${className}`}
       />

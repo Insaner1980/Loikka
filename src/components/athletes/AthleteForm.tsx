@@ -213,7 +213,8 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
             id="firstName"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
-            className={`w-full px-3 py-2 text-sm bg-background border rounded-md input-focus ${
+            autoComplete="one-time-code"
+            className={`w-full px-3 py-2 text-sm bg-card border rounded-md input-focus ${
               errors.firstName ? "border-error" : "border-border-subtle"
             }`}
             placeholder="Esim. Eemeli"
@@ -233,7 +234,8 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
             id="lastName"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-            className={`w-full px-3 py-2 text-sm bg-background border rounded-md input-focus ${
+            autoComplete="one-time-code"
+            className={`w-full px-3 py-2 text-sm bg-card border rounded-md input-focus ${
               errors.lastName ? "border-error" : "border-border-subtle"
             }`}
             placeholder="Esim. Virtanen"
@@ -272,8 +274,8 @@ export function AthleteForm({ athlete, onSave, onCancel, disabled = false }: Ath
             id="clubName"
             value={clubName}
             onChange={(e) => setClubName(e.target.value)}
-            autoComplete="off"
-            className="w-full px-3 py-2 text-sm bg-background border border-border-subtle rounded-md input-focus"
+            autoComplete="one-time-code"
+            className="w-full px-3 py-2 text-sm bg-card border border-border-subtle rounded-md input-focus"
             placeholder="Esim. Tampereen Pyrintö"
           />
         </div>

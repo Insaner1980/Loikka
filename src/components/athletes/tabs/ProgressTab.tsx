@@ -14,7 +14,7 @@ import {
   Hash,
   Calculator,
 } from "lucide-react";
-import { formatTime, formatDistance, formatDate } from "../../../lib/formatters";
+import { formatTime, formatDistance, formatDate, formatShortDate } from "../../../lib/formatters";
 import { DisciplineFilterSelect, FilterSelect, type FilterOption } from "../../ui";
 import type { ResultWithDiscipline } from "./types";
 
@@ -136,10 +136,7 @@ export function ProgressTab({ results }: ProgressTabProps) {
       .filter((r) => r.value > 0 && (!r.status || r.status === "valid"))
       .map((r, index) => ({
         key: `${r.date}-${index}`,
-        date: new Date(r.date).toLocaleDateString("fi-FI", {
-          day: "numeric",
-          month: "numeric",
-        }),
+        date: formatShortDate(r.date),
         fullDate: formatDate(r.date),
         value: r.value,
         isPB: allTimeBest ? r.id === allTimeBest.id : false,
@@ -175,7 +172,7 @@ export function ProgressTab({ results }: ProgressTabProps) {
       return (
         <div className="bg-card border border-border-subtle rounded-lg px-3 py-2 shadow-lg">
           <p className="text-body text-muted-foreground">{data.fullDate}</p>
-          <p className="text-lg font-bold text-foreground">
+          <p className="text-title font-bold text-foreground">
             {selectedDiscipline?.unit === "time"
               ? formatTime(data.value)
               : formatDistance(data.value)}
@@ -233,7 +230,7 @@ export function ProgressTab({ results }: ProgressTabProps) {
       {!disciplineFilter && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <TrendingUp size={48} className="text-icon-muted mb-4" />
-          <h2 className="text-sm font-medium text-muted-foreground mb-1.5">
+          <h2 className="text-body font-medium text-muted-foreground mb-1.5">
             Valitse laji
           </h2>
           <p className="text-body text-tertiary">
@@ -246,7 +243,7 @@ export function ProgressTab({ results }: ProgressTabProps) {
       {disciplineFilter && chartData.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <TrendingUp size={48} className="text-icon-muted mb-4" />
-          <h2 className="text-sm font-medium text-muted-foreground mb-1.5">
+          <h2 className="text-body font-medium text-muted-foreground mb-1.5">
             Ei tuloksia
           </h2>
           <p className="text-body text-tertiary">
@@ -259,7 +256,7 @@ export function ProgressTab({ results }: ProgressTabProps) {
       {disciplineFilter && chartData.length > 0 && (
         <>
           <div className="bg-card border border-border-subtle rounded-lg p-4">
-            <h3 className="text-sm font-medium text-foreground mb-4">
+            <h3 className="text-body font-medium text-foreground mb-4">
               Tuloskehitys
             </h3>
             <div className="h-64">
@@ -271,10 +268,7 @@ export function ProgressTab({ results }: ProgressTabProps) {
                     axisLine={{ stroke: "var(--border-subtle)" }}
                     tickFormatter={(value) => {
                       const datePart = value.split("-").slice(0, 3).join("-");
-                      return new Date(datePart).toLocaleDateString("fi-FI", {
-                        day: "numeric",
-                        month: "numeric",
-                      });
+                      return formatShortDate(datePart);
                     }}
                   />
                   <YAxis
@@ -341,7 +335,7 @@ export function ProgressTab({ results }: ProgressTabProps) {
             <div className="bg-card rounded-xl border border-border p-4">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Paras</p>
+                  <p className="text-body text-muted-foreground">Paras</p>
                   <div className="flex items-center gap-2 mt-1">
                     <p className="text-stat font-bold tabular-nums">
                       {seasonBest
@@ -362,7 +356,7 @@ export function ProgressTab({ results }: ProgressTabProps) {
             <div className="bg-card rounded-xl border border-border p-4">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Kehitys</p>
+                  <p className="text-body text-muted-foreground">Kehitys</p>
                   <p className="text-stat font-bold tabular-nums mt-1 text-foreground">
                     {validSeasonResults.length >= 2
                       ? formatImprovement(improvement)
@@ -383,11 +377,11 @@ export function ProgressTab({ results }: ProgressTabProps) {
             <div className="bg-card rounded-xl border border-border p-4">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Tuloksia</p>
+                  <p className="text-body text-muted-foreground">Tuloksia</p>
                   <p className="text-stat font-bold tabular-nums mt-1">
                     {validSeasonResults.length}
                   </p>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-body text-muted-foreground mt-1">
                     {seasonFilter ? "kaudella" : "yhteensä"}
                   </p>
                 </div>
@@ -401,7 +395,7 @@ export function ProgressTab({ results }: ProgressTabProps) {
             <div className="bg-card rounded-xl border border-border p-4">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Keskiarvo</p>
+                  <p className="text-body text-muted-foreground">Keskiarvo</p>
                   <p className="text-stat font-bold tabular-nums mt-1">
                     {average > 0
                       ? selectedDiscipline?.unit === "time"
@@ -420,7 +414,7 @@ export function ProgressTab({ results }: ProgressTabProps) {
           {/* Season comparison */}
           {seasonBests.length > 1 && (
             <div className="bg-card border border-border-subtle rounded-lg p-4">
-              <h3 className="text-sm font-medium text-foreground mb-4">
+              <h3 className="text-body font-medium text-foreground mb-4">
                 Kausien vertailu
               </h3>
               <div className="space-y-3">
@@ -441,7 +435,7 @@ export function ProgressTab({ results }: ProgressTabProps) {
 
                   return (
                     <div key={season.year} className="flex items-center gap-3">
-                      <span className="text-sm text-muted-foreground w-12 shrink-0">
+                      <span className="text-body text-muted-foreground w-12 shrink-0">
                         {season.year}
                       </span>
                       <div className="flex-1 h-8 bg-elevated rounded overflow-hidden">
@@ -452,7 +446,7 @@ export function ProgressTab({ results }: ProgressTabProps) {
                           style={{ width: `${percentage}%` }}
                         />
                       </div>
-                      <span className={`text-sm font-medium tabular-nums w-20 text-right ${
+                      <span className={`text-body font-medium tabular-nums w-20 text-right ${
                         isBest ? "text-[var(--accent)]" : "text-foreground"
                       }`}>
                         {selectedDiscipline?.unit === "time"

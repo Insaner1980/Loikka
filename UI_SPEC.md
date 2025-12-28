@@ -490,7 +490,7 @@ bg-transparent text-[var(--text-muted)] border border-[var(--border-hover)]
 | Ennätys OE | "OE" | Oma ennätys (Personal Best) |
 | Ennätys KE | "KE" | Kauden ennätys (Season Best) |
 | Ennätys SE | "SE" | Suomen ennätys (National Record) |
-| Kilpailutaso | "SM", "PM", "KLL", "Piiri", "Seura", "Alue", "Muu" | Kilpailun taso |
+| Kilpailutaso | "Seurakisat", "Koululaiskisat", "Seuran sisäiset", "Seuraottelut", "Piirikisat", "PM", "Hallikisat", "Aluekisat", "Pohjola Seuracup", "SM" | Kilpailun taso |
 | Saavutettu | "Saavutettu" (+ Check-ikoni) | Tavoite saavutettu |
 | Lähellä | "Lähellä!" | Tavoite lähellä (90-99%) |
 

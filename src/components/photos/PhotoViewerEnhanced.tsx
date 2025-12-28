@@ -116,7 +116,7 @@ export function PhotoViewerEnhanced({
         maxWidth="sm"
       >
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body text-muted-foreground">
             Haluatko varmasti poistaa tämän kuvan? Tätä toimintoa ei voi perua.
           </p>
           <div className="flex justify-end gap-2">
@@ -161,7 +161,7 @@ export function PhotoViewerEnhanced({
 
           {/* Caption below photo */}
           <div className="mt-3 text-center">
-            <p className="text-white/60 text-sm">
+            <p className="text-white/60 text-body">
               {captionParts.join(" · ")}
             </p>
           </div>
@@ -202,7 +202,7 @@ export function PhotoViewerEnhanced({
               />
             ))}
           </div>
-          <span className="text-white/50 text-xs">
+          <span className="text-white/50 text-caption">
             {currentIndex + 1} / {photos.length}
           </span>
         </div>

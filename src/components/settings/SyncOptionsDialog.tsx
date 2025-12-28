@@ -395,7 +395,7 @@ export function SyncOptionsDialog({
                                 </div>
                               )}
                               <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-1 py-0.5">
-                                <span className="text-[10px] text-white truncate block">
+                                <span className="text-caption text-white truncate block">
                                   {formatBackupSize(photo.sizeBytes)}
                                 </span>
                               </div>

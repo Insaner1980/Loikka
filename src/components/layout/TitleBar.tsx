@@ -35,7 +35,7 @@ export function TitleBar() {
       <div data-tauri-drag-region className="flex-1 flex items-center">
         <img src={logoIcon} alt="Loikka" className="w-12 h-12" loading="eager" />
         <span
-          className="text-xl text-foreground tracking-wide"
+          className="text-heading text-foreground tracking-wide"
           style={{ fontFamily: 'Satoshi, sans-serif', fontWeight: 700 }}
         >
           LOIKKA
@@ -60,7 +60,7 @@ export function TitleBar() {
         </button>
         <button
           onClick={handleClose}
-          className="w-12 h-full flex items-center justify-center text-muted-foreground hover:bg-red-500 hover:text-white transition-colors duration-150"
+          className="w-12 h-full flex items-center justify-center text-muted-foreground hover:bg-close-hover hover:text-white transition-colors duration-150"
           aria-label="Sulje"
         >
           <X size={16} />

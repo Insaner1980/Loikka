@@ -12,7 +12,7 @@ export function GoalsTab({ goals, getDisciplineForGoal }: GoalsTabProps) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center">
         <Target size={48} className="text-icon-muted mb-4" />
-        <h2 className="text-sm font-medium text-muted-foreground mb-1.5">Ei tavoitteita</h2>
+        <h2 className="text-body font-medium text-muted-foreground mb-1.5">Ei tavoitteita</h2>
         <p className="text-body text-tertiary">
           Lisää ensimmäinen tavoite
         </p>
@@ -40,14 +40,14 @@ export function GoalsTab({ goals, getDisciplineForGoal }: GoalsTabProps) {
           >
             {/* Top: Discipline name */}
             <div className="mb-3">
-              <span className="text-sm font-medium text-foreground">
+              <span className="text-body font-medium text-foreground">
                 {discipline?.fullName || "Tuntematon laji"}
               </span>
             </div>
 
             {/* Center: Target value (big) */}
             <div className="flex-1 flex flex-col items-center justify-center py-2">
-              <span className="text-2xl font-bold tabular-nums text-foreground">
+              <span className="text-stat font-bold tabular-nums text-foreground">
                 {formattedTarget}
               </span>
               {isAchieved && (
@@ -61,7 +61,7 @@ export function GoalsTab({ goals, getDisciplineForGoal }: GoalsTabProps) {
             <div className="h-px w-full bg-border my-3" />
 
             {/* Bottom: Dates */}
-            <div className="text-sm text-muted-foreground text-center">
+            <div className="text-body text-muted-foreground text-center">
               {goal.targetDate && (
                 <div>DDL: {formatDate(goal.targetDate)}</div>
               )}

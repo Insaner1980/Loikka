@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/layout";
-import { ToastContainer } from "./components/ui";
+import { ToastContainer, ErrorBoundary } from "./components/ui";
+import { BirthdayOverlay } from "./components/BirthdayOverlay";
 import { Dashboard } from "./pages/Dashboard";
 import { Athletes } from "./pages/Athletes";
 import { AthleteDetail } from "./pages/AthleteDetail";
@@ -13,22 +14,25 @@ import { Settings } from "./pages/Settings";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="athletes" element={<Athletes />} />
-          <Route path="athletes/:id" element={<AthleteDetail />} />
-          <Route path="results" element={<Results />} />
-          <Route path="calendar" element={<Calendar />} />
-          <Route path="statistics" element={<Statistics />} />
-          <Route path="goals" element={<Goals />} />
-          <Route path="photos" element={<Photos />} />
-          <Route path="settings" element={<Settings />} />
-        </Route>
-      </Routes>
-      <ToastContainer />
-    </BrowserRouter>
+    <ErrorBoundary>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="athletes" element={<Athletes />} />
+            <Route path="athletes/:id" element={<AthleteDetail />} />
+            <Route path="results" element={<Results />} />
+            <Route path="calendar" element={<Calendar />} />
+            <Route path="statistics" element={<Statistics />} />
+            <Route path="goals" element={<Goals />} />
+            <Route path="photos" element={<Photos />} />
+            <Route path="settings" element={<Settings />} />
+          </Route>
+        </Routes>
+        <ToastContainer />
+        <BirthdayOverlay />
+      </BrowserRouter>
+    </ErrorBoundary>
   );
 }
 

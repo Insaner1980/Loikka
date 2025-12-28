@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAthleteStore } from "../stores/useAthleteStore";
 import type { Medal, Goal } from "../types";
 import type { ResultWithDiscipline } from "../components/athletes/tabs";
@@ -33,8 +33,15 @@ export function useAthleteData(athleteId: number): UseAthleteDataReturn {
     loading: true,
   });
 
+  // Track current athlete ID to prevent stale updates
+  const currentAthleteIdRef = useRef(athleteId);
+
   const fetchAll = useCallback(async () => {
     if (!athleteId) return;
+
+    // Update ref to current athlete
+    currentAthleteIdRef.current = athleteId;
+    const fetchAthleteId = athleteId;
 
     setData((prev) => ({ ...prev, loading: true }));
 
@@ -45,17 +52,22 @@ export function useAthleteData(athleteId: number): UseAthleteDataReturn {
       getAthleteGoals(athleteId),
     ]);
 
-    setData({
-      results: resultsData,
-      personalBests: pbData,
-      medals: medalsData,
-      goals: goalsData,
-      loading: false,
-    });
+    // Only update if this is still the current athlete (prevent stale updates)
+    if (currentAthleteIdRef.current === fetchAthleteId) {
+      setData({
+        results: resultsData,
+        personalBests: pbData,
+        medals: medalsData,
+        goals: goalsData,
+        loading: false,
+      });
+    }
   }, [athleteId, getAthleteResults, getAthletePersonalBests, getAthleteMedals, getAthleteGoals]);
 
   const refetchResults = useCallback(async () => {
     if (!athleteId) return;
+
+    const fetchAthleteId = athleteId;
 
     const [resultsData, pbData, medalsData] = await Promise.all([
       getAthleteResults(athleteId),
@@ -63,22 +75,33 @@ export function useAthleteData(athleteId: number): UseAthleteDataReturn {
       getAthleteMedals(athleteId),
     ]);
 
-    setData((prev) => ({
-      ...prev,
-      results: resultsData,
-      personalBests: pbData,
-      medals: medalsData,
-    }));
+    // Only update if this is still the current athlete
+    if (currentAthleteIdRef.current === fetchAthleteId) {
+      setData((prev) => ({
+        ...prev,
+        results: resultsData,
+        personalBests: pbData,
+        medals: medalsData,
+      }));
+    }
   }, [athleteId, getAthleteResults, getAthletePersonalBests, getAthleteMedals]);
 
   const refetchGoals = useCallback(async () => {
     if (!athleteId) return;
 
+    const fetchAthleteId = athleteId;
+
     const goalsData = await getAthleteGoals(athleteId);
-    setData((prev) => ({ ...prev, goals: goalsData }));
+
+    // Only update if this is still the current athlete
+    if (currentAthleteIdRef.current === fetchAthleteId) {
+      setData((prev) => ({ ...prev, goals: goalsData }));
+    }
   }, [athleteId, getAthleteGoals]);
 
   useEffect(() => {
+    // Update ref when athleteId changes
+    currentAthleteIdRef.current = athleteId;
     fetchAll();
   }, [athleteId]); // eslint-disable-line react-hooks/exhaustive-deps
 

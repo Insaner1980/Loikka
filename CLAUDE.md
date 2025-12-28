@@ -347,7 +347,7 @@ export const useMyStore = create<MyStore>((set, get) => ({
 | `useAddShortcut` | Lisää uusi -pikanäppäin (Ctrl+U), sivukohtainen |
 | `useEscapeKey` | Esc-näppäin (peruuta/sulje), ehdollinen aktivointi |
 | `useCalendarKeyboard` | Kalenterin näppäinohjaus (←/→ kuukaudet) |
-| `useTheme` | Teeman hallinta (vain dark) |
+| `useDisciplineFields` | Lajin kentät (tuuli, väline, aita) lomakkeissa |
 | `useAthleteData` | Urheilijan tulokset, ennätykset, mitalit, tavoitteet |
 | `useDropdownPosition` | Pudotusvalikon sijoittelu dialog/ikkunan rajojen sisään |
 | `useBackgroundDeselect` | Valintatilan poisto taustaa klikkaamalla |
@@ -362,6 +362,8 @@ export const useMyStore = create<MyStore>((set, get) => ({
 | `DisciplineSelect` | Lajivalitsin lomakkeissa (ikäluokkasuodatus) |
 | `DisciplineFilterSelect` | Lajin suodatusvalitsin (kategorioittain) |
 | `FilterSelect` | Yleinen suodatusvalitsin |
+| `TimeInput` | Aikasyöttö (min:sek.sadasosat) |
+| `DistanceInput` | Matkasyöttö (metrit.senttimetrit) |
 | `SlidePanel` | Sivusta liukuva paneeli |
 
 ### Keskitetyt CSS-luokat
@@ -431,6 +433,17 @@ className="bg-card border border-border-subtle hover:border-border-hover transit
 className="hover:bg-card-hover transition-colors duration-150"
 ```
 
+**Lomakekentät:**
+```tsx
+// Kaikki input-kentät käyttävät bg-card (tumman harmaa, yhtenäinen FilterSelect:n kanssa)
+// autoComplete="one-time-code" estää selaimen täydennyksen (off ei toimi Chromessa)
+<input
+  type="text"
+  autoComplete="one-time-code"
+  className="w-full px-3 py-2 bg-card border border-border rounded-lg input-focus"
+/>
+```
+
 ### Tiedostopolut
 
 - Käytä suhteellisia polkuja (`../components/...`)
@@ -493,6 +506,14 @@ Migraatiot ajetaan automaattisesti sovelluksen käynnistyksessä (`database.rs`)
 | v3 | Photos-taulun uudelleenluonti (entity-pohjainen) |
 | v4 | Lisää `level`-sarake competitions-tauluun |
 | v5 | Lisää `competition_level`-sarake results-tauluun |
+| v6 | Lisää `wind`, `status`, `equipment_weight`, `hurdle_height`, `hurdle_spacing` results-tauluun |
+| v7 | Lisää `gender`-sarake athletes-tauluun |
+| v8 | Lisää `event_name`-sarake photos-tauluun |
+| v9 | Lisää `is_national_record`-sarake results-tauluun |
+| v10 | Checkpoint - konsolidoitu skeema |
+| v11 | Testidatan seed |
+| v12 | Lisää `custom_level_name` results- ja competitions-tauluihin |
+| v13 | Päivittää CHECK-rajoitukset sisältämään 'muu' kilpailutason |
 
 ## Muuta
 

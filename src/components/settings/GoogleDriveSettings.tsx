@@ -188,12 +188,12 @@ export function GoogleDriveSettings() {
                 {authStatus.isAuthenticated ? "Yhdistetty" : "Ei yhdistetty"}
               </div>
               {authStatus.isAuthenticated && authStatus.userEmail && (
-                <div className="text-sm text-muted-foreground">
+                <div className="text-body text-muted-foreground">
                   {authStatus.userEmail}
                 </div>
               )}
               {!authStatus.isAuthenticated && (
-                <div className="text-sm text-muted-foreground">
+                <div className="text-body text-muted-foreground">
                   Yhdistä Google Drive varmuuskopiointia varten
                 </div>
               )}
@@ -204,7 +204,7 @@ export function GoogleDriveSettings() {
             <button
               onClick={handleDisconnect}
               disabled={loading}
-              className="px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:text-foreground hover:border-border-hover transition-colors disabled:opacity-50 cursor-pointer"
+              className="px-4 py-2 text-body font-medium text-muted-foreground border border-border rounded-lg hover:text-foreground hover:border-border-hover transition-colors disabled:opacity-50 cursor-pointer"
             >
               Katkaise yhteys
             </button>
@@ -212,7 +212,7 @@ export function GoogleDriveSettings() {
             <button
               onClick={handleConnect}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium bg-primary text-secondary rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 text-body font-medium bg-primary text-secondary rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 cursor-pointer"
             >
               {loading ? (
                 <Loader2 size={16} className="animate-spin" />
@@ -249,8 +249,8 @@ export function GoogleDriveSettings() {
                         className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
                       >
                         <div>
-                          <div className="font-medium text-sm">{backup.name}</div>
-                          <div className="text-xs text-muted-foreground">
+                          <div className="font-medium text-body">{backup.name}</div>
+                          <div className="text-caption text-muted-foreground">
                             {formatBackupDate(backup.createdAt)} •{" "}
                             {formatBackupSize(backup.sizeBytes)}
                           </div>
@@ -260,7 +260,6 @@ export function GoogleDriveSettings() {
                             onClick={() => handleRestoreBackup(backup.id)}
                             disabled={loading}
                             className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
-                            title="Palauta tämä varmuuskopio"
                           >
                             <Download size={16} />
                           </button>
@@ -268,7 +267,6 @@ export function GoogleDriveSettings() {
                             onClick={() => handleDeleteBackup(backup.id)}
                             disabled={loading}
                             className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors cursor-pointer"
-                            title="Poista varmuuskopio"
                           >
                             <Trash2 size={16} />
                           </button>
@@ -286,7 +284,6 @@ export function GoogleDriveSettings() {
                 onClick={handleUploadClick}
                 disabled={loading}
                 className="flex-1 flex items-center justify-center px-4 py-4 border border-border rounded-lg hover:bg-muted hover:text-accent transition-colors disabled:opacity-50 cursor-pointer"
-                title="Lähetä pilveen"
               >
                 <ArrowUpFromLine size={28} />
               </button>
@@ -294,7 +291,6 @@ export function GoogleDriveSettings() {
                 onClick={handleDownloadClick}
                 disabled={loading}
                 className="flex-1 flex items-center justify-center px-4 py-4 border border-border rounded-lg hover:bg-muted hover:text-accent transition-colors disabled:opacity-50 cursor-pointer"
-                title="Lataa pilvestä"
               >
                 <ArrowDownToLine size={28} />
               </button>

@@ -56,7 +56,7 @@ export function Settings() {
               <Download size={20} className="text-muted-foreground" />
               <div className="text-left">
                 <span className="font-medium">Vie tiedot</span>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-body text-muted-foreground">
                   Tallenna kaikki tiedot JSON-tiedostoon
                 </p>
               </div>
@@ -70,7 +70,7 @@ export function Settings() {
               <Upload size={20} className="text-muted-foreground" />
               <div className="text-left">
                 <span className="font-medium">Tuo tiedot</span>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-body text-muted-foreground">
                   Lataa tiedot JSON-tiedostosta
                 </p>
               </div>

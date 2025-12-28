@@ -99,7 +99,8 @@ function MainView({
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Hae ohjeista..."
-            className="w-full pl-9 pr-8 py-2 text-body bg-background border border-border-subtle rounded-md input-focus"
+            autoComplete="one-time-code"
+            className="w-full pl-9 pr-8 py-2 text-body bg-card border border-border-subtle rounded-md input-focus"
           />
           {searchQuery && (
             <button

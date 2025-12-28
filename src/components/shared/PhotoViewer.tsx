@@ -140,7 +140,7 @@ export function PhotoViewer({
           </div>
         )}
         <div className="px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-lg">
-          <span className="text-white/80 text-sm">
+          <span className="text-white/80 text-body">
             {currentPhoto.originalName}
             {hasMultiple && (
               <span className="text-white/50 ml-2">

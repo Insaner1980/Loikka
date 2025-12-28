@@ -115,20 +115,20 @@ export const GoalCard = memo(function GoalCard({
             </span>
           )}
         </div>
-        <p className="text-sm text-muted-foreground">{disciplineName}</p>
+        <p className="text-body text-muted-foreground">{disciplineName}</p>
       </div>
 
       {/* Target */}
       <div className="mb-3">
         <div className="flex items-baseline justify-between">
-          <span className="text-sm text-muted-foreground">Tavoite:</span>
-          <span className="text-xl font-bold">{formatValue(goal.targetValue)}</span>
+          <span className="text-body text-muted-foreground">Tavoite:</span>
+          <span className="text-heading font-bold">{formatValue(goal.targetValue)}</span>
         </div>
       </div>
 
       {/* Progress bar */}
       <div className="mb-3">
-        <div className="flex items-center justify-between text-sm mb-1">
+        <div className="flex items-center justify-between text-body mb-1">
           <span className="text-muted-foreground">Edistyminen</span>
           <span className="font-medium">{Math.round(progress)}%</span>
         </div>
@@ -141,7 +141,7 @@ export const GoalCard = memo(function GoalCard({
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 text-sm">
+      <div className="grid grid-cols-2 gap-3 text-body">
         <div>
           <span className="text-muted-foreground">Nykyinen:</span>
           <p className="font-medium">{formatValue(currentBest)}</p>
@@ -162,7 +162,7 @@ export const GoalCard = memo(function GoalCard({
 
       {/* Target date */}
       {goal.targetDate && !isCompleted && (
-        <div className="mt-3 pt-3 flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="mt-3 pt-3 flex items-center gap-2 text-body text-muted-foreground">
           <Calendar size={14} />
           <span>DDL: {formatDate(goal.targetDate)}</span>
         </div>

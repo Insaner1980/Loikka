@@ -25,16 +25,16 @@ function StatCard({ title, value, subtitle, icon, trend }: StatCardProps) {
     <div className="bg-card rounded-xl border border-border p-4">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm text-muted-foreground">{title}</p>
+          <p className="text-body text-muted-foreground">{title}</p>
           <p className="text-stat font-bold mt-1">{value}</p>
           {subtitle && (
-            <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>
+            <p className="text-body text-muted-foreground mt-1">{subtitle}</p>
           )}
         </div>
         <div className="p-2 bg-primary/10 rounded-lg text-primary">{icon}</div>
       </div>
       {trend && (
-        <div className="flex items-center gap-1 mt-3 text-sm text-foreground">
+        <div className="flex items-center gap-1 mt-3 text-body text-foreground">
           {trend.isPositive ? (
             <TrendingUp size={16} />
           ) : (

@@ -41,6 +41,10 @@ body {
   --color-gold: #FFD700;
   --color-silver: #C0C0C0;
   --color-bronze: #CD7F32;
+  --color-medal-text: rgba(0, 0, 0, 0.7);
+
+  /* Close button (window controls) */
+  --color-close-hover: var(--status-error);
 
   /* CSS variable references */
   --color-background: var(--bg-base);
@@ -49,6 +53,7 @@ body {
   --color-card-hover: var(--bg-hover);
   --color-muted: var(--bg-elevated);
   --color-muted-foreground: var(--text-secondary);
+  --color-placeholder: var(--text-placeholder);
   --color-tertiary: var(--text-muted);
   --color-border: var(--border-default);
   --color-border-subtle: var(--border-subtle);
@@ -409,7 +414,7 @@ body {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 20px var(--accent-muted);
   }
 
-  /* Input styling */
+  /* Input styling - base class (legacy) */
   .input-base {
     @apply rounded-md transition-all duration-150;
     background: var(--bg-elevated);
@@ -421,6 +426,12 @@ body {
     color: var(--text-placeholder);
   }
 
+  /* Global placeholder styling for all inputs */
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--text-placeholder);
+    opacity: 1; /* Firefox */
+  }
   /* Dropdown/Popover styling */
   .autocomplete-popup,
   .dropdown-menu,
@@ -527,6 +538,29 @@ body {
   .input-focus:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 2px var(--accent-muted);
+  }
+
+  /* Override browser autofill styling */
+  input:-webkit-autofill,
+  input:-webkit-autofill:hover,
+  input:-webkit-autofill:focus,
+  input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px var(--bg-base) inset !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
+    caret-color: var(--text-primary) !important;
+    transition: background-color 5000s ease-in-out 0s;
+  }
+
+  /* Hide native number input spinners - they don't match dark theme */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
   }
 
   /* Dropdown menu - portal-based dropdowns */

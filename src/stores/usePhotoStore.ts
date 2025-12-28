@@ -3,38 +3,11 @@ import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { getErrorMessage } from "../lib";
+import type { Photo, PhotoWithDetails, PhotoEntityType } from "../types";
 
-export interface PhotoWithDetails {
-  id: number;
-  entityType: string;
-  entityId: number;
-  filePath: string;
-  thumbnailPath: string | null;
-  originalName: string;
-  width: number | null;
-  height: number | null;
-  sizeBytes: number;
-  eventName: string | null;
-  createdAt: string;
-  athleteName: string | null;
-  competitionName: string | null;
-}
-
-// Simplified photo type for entity-specific fetching
-export interface Photo {
-  id: number;
-  entityType: string;
-  entityId: number;
-  filePath: string;
-  thumbnailPath: string | null;
-  originalName: string;
-  width: number | null;
-  height: number | null;
-  sizeBytes: number;
-  createdAt: string;
-}
-
-export type EntityType = "athletes" | "results" | "competitions";
+// Re-export types for backwards compatibility
+export type { Photo, PhotoWithDetails };
+export type EntityType = PhotoEntityType;
 
 interface PhotoFilters {
   athleteId?: number;
@@ -203,6 +176,9 @@ export const usePhotoStore = create<PhotoStore>((set, get) => ({
   },
 
   fetchPhotos: async (filters?: PhotoFilters) => {
+    // Prevent concurrent fetches
+    if (get().loading) return;
+
     const effectiveFilters = filters || get().filters;
     set({ loading: true, error: null });
 

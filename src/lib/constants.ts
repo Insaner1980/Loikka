@@ -94,12 +94,15 @@ export const DISCIPLINE_EQUIPMENT_MAP: Record<string, keyof typeof EQUIPMENT_WEI
 
 // Competition level options for dropdowns
 export const COMPETITION_LEVEL_OPTIONS = [
-  { value: "seura", label: "Seuran kisat" },
-  { value: "seuraottelu", label: "Seuraottelu" },
-  { value: "piiri", label: "Piirikisat" },
-  { value: "pm", label: "Piirimestaruus (PM)" },
-  { value: "alue", label: "Aluemestaruus" },
-  { value: "sm", label: "Suomenmestaruus (SM)" },
-  { value: "kll", label: "Koululiikuntaliiton kisat (KLL)" },
+  { value: "seurakisat", label: "Seurakisat" },
+  { value: "koululaiskisat", label: "Koululaiskisat" },
+  { value: "seuran_sisaiset", label: "Seuran sisäiset kisat" },
+  { value: "seuraottelut", label: "Seuraottelut" },
+  { value: "piirikisat", label: "Piirikisat" },
+  { value: "pm", label: "Piirinmestaruuskilpailut (PM)" },
+  { value: "hallikisat", label: "Hallikisat" },
+  { value: "aluekisat", label: "Aluekisat" },
+  { value: "pohjola_seuracup", label: "Pohjola Seuracup" },
+  { value: "sm", label: "SM-kilpailut" },
   { value: "muu", label: "Muu" },
 ] as const;

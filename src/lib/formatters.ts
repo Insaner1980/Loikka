@@ -1,4 +1,5 @@
 import { convertFileSrc } from "@tauri-apps/api/core";
+import { differenceInDays, parseISO, startOfDay } from "date-fns";
 import { WIND } from "./constants";
 
 /**
@@ -8,6 +9,11 @@ import { WIND } from "./constants";
  * >= 3600 seconds: "1:02:34.56"
  */
 export function formatTime(seconds: number): string {
+  // Handle edge cases
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    return "0.00";
+  }
+
   if (seconds < 60) {
     return seconds.toFixed(2);
   }
@@ -29,17 +35,58 @@ export function formatTime(seconds: number): string {
  * e.g., "4.56 m"
  */
 export function formatDistance(meters: number): string {
+  // Handle edge cases
+  if (!Number.isFinite(meters) || meters < 0) {
+    return "0.00 m";
+  }
   return `${meters.toFixed(2)} m`;
 }
 
 /**
  * Format a date string to Finnish locale.
+ * e.g., "21.12.2025"
  */
 export function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("fi-FI", {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  // Check for invalid date
+  if (isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("fi-FI", {
     day: "numeric",
     month: "numeric",
     year: "numeric",
+  });
+}
+
+/**
+ * Format a date string to Finnish locale with time.
+ * e.g., "21.12.2025 14:30"
+ */
+export function formatDateTime(dateString: string): string {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("fi-FI", {
+    day: "numeric",
+    month: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/**
+ * Format a date string to short Finnish format (day.month only).
+ * Useful for chart labels.
+ * e.g., "21.12"
+ */
+export function formatShortDate(dateString: string): string {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "";
+  return date.toLocaleDateString("fi-FI", {
+    day: "numeric",
+    month: "numeric",
   });
 }
 
@@ -160,17 +207,22 @@ export function getStatusLabel(status: string | undefined | null): string {
  * Get initials from first and last name.
  */
 export function getInitials(firstName: string, lastName: string): string {
-  return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
+  const first = firstName?.charAt(0) || "";
+  const last = lastName?.charAt(0) || "";
+  return `${first}${last}`.toUpperCase();
 }
 
 /**
  * Calculate the number of days until a given date.
+ * Uses date-fns for reliable timezone handling.
  */
 export function getDaysUntil(dateStr: string): number {
-  const date = new Date(dateStr);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  date.setHours(0, 0, 0, 0);
-  const diff = date.getTime() - today.getTime();
-  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  try {
+    const targetDate = startOfDay(parseISO(dateStr));
+    const today = startOfDay(new Date());
+    return differenceInDays(targetDate, today);
+  } catch {
+    // Fallback for invalid date strings
+    return 0;
+  }
 }

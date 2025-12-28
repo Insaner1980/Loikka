@@ -46,7 +46,7 @@ export function AthleteCard({ athlete, stats }: AthleteCardProps) {
             loading="eager"
           />
         ) : (
-          <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center text-initials font-medium text-2xl flex-shrink-0">
+          <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center text-initials font-medium text-stat flex-shrink-0">
             {getInitials(athlete.firstName, athlete.lastName)}
           </div>
         )}
@@ -78,7 +78,7 @@ export function AthleteCard({ athlete, stats }: AthleteCardProps) {
 
       {/* Middle: Name, age class, club */}
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-foreground truncate">
+        <h3 className="text-title font-semibold text-foreground truncate">
           {athlete.firstName} {athlete.lastName}
         </h3>
         <div className="text-body text-muted-foreground mt-0.5">

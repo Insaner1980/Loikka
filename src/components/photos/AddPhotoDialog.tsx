@@ -248,7 +248,7 @@ export function AddPhotoDialog({
                 onChange={(e) => handleCompetitionInputChange(e.target.value)}
                 onFocus={() => setCompetitionDropdownOpen(true)}
                 placeholder="Kirjoita tai valitse kilpailu"
-                autoComplete="off"
+                autoComplete="one-time-code"
                 className="w-full bg-card border border-border rounded-lg px-4 py-2.5 text-sm input-focus pr-10"
                 disabled={!!preselectedCompetitionId}
               />

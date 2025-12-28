@@ -62,7 +62,7 @@ export function AthleteHeader({
         </button>
       ) : (
         <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center text-initials shrink-0">
-          <span className="text-2xl font-medium">
+          <span className="text-stat font-medium">
             {getInitials(athlete.firstName, athlete.lastName)}
           </span>
         </div>
@@ -94,7 +94,7 @@ export function AthleteHeader({
 
       {/* Name and details */}
       <div className="flex-1 min-w-0">
-        <h1 className="text-lg font-semibold text-foreground truncate">
+        <h1 className="text-title font-semibold text-foreground truncate">
           {athlete.firstName} {athlete.lastName}
         </h1>
         <div className="text-body text-muted-foreground mt-0.5">

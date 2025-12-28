@@ -47,6 +47,7 @@ export function CompetitionForm({
   const [location, setLocation] = useState(competition?.location ?? "");
   const [address, setAddress] = useState(competition?.address ?? "");
   const [level, setLevel] = useState<CompetitionLevel | "">(competition?.level ?? "");
+  const [customLevelName, setCustomLevelName] = useState(competition?.customLevelName ?? "");
   const [notes, setNotes] = useState(competition?.notes ?? "");
 
   // Participants state: map of athleteId -> selected disciplines
@@ -147,6 +148,7 @@ export function CompetitionForm({
       location: location.trim() || undefined,
       address: address.trim() || undefined,
       level: level || undefined,
+      customLevelName: level === "muu" ? customLevelName.trim() || undefined : undefined,
       notes: notes.trim() || undefined,
       reminderEnabled: false,
       reminderDaysBefore: undefined,
@@ -194,6 +196,24 @@ export function CompetitionForm({
         </div>
       </div>
 
+      {/* Custom level name - shown only when "Muu" is selected */}
+      {level === "muu" && (
+        <div>
+          <label htmlFor="customLevelName" className="block text-sm font-medium mb-1.5">
+            Kilpailutason nimi
+          </label>
+          <input
+            type="text"
+            id="customLevelName"
+            value={customLevelName}
+            onChange={(e) => setCustomLevelName(e.target.value)}
+            placeholder="esim. Kansainvälinen kutsukilpailu"
+            autoComplete="one-time-code"
+            className="w-full px-3 py-2 bg-card border border-border rounded-lg input-focus"
+          />
+        </div>
+      )}
+
       {/* Row 2: Date + EndDate + Location */}
       <div className="grid grid-cols-3 gap-4">
         <div>
@@ -238,8 +258,8 @@ export function CompetitionForm({
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="esim. Tampere"
-            autoComplete="off"
-            className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
+            autoComplete="one-time-code"
+            className="w-full px-3 py-2 bg-card border border-border rounded-lg input-focus"
           />
         </div>
       </div>
@@ -257,7 +277,8 @@ export function CompetitionForm({
             value={address}
             onChange={(e) => setAddress(e.target.value)}
             placeholder="esim. Ratina stadion"
-            className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
+            autoComplete="one-time-code"
+            className="w-full px-3 py-2 bg-card border border-border rounded-lg input-focus"
           />
         </div>
 
@@ -272,7 +293,8 @@ export function CompetitionForm({
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Valinnainen lisätieto..."
-            className="w-full px-3 py-2 bg-background border border-border rounded-lg input-focus"
+            autoComplete="one-time-code"
+            className="w-full px-3 py-2 bg-card border border-border rounded-lg input-focus"
           />
         </div>
       </div>

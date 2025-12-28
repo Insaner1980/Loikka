@@ -38,7 +38,7 @@ function Toast({ id, type: _type, message, duration = TOAST.DURATION_MS, onClose
       {/* Accent color left border */}
       <div className="w-1 self-stretch bg-[var(--accent)]" />
       <div className="flex items-center gap-3 px-4 py-3 flex-1">
-        <span className="flex-1 text-sm font-medium text-foreground">{message}</span>
+        <span className="flex-1 text-body font-medium text-foreground">{message}</span>
         <button
           onClick={handleClose}
           className="shrink-0 p-1 rounded-lg hover:bg-border-hover transition-colors text-muted-foreground hover:text-foreground"

@@ -114,7 +114,7 @@ export function DisciplineSelect({
         type="button"
         onClick={() => !disabled && toggle()}
         disabled={disabled}
-        className={`w-full bg-background border border-border rounded-lg px-3 py-2 text-body text-left flex items-center justify-between focus:outline-none disabled:opacity-50 cursor-pointer transition-all duration-150 ${isOpen ? "border-accent shadow-[0_0_0_2px_var(--accent-muted)]" : ""} ${className}`}
+        className={`w-full bg-card border border-border rounded-lg px-3 py-2 text-body text-left flex items-center justify-between focus:outline-none disabled:opacity-50 cursor-pointer transition-all duration-150 ${isOpen ? "border-accent shadow-[0_0_0_2px_var(--accent-muted)]" : ""} ${className}`}
       >
         <span className={value ? "text-foreground" : "text-muted-foreground"}>
           {selectedName}

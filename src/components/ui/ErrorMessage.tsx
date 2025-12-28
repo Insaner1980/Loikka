@@ -16,7 +16,7 @@ export function ErrorMessage({
       <div className="w-16 h-16 rounded-full bg-[var(--accent)]/10 flex items-center justify-center mb-4">
         <AlertCircle size={32} className="text-[var(--accent)]" />
       </div>
-      <h3 className="text-lg font-semibold mb-2">{title}</h3>
+      <h3 className="text-title font-semibold mb-2">{title}</h3>
       <p className="text-muted-foreground mb-4 max-w-md">{message}</p>
       {onRetry && (
         <button

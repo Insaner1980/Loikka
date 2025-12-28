@@ -87,7 +87,7 @@ export function CalendarView({
         >
           <ChevronLeft size={18} />
         </button>
-        <h2 className="text-sm font-medium text-foreground">{capitalizedLabel}</h2>
+        <h2 className="text-body font-medium text-foreground">{capitalizedLabel}</h2>
         <button
           onClick={goToNextMonth}
           className="p-1.5 rounded-md text-tertiary hover:text-foreground hover:bg-muted transition-colors duration-150 cursor-pointer"

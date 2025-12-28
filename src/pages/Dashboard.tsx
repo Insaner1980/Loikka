@@ -193,10 +193,10 @@ export function Dashboard() {
                   )}
                   {/* Name overlay at bottom */}
                   <div className="absolute bottom-0 left-0 right-0 p-3" style={{ background: "var(--overlay-gradient)" }}>
-                    <div className="text-sm font-medium text-white">
+                    <div className="text-body font-medium text-white">
                       {athlete.firstName}
                     </div>
-                    <div className="text-xs text-white/70">
+                    <div className="text-caption text-white/70">
                       {athlete.lastName}
                     </div>
                   </div>
@@ -238,18 +238,18 @@ export function Dashboard() {
                     {/* Top row: Athlete name + discipline */}
                     <div className="mb-3">
                       <div className="font-medium text-foreground truncate">{result.athleteName?.split(' ')[0] || "Tuntematon"}</div>
-                      <div className="text-sm text-muted-foreground truncate">{result.disciplineName}</div>
+                      <div className="text-body text-muted-foreground truncate">{result.disciplineName}</div>
                     </div>
 
                     {/* Center: Result value (big) */}
                     <div className="flex-1 flex flex-col items-center justify-center py-2">
                       {(result.status && result.status !== "valid") || result.value === 0 ? (
-                        <span className="px-3 py-1.5 text-sm font-medium rounded-lg bg-muted text-muted-foreground">
+                        <span className="px-3 py-1.5 text-body font-medium rounded-lg bg-muted text-muted-foreground">
                           {getStatusLabel(result.status) || "Ei tulosta"}
                         </span>
                       ) : (
                         <>
-                          <span className="text-2xl font-bold tabular-nums text-foreground">
+                          <span className="text-stat font-bold tabular-nums text-foreground">
                             {result.disciplineUnit === "time"
                               ? formatTime(result.value)
                               : formatDistance(result.value)}
@@ -268,7 +268,7 @@ export function Dashboard() {
                     <div className="h-px w-full bg-border my-3" />
 
                     {/* Bottom: Date, competition/training, placement */}
-                    <div className="flex items-center justify-between gap-2 text-sm">
+                    <div className="flex items-center justify-between gap-2 text-body">
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5 text-foreground">
                           <Calendar size={13} className="text-muted-foreground shrink-0" />
@@ -300,12 +300,12 @@ export function Dashboard() {
                           <div
                             className={`w-7 h-7 rounded-full ${medalColors[result.placement as 1 | 2 | 3]} flex items-center justify-center shadow-sm`}
                           >
-                            <span className="text-xs font-bold text-black/70">{result.placement}</span>
+                            <span className="text-caption font-bold text-medal-text">{result.placement}</span>
                           </div>
                         )}
                         {result.placement && result.placement > 3 && (
                           <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">
-                            <span className="text-xs font-semibold text-muted-foreground">{result.placement}</span>
+                            <span className="text-caption font-semibold text-muted-foreground">{result.placement}</span>
                           </div>
                         )}
                       </div>
@@ -345,7 +345,7 @@ export function Dashboard() {
             <div className="pt-4 border-t border-border">
               <button
                 onClick={handleDeleteClick}
-                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                className="flex items-center gap-2 text-body text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
               >
                 <Trash2 size={16} />
                 Poista kilpailu

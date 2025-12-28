@@ -273,8 +273,8 @@ export function DatePicker({
           onBlur={handleInputBlur}
           onFocus={() => setIsOpen(true)}
           placeholder={placeholder}
-          autoComplete="off"
-          className={`w-full pl-3 pr-10 py-2 bg-background border rounded-lg input-focus ${
+          autoComplete="one-time-code"
+          className={`w-full pl-3 pr-10 py-2 bg-card border rounded-lg input-focus ${
             error ? "border-error" : "border-border"
           }`}
         />

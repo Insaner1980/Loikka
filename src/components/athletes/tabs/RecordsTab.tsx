@@ -78,19 +78,19 @@ export function RecordsTab({ personalBests }: RecordsTabProps) {
               className="rounded-xl bg-card border border-border-subtle hover:border-border-hover transition-colors duration-150 p-4 flex flex-col"
             >
               {/* Top: Discipline */}
-              <div className="text-sm font-medium text-foreground mb-3">
+              <div className="text-body font-medium text-foreground mb-3">
                 {result.discipline.fullName}
               </div>
 
               {/* Center: Result value (big) */}
               <div className="flex-1 flex flex-col items-center justify-center py-2">
                 {(result.status && result.status !== "valid") || result.value === 0 ? (
-                  <span className="px-3 py-1.5 text-sm font-medium rounded-lg bg-muted text-muted-foreground">
+                  <span className="px-3 py-1.5 text-body font-medium rounded-lg bg-muted text-muted-foreground">
                     {getStatusLabel(result.status) || "Ei tulosta"}
                   </span>
                 ) : (
                   <>
-                    <span className="text-2xl font-bold tabular-nums text-foreground">
+                    <span className="text-stat font-bold tabular-nums text-foreground">
                       {result.discipline.unit === "time"
                         ? formatTime(result.value)
                         : formatDistance(result.value)}
@@ -109,7 +109,7 @@ export function RecordsTab({ personalBests }: RecordsTabProps) {
               <div className="h-px w-full bg-border my-3" />
 
               {/* Bottom: Date + competition */}
-              <div className="text-sm text-muted-foreground">
+              <div className="text-body text-muted-foreground">
                 <div>{formatDate(result.date)}</div>
                 {result.competitionName && (
                   <div className="truncate mt-0.5">{result.competitionName}</div>

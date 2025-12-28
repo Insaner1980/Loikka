@@ -2,8 +2,8 @@ import type { Discipline, DisciplineCategory, AgeCategory } from "../types";
 
 // Category labels in Finnish
 export const categoryLabels: Record<DisciplineCategory, string> = {
-  sprints: "Pikajuoksut",
-  middleDistance: "Keskimatkat",
+  sprints: "Pikajuoksu",
+  middleDistance: "Keskimatka",
   longDistance: "Kestävyys",
   hurdles: "Aidat",
   jumps: "Hypyt",
@@ -318,6 +318,14 @@ export const disciplines: Discipline[] = [
     lowerIsBetter: true,
   },
   {
+    id: 41,
+    name: "1000 m kävely",
+    fullName: "1000 metriä kävely",
+    category: "walking",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+  {
     id: 37,
     name: "2000 m kävely",
     fullName: "2000 metriä kävely",
@@ -352,43 +360,44 @@ export const disciplines: Discipline[] = [
 ];
 
 // Disciplines available for each age category
-// Based on Finnish Athletics Federation (SUL) rules
+// Based on Finnish Athletics Federation (SUL) rules and HIPPO/seurakilpailut
+// Source: docs/DISCIPLINES_BY_AGE.md
 const disciplineIdsByAgeCategory: Record<AgeCategory, number[]> = {
   // HIPPO-kisat, seurakilpailut (not in official statistics)
-  T3: [1, 22], // 40m, pituus
-  T4: [1, 22], // 40m, pituus
-  T5: [1, 22, 30], // 40m, pituus, pallo
-  T6: [1, 22, 30], // 40m, pituus, pallo
-  T7: [2, 22, 23, 30], // 60m, pituus, korkeus, pallo
-  T8: [2, 9, 22, 23, 30], // 60m, 800m, pituus, korkeus, pallo
+  T3: [1, 22, 30], // 40m, pituus, pallo
+  T4: [1, 22, 30], // 40m, pituus, pallo
+  T5: [1, 22, 23, 28, 30], // 40m, pituus, korkeus, keihäs, pallo
+  T6: [1, 22, 23, 28, 30], // 40m, pituus, korkeus, keihäs, pallo
+  T7: [1, 2, 8, 22, 23, 28, 30], // 40m, 60m, 600m, pituus, korkeus, keihäs, pallo
+  T8: [1, 2, 8, 9, 22, 23, 26, 28, 30], // 40m, 60m, 600m, 800m, pituus, korkeus, kuula, keihäs, pallo
 
   // Official SUL statistics (T9+)
   T9: [
     1, 2, // 40m, 60m
-    8, 10, // 600m, 1000m
+    8, 9, 10, // 600m, 800m, 1000m
     16, // 60m aj
-    22, 23, 25, // pituus, korkeus, seiväs
-    26, 27, 30, // kuula, kiekko, pallo
-    31, // 3-ottelu
-    35, 36, // kävely 600m, 800m
+    22, 23, 24, 25, // pituus, korkeus, kolmiloikka, seiväs
+    26, 27, 28, 29, 30, // kuula, kiekko, keihäs, moukari, pallo
+    31, 32, // 3-ottelu, 4-ottelu
+    35, 36, // 600m kävely, 800m kävely
   ],
   T10: [
     2, 4, // 60m, 150m
     8, 9, 10, // 600m, 800m, 1000m
     16, // 60m aj
-    22, 23, 25, // pituus, korkeus, seiväs
-    26, 27, 28, 30, // kuula, kiekko, keihäs, pallo
-    31, // 3-ottelu
-    35, 36, // kävely
+    22, 23, 24, 25, // pituus, korkeus, kolmiloikka, seiväs
+    26, 27, 28, 29, 30, // kuula, kiekko, keihäs, moukari, pallo
+    31, 32, // 3-ottelu, 4-ottelu
+    41, // 1000m kävely
   ],
   T11: [
     2, 4, // 60m, 150m
     8, 9, 10, // 600m, 800m, 1000m
     16, // 60m aj
-    22, 23, 25, // pituus, korkeus, seiväs
-    26, 27, 28, 30, // kuula, kiekko, keihäs, pallo
-    31, // 3-ottelu
-    35, 36, // kävely
+    22, 23, 24, 25, // pituus, korkeus, kolmiloikka, seiväs
+    26, 27, 28, 29, 30, // kuula, kiekko, keihäs, moukari, pallo
+    31, 32, // 3-ottelu, 4-ottelu
+    41, // 1000m kävely
   ],
   T12: [
     2, 3, 5, // 60m, 100m, 200m
@@ -396,8 +405,8 @@ const disciplineIdsByAgeCategory: Record<AgeCategory, number[]> = {
     16, 19, // 60m aj, 200m aj
     22, 23, 24, 25, // pituus, korkeus, kolmiloikka, seiväs
     26, 27, 28, 29, // kuula, kiekko, keihäs, moukari
-    32, // 4-ottelu
-    37, // kävely 2000m
+    32, 33, // 4-ottelu, 5-ottelu
+    37, // 2000m kävely
   ],
   T13: [
     2, 3, 5, 6, // 60m, 100m, 200m, 300m
@@ -405,8 +414,8 @@ const disciplineIdsByAgeCategory: Record<AgeCategory, number[]> = {
     16, 19, // 60m aj, 200m aj
     22, 23, 24, 25, // pituus, korkeus, kolmiloikka, seiväs
     26, 27, 28, 29, // kuula, kiekko, keihäs, moukari
-    32, // 4-ottelu
-    37, // kävely 2000m
+    32, 33, // 4-ottelu, 5-ottelu
+    37, // 2000m kävely
   ],
   T14: [
     3, 5, 6, 7, // 100m, 200m, 300m, 400m
@@ -415,7 +424,7 @@ const disciplineIdsByAgeCategory: Record<AgeCategory, number[]> = {
     22, 23, 24, 25, // pituus, korkeus, kolmiloikka, seiväs
     26, 27, 28, 29, // kuula, kiekko, keihäs, moukari
     33, // 5-ottelu
-    37, // kävely 2000m
+    38, // 3000m kävely
   ],
   T15: [
     3, 5, 6, 7, // 100m, 200m, 300m, 400m
@@ -424,7 +433,7 @@ const disciplineIdsByAgeCategory: Record<AgeCategory, number[]> = {
     22, 23, 24, 25, // pituus, korkeus, kolmiloikka, seiväs
     26, 27, 28, 29, // kuula, kiekko, keihäs, moukari
     33, // 5-ottelu
-    37, // kävely 2000m
+    38, // 3000m kävely
   ],
 
   // Nuoret naiset (N17, N19, N22)
@@ -435,7 +444,7 @@ const disciplineIdsByAgeCategory: Record<AgeCategory, number[]> = {
     22, 23, 24, 25, // pituus, korkeus, kolmiloikka, seiväs
     26, 27, 28, 29, // kuula, kiekko, keihäs, moukari
     33, 34, // 5-ottelu, 7-ottelu
-    38, // kävely 3000m
+    38, // 3000m kävely
   ],
   N19: [
     3, 5, 7, // 100m, 200m, 400m
@@ -444,7 +453,7 @@ const disciplineIdsByAgeCategory: Record<AgeCategory, number[]> = {
     22, 23, 24, 25, // pituus, korkeus, kolmiloikka, seiväs
     26, 27, 28, 29, // kuula, kiekko, keihäs, moukari
     34, // 7-ottelu
-    38, 39, // kävely 3000m, 5000m
+    38, 39, // 3000m kävely, 5000m kävely
   ],
   N22: [
     3, 5, 7, // 100m, 200m, 400m
@@ -516,6 +525,7 @@ const DISCIPLINES_WITH_MINUTES = new Set([
   38, // 3000m kävely
   39, // 5000m kävely
   40, // 10km kävely
+  41, // 1000m kävely
 ]);
 
 // Check if a discipline needs minutes field in time input
@@ -615,3 +625,21 @@ export const ageCategoryLabels: Record<AgeCategory, string> = {
   N22: "N22 (20-22-vuotiaat)",
   N: "N (aikuiset)",
 };
+
+// Age category order (youngest to oldest) for sorting
+export const ageCategoryOrder: AgeCategory[] = [
+  "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10",
+  "T11", "T12", "T13", "T14", "T15", "N17", "N19", "N22", "N",
+];
+
+// Sort age categories from youngest to oldest
+export function sortAgeCategories(categories: string[]): string[] {
+  return [...categories].sort((a, b) => {
+    const indexA = ageCategoryOrder.indexOf(a as AgeCategory);
+    const indexB = ageCategoryOrder.indexOf(b as AgeCategory);
+    // If not found in order, put at end
+    if (indexA === -1) return 1;
+    if (indexB === -1) return -1;
+    return indexA - indexB;
+  });
+}

@@ -7,13 +7,16 @@ import { HoverCheckbox } from "../ui";
 
 // Competition level labels and highlight status
 const levelConfig: Record<CompetitionLevel, { label: string; highlighted: boolean }> = {
-  seura: { label: "Seura", highlighted: false },
-  seuraottelu: { label: "Seuraottelu", highlighted: false },
-  piiri: { label: "Piiri", highlighted: false },
+  seurakisat: { label: "Seurakisat", highlighted: false },
+  koululaiskisat: { label: "Koululaiskisat", highlighted: false },
+  seuran_sisaiset: { label: "Seuran sisäiset", highlighted: false },
+  seuraottelut: { label: "Seuraottelut", highlighted: false },
+  piirikisat: { label: "Piirikisat", highlighted: false },
   pm: { label: "PM", highlighted: true },
-  alue: { label: "Alue", highlighted: false },
+  hallikisat: { label: "Hallikisat", highlighted: false },
+  aluekisat: { label: "Aluekisat", highlighted: false },
+  pohjola_seuracup: { label: "Pohjola Seuracup", highlighted: true },
   sm: { label: "SM", highlighted: true },
-  kll: { label: "KLL", highlighted: true },
   muu: { label: "Muu", highlighted: false },
 };
 
@@ -46,12 +49,14 @@ function DaysUntilBadge({ date }: { date: string }) {
   return <span className="badge-status">{daysUntil} pv</span>;
 }
 
-function LevelBadge({ level }: { level: CompetitionLevel }) {
+function LevelBadge({ level, customLevelName }: { level: CompetitionLevel; customLevelName?: string }) {
   const config = levelConfig[level];
+  // Show custom level name if level is "muu" and customLevelName exists
+  const displayLabel = level === "muu" && customLevelName ? customLevelName : config.label;
 
   return (
     <span className="badge-status">
-      {config.label}
+      {displayLabel}
     </span>
   );
 }
@@ -138,11 +143,11 @@ export const CompetitionCard = memo(function CompetitionCard({
       {/* Top: Name and level */}
       <div className="flex items-center gap-2 mb-2 pr-16">
         <h3 className="font-semibold text-foreground truncate">{competition.name}</h3>
-        {competition.level && <LevelBadge level={competition.level} />}
+        {competition.level && <LevelBadge level={competition.level} customLevelName={competition.customLevelName} />}
       </div>
 
       {/* Date */}
-      <div className="flex items-center gap-1.5 text-sm text-muted-foreground mb-3">
+      <div className="flex items-center gap-1.5 text-body text-muted-foreground mb-3">
         <Calendar size={13} className="shrink-0" />
         <span>{dateDisplay}</span>
       </div>
@@ -151,7 +156,7 @@ export const CompetitionCard = memo(function CompetitionCard({
       <div className="h-px w-full bg-border my-2" />
 
       {/* Bottom info */}
-      <div className="space-y-1.5 text-sm text-muted-foreground">
+      <div className="space-y-1.5 text-body text-muted-foreground">
         {/* Location */}
         {competition.location && (
           <div className="flex items-center gap-1.5">

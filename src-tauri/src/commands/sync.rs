@@ -29,7 +29,7 @@ pub async fn export_data(app: AppHandle) -> Result<String, String> {
 
     // Fetch all results
     let result_rows = sqlx::query(
-        "SELECT id, athlete_id, discipline_id, date, value, type, competition_name, competition_level, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing, created_at FROM results"
+        "SELECT id, athlete_id, discipline_id, date, value, type, competition_name, competition_level, custom_level_name, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing, created_at FROM results"
     )
     .fetch_all(&pool)
     .await
@@ -44,6 +44,7 @@ pub async fn export_data(app: AppHandle) -> Result<String, String> {
         result_type: row.get("type"),
         competition_name: row.get("competition_name"),
         competition_level: row.get("competition_level"),
+        custom_level_name: row.get("custom_level_name"),
         location: row.get("location"),
         placement: row.get("placement"),
         notes: row.get("notes"),
@@ -60,7 +61,7 @@ pub async fn export_data(app: AppHandle) -> Result<String, String> {
 
     // Fetch all competitions
     let competition_rows = sqlx::query(
-        "SELECT id, name, date, end_date, location, address, level, notes, reminder_enabled, reminder_days_before, created_at FROM competitions"
+        "SELECT id, name, date, end_date, location, address, level, custom_level_name, notes, reminder_enabled, reminder_days_before, created_at FROM competitions"
     )
     .fetch_all(&pool)
     .await
@@ -74,6 +75,7 @@ pub async fn export_data(app: AppHandle) -> Result<String, String> {
         location: row.get("location"),
         address: row.get("address"),
         level: row.get("level"),
+        custom_level_name: row.get("custom_level_name"),
         notes: row.get("notes"),
         reminder_enabled: row.get::<i32, _>("reminder_enabled") == 1,
         reminder_days_before: row.get("reminder_days_before"),
@@ -101,7 +103,7 @@ pub async fn export_data(app: AppHandle) -> Result<String, String> {
 
     // Fetch all medals
     let medal_rows = sqlx::query(
-        "SELECT id, athlete_id, result_id, type, competition_name, discipline_name, date, created_at FROM medals"
+        "SELECT id, athlete_id, result_id, type, competition_name, competition_id, location, discipline_id, discipline_name, date, created_at FROM medals"
     )
     .fetch_all(&pool)
     .await
@@ -113,9 +115,9 @@ pub async fn export_data(app: AppHandle) -> Result<String, String> {
         result_id: row.get("result_id"),
         medal_type: row.get("type"),
         competition_name: row.get("competition_name"),
-        competition_id: None,
-        location: None,
-        discipline_id: None,
+        competition_id: row.get("competition_id"),
+        location: row.get("location"),
+        discipline_id: row.get("discipline_id"),
         discipline_name: row.get("discipline_name"),
         date: row.get("date"),
         created_at: row.get("created_at"),
@@ -162,7 +164,7 @@ pub async fn import_data(app: AppHandle, json: String) -> Result<bool, String> {
     // Import results
     for result in data.results {
         sqlx::query(
-            "INSERT OR REPLACE INTO results (id, athlete_id, discipline_id, date, value, type, competition_name, competition_level, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            "INSERT OR REPLACE INTO results (id, athlete_id, discipline_id, date, value, type, competition_name, competition_level, custom_level_name, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         )
         .bind(result.id)
         .bind(result.athlete_id)
@@ -172,6 +174,7 @@ pub async fn import_data(app: AppHandle, json: String) -> Result<bool, String> {
         .bind(&result.result_type)
         .bind(&result.competition_name)
         .bind(&result.competition_level)
+        .bind(&result.custom_level_name)
         .bind(&result.location)
         .bind(result.placement)
         .bind(&result.notes)
@@ -192,7 +195,7 @@ pub async fn import_data(app: AppHandle, json: String) -> Result<bool, String> {
     // Import competitions
     for competition in data.competitions {
         sqlx::query(
-            "INSERT OR REPLACE INTO competitions (id, name, date, end_date, location, address, level, notes, reminder_enabled, reminder_days_before, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            "INSERT OR REPLACE INTO competitions (id, name, date, end_date, location, address, level, custom_level_name, notes, reminder_enabled, reminder_days_before, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         )
         .bind(competition.id)
         .bind(&competition.name)
@@ -201,6 +204,7 @@ pub async fn import_data(app: AppHandle, json: String) -> Result<bool, String> {
         .bind(&competition.location)
         .bind(&competition.address)
         .bind(&competition.level)
+        .bind(&competition.custom_level_name)
         .bind(&competition.notes)
         .bind(competition.reminder_enabled as i32)
         .bind(competition.reminder_days_before)
@@ -231,13 +235,16 @@ pub async fn import_data(app: AppHandle, json: String) -> Result<bool, String> {
     // Import medals
     for medal in data.medals {
         sqlx::query(
-            "INSERT OR REPLACE INTO medals (id, athlete_id, result_id, type, competition_name, discipline_name, date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+            "INSERT OR REPLACE INTO medals (id, athlete_id, result_id, type, competition_name, competition_id, location, discipline_id, discipline_name, date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         )
         .bind(medal.id)
         .bind(medal.athlete_id)
         .bind(medal.result_id)
         .bind(&medal.medal_type)
         .bind(&medal.competition_name)
+        .bind(medal.competition_id)
+        .bind(&medal.location)
+        .bind(medal.discipline_id)
         .bind(&medal.discipline_name)
         .bind(&medal.date)
         .bind(&medal.created_at)

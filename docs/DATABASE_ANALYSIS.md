@@ -56,7 +56,7 @@
 | value | REAL | NOT NULL | Sekunteja TAI metrejä |
 | type | TEXT | NOT NULL, CHECK | competition/training |
 | competition_name | TEXT | - | Kilpailun nimi |
-| competition_level | TEXT | CHECK | seura/seuraottelu/piiri/pm/alue/sm/kll/muu |
+| competition_level | TEXT | CHECK | seurakisat/koululaiskisat/seuran_sisaiset/seuraottelut/piirikisat/pm/hallikisat/aluekisat/pohjola_seuracup/sm |
 | location | TEXT | - | Paikka |
 | placement | INTEGER | - | Sijoitus |
 | notes | TEXT | - | Muistiinpanot |

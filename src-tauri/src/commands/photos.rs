@@ -253,23 +253,29 @@ pub async fn delete_photo(app: AppHandle, id: i64) -> Result<bool, String> {
         let file_path: String = row.get("file_path");
         let thumbnail_path: Option<String> = row.get("thumbnail_path");
 
-        // Delete the files
-        if let Err(e) = fs::remove_file(&file_path) {
-            eprintln!("Failed to delete photo file: {}", e);
-        }
-
-        if let Some(thumb) = thumbnail_path {
-            if let Err(e) = fs::remove_file(&thumb) {
-                eprintln!("Failed to delete thumbnail: {}", e);
-            }
-        }
-
-        // Delete from database
+        // Delete from database first (can be rolled back if needed)
         sqlx::query("DELETE FROM photos WHERE id = ?")
             .bind(id)
             .execute(&pool)
             .await
             .map_err(|e| e.to_string())?;
+
+        // Delete the files (best effort - file may already be deleted or inaccessible)
+        // We delete DB record first so UI stays consistent even if file cleanup fails
+        if let Err(e) = fs::remove_file(&file_path) {
+            // Only log if error is not "file not found" (already deleted)
+            if e.kind() != std::io::ErrorKind::NotFound {
+                eprintln!("Warning: Failed to delete photo file {}: {}", file_path, e);
+            }
+        }
+
+        if let Some(thumb) = thumbnail_path {
+            if let Err(e) = fs::remove_file(&thumb) {
+                if e.kind() != std::io::ErrorKind::NotFound {
+                    eprintln!("Warning: Failed to delete thumbnail {}: {}", thumb, e);
+                }
+            }
+        }
 
         Ok(true)
     } else {
@@ -475,23 +481,27 @@ pub async fn delete_photos_bulk(app: AppHandle, ids: Vec<i64>) -> Result<bool, S
             let file_path: String = row.get("file_path");
             let thumbnail_path: Option<String> = row.get("thumbnail_path");
 
-            // Delete the files
-            if let Err(e) = fs::remove_file(&file_path) {
-                eprintln!("Failed to delete photo file: {}", e);
-            }
-
-            if let Some(thumb) = thumbnail_path {
-                if let Err(e) = fs::remove_file(&thumb) {
-                    eprintln!("Failed to delete thumbnail: {}", e);
-                }
-            }
-
-            // Delete from database
+            // Delete from database first (can be rolled back if needed)
             sqlx::query("DELETE FROM photos WHERE id = ?")
                 .bind(id)
                 .execute(&pool)
                 .await
                 .map_err(|e| e.to_string())?;
+
+            // Delete the files (best effort - file may already be deleted or inaccessible)
+            if let Err(e) = fs::remove_file(&file_path) {
+                if e.kind() != std::io::ErrorKind::NotFound {
+                    eprintln!("Warning: Failed to delete photo file {}: {}", file_path, e);
+                }
+            }
+
+            if let Some(thumb) = thumbnail_path {
+                if let Err(e) = fs::remove_file(&thumb) {
+                    if e.kind() != std::io::ErrorKind::NotFound {
+                        eprintln!("Warning: Failed to delete thumbnail {}: {}", thumb, e);
+                    }
+                }
+            }
         }
     }
 

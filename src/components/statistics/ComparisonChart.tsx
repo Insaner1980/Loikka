@@ -39,8 +39,8 @@ function CustomTooltip({ active, payload, discipline }: CustomTooltipProps) {
 
   return (
     <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
-      <p className="text-sm text-muted-foreground">Kausi {dataPoint.year}</p>
-      <p className="text-lg font-bold">{formattedValue}</p>
+      <p className="text-body text-muted-foreground">Kausi {dataPoint.year}</p>
+      <p className="text-title font-bold">{formattedValue}</p>
     </div>
   );
 }
@@ -93,14 +93,12 @@ export function ComparisonChart({ data, discipline }: ComparisonChartProps) {
     return `${value.toFixed(1)}`;
   };
 
-  // Find the best result for highlighting
-  const bestValue = discipline.lowerIsBetter
-    ? Math.min(...values)
-    : Math.max(...values);
+  // Find the current (latest) year for highlighting
+  const currentYear = Math.max(...data.map((d) => d.year));
 
   return (
     <div className="bg-card rounded-xl border border-border p-4">
-      <h3 className="text-lg font-semibold mb-4">Kausivertailu</h3>
+      <h3 className="text-title font-semibold mb-4">Kausivertailu</h3>
       <div className="h-64">
           <BarChart
             data={chartData}
@@ -139,18 +137,15 @@ export function ComparisonChart({ data, discipline }: ComparisonChartProps) {
                 <Cell
                   key={`cell-${index}`}
                   fill={
-                    entry.bestResult === bestValue
-                      ? "var(--color-gold)"
-                      : "var(--accent)"
+                    entry.year === currentYear
+                      ? "var(--accent)"
+                      : "var(--text-secondary)"
                   }
                 />
               ))}
             </Bar>
           </BarChart>
       </div>
-      <p className="text-xs text-muted-foreground text-center mt-2">
-        Paras tulos kultaisella
-      </p>
     </div>
   );
 }

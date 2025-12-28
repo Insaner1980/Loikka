@@ -14,7 +14,7 @@ export function SettingsToggle({
   return (
     <div className="flex items-center justify-between">
       <div className="flex-1">
-        <span className="text-sm font-medium text-foreground">{label}</span>
+        <span className="text-body font-medium text-foreground">{label}</span>
         {description && (
           <p className="text-body text-muted-foreground mt-0.5">{description}</p>
         )}

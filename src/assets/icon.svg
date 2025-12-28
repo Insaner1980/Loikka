@@ -1,5 +1,5 @@
 <svg width="512" height="512" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100" height="100" fill="#000000"/>
+  <rect width="100" height="100" rx="12" ry="12" fill="#000000"/>
   <!-- Four parallel straight diagonal lines - thickness 5, tighter spacing -->
   <line x1="-10" y1="60" x2="60" y2="-10" stroke="#ffffff" stroke-width="5"/>
   <line x1="-10" y1="70" x2="70" y2="-10" stroke="#ffffff" stroke-width="5"/>

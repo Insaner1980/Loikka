@@ -13,7 +13,7 @@ pub async fn get_all_results(app: AppHandle) -> Result<Vec<AthleteResult>, Strin
     let pool = get_pool(&app).await?;
 
     let rows = sqlx::query(
-        r#"SELECT id, athlete_id, discipline_id, date, value, type, competition_name, competition_level, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing, created_at
+        r#"SELECT id, athlete_id, discipline_id, date, value, type, competition_name, competition_level, custom_level_name, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing, created_at
         FROM results ORDER BY date DESC"#
     )
     .fetch_all(&pool)
@@ -29,6 +29,7 @@ pub async fn get_all_results(app: AppHandle) -> Result<Vec<AthleteResult>, Strin
         result_type: row.get("type"),
         competition_name: row.get("competition_name"),
         competition_level: row.get("competition_level"),
+        custom_level_name: row.get("custom_level_name"),
         location: row.get("location"),
         placement: row.get("placement"),
         notes: row.get("notes"),
@@ -49,7 +50,7 @@ pub async fn get_results_by_athlete(app: AppHandle, athlete_id: i64) -> Result<V
     let pool = get_pool(&app).await?;
 
     let rows = sqlx::query(
-        r#"SELECT id, athlete_id, discipline_id, date, value, type, competition_name, competition_level, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing, created_at
+        r#"SELECT id, athlete_id, discipline_id, date, value, type, competition_name, competition_level, custom_level_name, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing, created_at
         FROM results WHERE athlete_id = ? ORDER BY date DESC"#
     )
     .bind(athlete_id)
@@ -66,6 +67,7 @@ pub async fn get_results_by_athlete(app: AppHandle, athlete_id: i64) -> Result<V
         result_type: row.get("type"),
         competition_name: row.get("competition_name"),
         competition_level: row.get("competition_level"),
+        custom_level_name: row.get("custom_level_name"),
         location: row.get("location"),
         placement: row.get("placement"),
         notes: row.get("notes"),
@@ -222,8 +224,8 @@ pub async fn create_result(app: AppHandle, result: CreateResult) -> Result<Athle
     }
 
     let query_result = sqlx::query(
-        r#"INSERT INTO results (athlete_id, discipline_id, date, value, type, competition_name, competition_level, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"#
+        r#"INSERT INTO results (athlete_id, discipline_id, date, value, type, competition_name, competition_level, custom_level_name, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"#
     )
     .bind(result.athlete_id)
     .bind(result.discipline_id)
@@ -232,6 +234,7 @@ pub async fn create_result(app: AppHandle, result: CreateResult) -> Result<Athle
     .bind(&result.result_type)
     .bind(&result.competition_name)
     .bind(&result.competition_level)
+    .bind(&result.custom_level_name)
     .bind(&result.location)
     .bind(result.placement)
     .bind(&result.notes)
@@ -250,7 +253,7 @@ pub async fn create_result(app: AppHandle, result: CreateResult) -> Result<Athle
     let id = query_result.last_insert_rowid();
 
     let row = sqlx::query(
-        r#"SELECT id, athlete_id, discipline_id, date, value, type, competition_name, competition_level, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing, created_at
+        r#"SELECT id, athlete_id, discipline_id, date, value, type, competition_name, competition_level, custom_level_name, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing, created_at
         FROM results WHERE id = ?"#
     )
     .bind(id)
@@ -270,6 +273,7 @@ pub async fn create_result(app: AppHandle, result: CreateResult) -> Result<Athle
         result_type: row.get("type"),
         competition_name: row.get("competition_name"),
         competition_level: row.get("competition_level"),
+        custom_level_name: row.get("custom_level_name"),
         location: row.get("location"),
         placement: row.get("placement"),
         notes: row.get("notes"),
@@ -298,6 +302,7 @@ pub async fn update_result(app: AppHandle, id: i64, result: UpdateResult) -> Res
             type = COALESCE(?, type),
             competition_name = ?,
             competition_level = ?,
+            custom_level_name = ?,
             location = ?,
             placement = ?,
             notes = ?,
@@ -316,6 +321,7 @@ pub async fn update_result(app: AppHandle, id: i64, result: UpdateResult) -> Res
     .bind(&result.result_type)
     .bind(&result.competition_name)
     .bind(&result.competition_level)
+    .bind(&result.custom_level_name)
     .bind(&result.location)
     .bind(result.placement)
     .bind(&result.notes)
@@ -332,7 +338,7 @@ pub async fn update_result(app: AppHandle, id: i64, result: UpdateResult) -> Res
 
     // Get the updated result to extract athlete_id and discipline_id for recalculation
     let row = sqlx::query(
-        r#"SELECT id, athlete_id, discipline_id, date, value, type, competition_name, competition_level, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing, created_at
+        r#"SELECT id, athlete_id, discipline_id, date, value, type, competition_name, competition_level, custom_level_name, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing, created_at
         FROM results WHERE id = ?"#
     )
     .bind(id)
@@ -350,7 +356,7 @@ pub async fn update_result(app: AppHandle, id: i64, result: UpdateResult) -> Res
 
     // Re-fetch the result after recalculation to get updated PB/SB flags
     let row = sqlx::query(
-        r#"SELECT id, athlete_id, discipline_id, date, value, type, competition_name, competition_level, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing, created_at
+        r#"SELECT id, athlete_id, discipline_id, date, value, type, competition_name, competition_level, custom_level_name, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing, created_at
         FROM results WHERE id = ?"#
     )
     .bind(id)
@@ -367,6 +373,7 @@ pub async fn update_result(app: AppHandle, id: i64, result: UpdateResult) -> Res
         result_type: row.get("type"),
         competition_name: row.get("competition_name"),
         competition_level: row.get("competition_level"),
+        custom_level_name: row.get("custom_level_name"),
         location: row.get("location"),
         placement: row.get("placement"),
         notes: row.get("notes"),

@@ -57,27 +57,6 @@ import { Dialog } from "@/components/ui";
 
 ---
 
-### Tooltip
-
-Hover-vihje elementeille.
-
-```tsx
-import { Tooltip } from "@/components/ui";
-
-<Tooltip content="Vihjeteksti" side="right">
-  <button>Hover me</button>
-</Tooltip>
-```
-
-**Props:**
-| Prop | Tyyppi | Pakollinen | Oletus | Kuvaus |
-|------|--------|------------|--------|--------|
-| content | string | Kyllä | - | Vihjeteksti |
-| children | ReactNode | Kyllä | - | Kohde-elementti |
-| side | "top" \| "right" \| "bottom" \| "left" | Ei | "right" | Sijainti |
-
----
-
 ## Shared-komponentit
 
 ### StatCard
@@ -229,7 +208,7 @@ import { Layout } from "@/components/layout";
 
 ### SidebarIcon
 
-Navigaatioikoni tooltipilla.
+Sivupalkin navigaatioikoni.
 
 ```tsx
 import { SidebarIcon } from "@/components/layout";
@@ -271,7 +250,7 @@ import { Home } from "lucide-react";
 // Tekstikenttä
 <input
   type="text"
-  className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
+  className="w-full px-3 py-2 bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors"
 />
 
 // Virheellinen kenttä
@@ -280,7 +259,7 @@ import { Home } from "lucide-react";
 />
 
 // Dropdown
-<select className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50">
+<select className="w-full px-3 py-2 bg-card border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50">
   <option>Vaihtoehto</option>
 </select>
 ```

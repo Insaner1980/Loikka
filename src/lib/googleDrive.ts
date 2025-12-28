@@ -83,13 +83,5 @@ export function formatBackupSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function formatBackupDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString("fi-FI", {
-    day: "numeric",
-    month: "numeric",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
+// Re-export from formatters for backwards compatibility
+export { formatDateTime as formatBackupDate } from "./formatters";

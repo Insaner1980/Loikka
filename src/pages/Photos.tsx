@@ -9,7 +9,6 @@ import { PhotoViewerEnhanced } from "../components/photos/PhotoViewerEnhanced";
 import { AddPhotoDialog } from "../components/photos/AddPhotoDialog";
 import { Dialog, FilterSelect, type FilterOption } from "../components/ui";
 import { useAddShortcut, useEscapeKey, useBackgroundDeselect } from "../hooks";
-import { YEAR_RANGE } from "../lib/constants";
 
 export function Photos() {
   const [searchParams] = useSearchParams();
@@ -203,14 +202,11 @@ export function Photos() {
   // Click on empty area exits selection mode
   const handleBackgroundClick = useBackgroundDeselect(selectionMode, handleCancelSelection);
 
-  // Generate year options (fixed range)
-  const currentYear = new Date().getFullYear();
-  const startYear = YEAR_RANGE.START_YEAR;
-  const endYear = currentYear + YEAR_RANGE.YEARS_AHEAD;
-  const yearOptions: number[] = [];
-  for (let y = endYear; y >= startYear; y--) {
-    yearOptions.push(y);
-  }
+  // Get years that have photos
+  const yearsWithPhotos = useMemo(() => {
+    const years = new Set(photos.map((p) => new Date(p.createdAt).getFullYear()));
+    return Array.from(years).sort((a, b) => b - a); // Descending order
+  }, [photos]);
 
   const selectedCount = selectedIds.size;
   const hasSelection = selectedCount > 0;
@@ -234,11 +230,11 @@ export function Photos() {
 
   const yearFilterOptions: FilterOption[] = useMemo(() => [
     { value: "all", label: "Kaikki vuodet" },
-    ...yearOptions.map((y) => ({
+    ...yearsWithPhotos.map((y) => ({
       value: y,
       label: String(y),
     })),
-  ], [yearOptions]);
+  ], [yearsWithPhotos]);
 
   // Options for link dialogs
   const linkCompetitionOptions: FilterOption[] = useMemo(() => [

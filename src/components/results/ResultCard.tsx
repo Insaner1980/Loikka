@@ -158,23 +158,23 @@ export const ResultCard = memo(function ResultCard({
           {showAthleteName && (
             <div className="font-medium text-foreground truncate">{athleteName}</div>
           )}
-          <div className={`truncate ${showAthleteName ? "text-sm text-muted-foreground" : "text-sm font-medium text-foreground"}`}>
+          <div className={`truncate ${showAthleteName ? "text-body text-muted-foreground" : "text-body font-medium text-foreground"}`}>
             {disciplineName}
           </div>
           {metadataLine && (
-            <div className="text-xs text-muted-foreground truncate">{metadataLine}</div>
+            <div className="text-caption text-muted-foreground truncate">{metadataLine}</div>
           )}
         </div>
 
         {/* Center: Result value (big) */}
         <div className="flex-1 flex flex-col items-center justify-center py-2">
           {isInvalidStatus ? (
-            <span className="px-3 py-1.5 text-sm font-medium rounded-lg bg-muted text-muted-foreground">
+            <span className="px-3 py-1.5 text-body font-medium rounded-lg bg-muted text-muted-foreground">
               {getStatusLabel(result.status) || "Ei tulosta"}
             </span>
           ) : (
             <>
-              <span className="text-2xl font-bold tabular-nums text-foreground">{formattedValue}</span>
+              <span className="text-stat font-bold tabular-nums text-foreground">{formattedValue}</span>
               {/* Badges */}
               <div className="flex items-center gap-1.5 mt-1.5">
                 {result.isPersonalBest && <ResultBadge type="pb" />}
@@ -189,7 +189,7 @@ export const ResultCard = memo(function ResultCard({
         <div className="h-px w-full bg-border my-3" />
 
         {/* Bottom: Date, competition/training, placement, photos */}
-        <div className="flex items-center justify-between gap-2 text-sm">
+        <div className="flex items-center justify-between gap-2 text-body">
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 text-foreground">
               <Calendar size={13} className="text-muted-foreground shrink-0" />
@@ -224,12 +224,12 @@ export const ResultCard = memo(function ResultCard({
               <div
                 className={`w-7 h-7 rounded-full ${medalColors[result.placement as 1 | 2 | 3]} flex items-center justify-center shadow-sm`}
               >
-                <span className="text-xs font-bold text-black/70">{result.placement}</span>
+                <span className="text-caption font-bold text-medal-text">{result.placement}</span>
               </div>
             )}
             {result.placement && result.placement > 3 && (
               <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">
-                <span className="text-xs font-semibold text-muted-foreground">{result.placement}</span>
+                <span className="text-caption font-semibold text-muted-foreground">{result.placement}</span>
               </div>
             )}
           </div>

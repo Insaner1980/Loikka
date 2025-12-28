@@ -71,7 +71,7 @@ export function Dialog({
       >
         {/* Header */}
         <div className="flex-shrink-0 flex items-center justify-between px-5 py-4 border-b border-border-subtle">
-          <h2 id="dialog-title" className="text-sm font-medium text-foreground">
+          <h2 id="dialog-title" className="text-body font-medium text-foreground">
             {title}
           </h2>
           <button

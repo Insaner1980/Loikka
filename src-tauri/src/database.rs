@@ -110,6 +110,10 @@ async fn run_migrations(pool: &DbPool) -> Result<(), String> {
         run_migration_v13(pool).await?;
     }
 
+    if current_version < 14 {
+        run_migration_v14(pool).await?;
+    }
+
     Ok(())
 }
 
@@ -731,6 +735,50 @@ async fn run_migration_v13(pool: &DbPool) -> Result<(), String> {
         .execute(pool)
         .await
         .map_err(|e| format!("Failed to record migration v13: {}", e))?;
+
+    Ok(())
+}
+
+async fn run_migration_v14(pool: &DbPool) -> Result<(), String> {
+    // Create notes table
+    let has_notes: bool = sqlx::query_scalar(
+        "SELECT COUNT(*) > 0 FROM sqlite_master WHERE type='table' AND name='notes'"
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(|e| format!("Migration v14 failed checking notes table: {}", e))?;
+
+    if !has_notes {
+        sqlx::query(r#"
+            CREATE TABLE notes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                content TEXT NOT NULL,
+                athlete_id INTEGER,
+                pinned INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+                FOREIGN KEY (athlete_id) REFERENCES athletes(id) ON DELETE SET NULL
+            )
+        "#)
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Migration v14 failed creating notes table: {}", e))?;
+
+        sqlx::query("CREATE INDEX IF NOT EXISTS idx_notes_athlete ON notes(athlete_id)")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v14 failed creating idx_notes_athlete: {}", e))?;
+
+        sqlx::query("CREATE INDEX IF NOT EXISTS idx_notes_pinned ON notes(pinned)")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v14 failed creating idx_notes_pinned: {}", e))?;
+    }
+
+    sqlx::query("INSERT INTO _migrations (version, description) VALUES (14, 'add_notes_table')")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Failed to record migration v14: {}", e))?;
 
     Ok(())
 }

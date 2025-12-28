@@ -69,6 +69,14 @@ body {
   --color-overlay: var(--overlay-bg);
   --color-overlay-light: var(--overlay-light);
 
+  /* Accent colors */
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-muted: var(--accent-muted);
+
+  /* Button text */
+  --color-btn-primary-text: var(--btn-primary-text);
+
   /* Border radius */
   --radius-xl: 10px;
 }
@@ -326,6 +334,11 @@ body {
     line-height: 1;
   }
 
+  /* Record indicator - left border accent for cards with OE/SE */
+  .border-l-3 {
+    border-left-width: 3px;
+  }
+
   .animate-fade-in {
     animation: fade-in 0.2s ease-out forwards;
   }
@@ -462,36 +475,36 @@ body {
   .badge-pb {
     @apply px-1.5 py-0.5 font-medium rounded;
     font-size: 11px;
-    background: transparent;
-    color: var(--text-muted);
-    border: 1px solid var(--border-hover);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.15);
   }
 
   /* KE (Kauden ennätys / Season Best) badge */
   .badge-sb {
     @apply px-1.5 py-0.5 font-medium rounded;
     font-size: 11px;
-    background: transparent;
-    color: var(--text-muted);
-    border: 1px solid var(--border-hover);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.15);
   }
 
   /* SE (Suomen ennätys / National Record) badge - same style as OE/KE */
   .badge-nr {
     @apply px-1.5 py-0.5 font-medium rounded;
     font-size: 11px;
-    background: transparent;
-    color: var(--text-muted);
-    border: 1px solid var(--border-hover);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.15);
   }
 
   /* Status badge - for days until, competition level, goal status etc. */
   .badge-status {
     @apply px-1.5 py-0.5 font-medium rounded;
     font-size: 11px;
-    background: transparent;
-    color: var(--text-muted);
-    border: 1px solid var(--border-hover);
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.15);
   }
 
   /* Primary button - accent color */
@@ -538,6 +551,16 @@ body {
   .input-focus:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 2px var(--accent-muted);
+  }
+
+  /* Interactive card with lift effect on hover */
+  .card-interactive {
+    transition: transform 150ms ease, box-shadow 150ms ease;
+  }
+
+  .card-interactive:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   }
 
   /* Override browser autofill styling */
@@ -638,4 +661,123 @@ body {
     max-height: calc(100vh - 140px);
     object-fit: contain;
   }
+}
+
+/* TipTap Editor Styles */
+.tiptap {
+  height: 100%;
+}
+
+.ProseMirror {
+  min-height: 100%;
+  height: 100%;
+  outline: none;
+  cursor: text;
+}
+
+.ProseMirror p {
+  margin: 0.5em 0;
+}
+
+.ProseMirror h1 {
+  font-size: 1.5em;
+  font-weight: 600;
+  margin: 1em 0 0.5em;
+  color: var(--text-primary);
+}
+
+.ProseMirror h2 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin: 0.8em 0 0.4em;
+  color: var(--text-primary);
+}
+
+.ProseMirror ul {
+  list-style-type: disc;
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+
+.ProseMirror ol {
+  list-style-type: decimal;
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+
+.ProseMirror li {
+  margin: 0.25em 0;
+}
+
+.ProseMirror li::marker {
+  color: var(--text-secondary);
+}
+
+.ProseMirror ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+
+.ProseMirror ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+}
+
+.ProseMirror ul[data-type="taskList"] li > label {
+  flex-shrink: 0;
+  margin-top: 0.25em;
+}
+
+.ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"] {
+  width: 1em;
+  height: 1em;
+  accent-color: var(--accent);
+}
+
+.ProseMirror ul[data-type="taskList"] li > div {
+  flex: 1;
+}
+
+.ProseMirror a {
+  color: var(--accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.ProseMirror a:hover {
+  color: var(--accent-hover);
+}
+
+.ProseMirror strong {
+  font-weight: 600;
+}
+
+.ProseMirror em {
+  font-style: italic;
+}
+
+.ProseMirror u {
+  text-decoration: underline;
+}
+
+.ProseMirror s {
+  text-decoration: line-through;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: var(--text-muted);
+  pointer-events: none;
+  height: 0;
+}
+
+/* TipTap placeholder */
+.ProseMirror .is-empty::before {
+  content: attr(data-placeholder);
+  color: var(--text-muted);
+  pointer-events: none;
+  float: left;
+  height: 0;
 }

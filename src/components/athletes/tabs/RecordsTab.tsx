@@ -75,7 +75,7 @@ export function RecordsTab({ personalBests }: RecordsTabProps) {
           {filteredRecords.map((result) => (
             <div
               key={result.id}
-              className="rounded-xl bg-card border border-border-subtle hover:border-border-hover transition-colors duration-150 p-4 flex flex-col"
+              className="rounded-xl bg-card border border-border-subtle hover:border-border-hover transition-colors duration-150 border-l-3 border-l-[var(--accent)] p-4 flex flex-col"
             >
               {/* Top: Discipline */}
               <div className="text-body font-medium text-foreground mb-3">

@@ -33,7 +33,7 @@ export function AthleteCard({ athlete, stats }: AthleteCardProps) {
   return (
     <Link
       to={`/athletes/${athlete.id}`}
-      className="p-5 rounded-xl bg-card border border-border-subtle hover:border-border-hover transition-colors duration-150 cursor-pointer flex flex-col"
+      className="p-5 rounded-xl bg-card border border-border-subtle hover:border-border-hover transition-colors duration-150 cursor-pointer flex flex-col card-interactive"
     >
       {/* Top row: Avatar + Medals */}
       <div className="flex items-center justify-between mb-4">

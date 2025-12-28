@@ -32,7 +32,7 @@ function Toast({ id, type: _type, message, duration = TOAST.DURATION_MS, onClose
   return (
     <div
       className={`flex items-center overflow-hidden rounded-xl bg-elevated shadow-lg backdrop-blur-sm transition-all duration-200 ${
-        isExiting ? "opacity-0 translate-x-4" : "opacity-100 translate-x-0"
+        isExiting ? "opacity-0 -translate-x-4" : "opacity-100 translate-x-0"
       }`}
     >
       {/* Accent color left border */}
@@ -102,7 +102,7 @@ export function ToastContainer() {
   if (items.length === 0) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm">
+    <div className="fixed bottom-4 left-16 z-50 flex flex-col gap-2 max-w-sm">
       {items.map((item) => (
         <Toast
           key={item.id}

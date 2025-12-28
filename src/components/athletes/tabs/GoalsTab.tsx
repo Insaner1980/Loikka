@@ -36,7 +36,7 @@ export function GoalsTab({ goals, getDisciplineForGoal }: GoalsTabProps) {
         return (
           <div
             key={goal.id}
-            className="rounded-xl bg-card border border-border-subtle p-4 flex flex-col"
+            className="rounded-xl bg-card border border-border-subtle hover:border-border-hover p-4 flex flex-col card-interactive"
           >
             {/* Top: Discipline name */}
             <div className="mb-3">

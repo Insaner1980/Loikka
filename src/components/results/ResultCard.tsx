@@ -125,15 +125,18 @@ export const ResultCard = memo(function ResultCard({
   // Medal placement (1-3)
   const hasMedal = result.placement && result.placement >= 1 && result.placement <= 3;
 
+  // Check if result has a record (OE or SE)
+  const hasRecord = result.isPersonalBest || result.isNationalRecord;
+
   return (
     <div
       data-card
       onClick={handleCardClick}
-      className={`group relative rounded-xl bg-card border transition-colors duration-150 ${
+      className={`group relative rounded-xl bg-card border transition-colors duration-150 card-interactive ${
         isSelected
           ? "border-[var(--accent)] ring-1 ring-[var(--accent)]"
           : "border-border-subtle hover:border-border-hover"
-      } ${onEdit || selectionMode ? "cursor-pointer" : ""}`}
+      } ${hasRecord ? "border-l-3 border-l-[var(--accent)]" : ""} ${onEdit || selectionMode ? "cursor-pointer" : ""}`}
     >
       {/* Hover checkbox - only shown when onCheckboxClick is provided */}
       {onCheckboxClick && (

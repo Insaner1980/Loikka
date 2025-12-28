@@ -7,6 +7,7 @@ import {
   Users,
   Trash2,
   Trophy,
+  Plus,
 } from "lucide-react";
 import { useAthleteStore } from "../stores/useAthleteStore";
 import { useResultStore } from "../stores/useResultStore";
@@ -112,8 +113,16 @@ export function Dashboard() {
             </Link>
           </div>
           {upcomingCompetitions.length === 0 ? (
-            <div className="text-body text-tertiary py-4">
-              Ei tulevia kilpailuja
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <Calendar size={32} className="text-[var(--text-initials)] mb-2" />
+              <p className="text-body text-tertiary">Ei tulevia kilpailuja</p>
+              <Link
+                to="/calendar"
+                className="inline-flex items-center gap-1 text-body text-[var(--accent)] hover:text-[var(--accent-hover)] mt-2 transition-colors duration-150"
+              >
+                <Plus size={14} />
+                Lisää kilpailu
+              </Link>
             </div>
           ) : (
             <div className="divide-y divide-border-subtle">
@@ -172,7 +181,7 @@ export function Dashboard() {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3">
+            <div className={`grid gap-3 ${athletes.length >= 3 ? "grid-cols-3" : "grid-cols-2"}`}>
               {athletes.slice(0, DASHBOARD.MAX_ATHLETES).map(({ athlete }) => (
                 <Link
                   key={athlete.id}
@@ -219,8 +228,16 @@ export function Dashboard() {
           </Link>
         </div>
         {recentResults.length === 0 ? (
-          <div className="text-body text-tertiary py-4">
-            Ei tuloksia vielä
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Trophy size={32} className="text-[var(--text-initials)] mb-2" />
+            <p className="text-body text-tertiary">Ei tuloksia vielä</p>
+            <Link
+              to="/results"
+              className="inline-flex items-center gap-1 text-body text-[var(--accent)] hover:text-[var(--accent-hover)] mt-2 transition-colors duration-150"
+            >
+              <Plus size={14} />
+              Lisää tulos
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-3">
@@ -228,11 +245,14 @@ export function Dashboard() {
               const hasMedal = result.placement && result.placement >= 1 && result.placement <= 3;
               const medalColors: Record<number, string> = { 1: "bg-gold", 2: "bg-silver", 3: "bg-bronze" };
 
+              // Check if result has a record (OE or SE)
+              const hasRecord = result.isPersonalBest || result.isNationalRecord;
+
               return (
                 <div
                   key={result.id}
                   onClick={() => navigate(`/athletes/${result.athleteId}?discipline=${result.disciplineId}`)}
-                  className="group rounded-xl bg-card border border-border-subtle hover:border-border-hover transition-colors duration-150 cursor-pointer"
+                  className={`group rounded-xl bg-card border border-border-subtle hover:border-border-hover transition-colors duration-150 cursor-pointer card-interactive ${hasRecord ? "border-l-3 border-l-[var(--accent)]" : ""}`}
                 >
                   <div className="p-4 flex flex-col h-full">
                     {/* Top row: Athlete name + discipline */}

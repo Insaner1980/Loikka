@@ -4,9 +4,9 @@
 
 // Dashboard display limits
 export const DASHBOARD = {
-  MAX_COMPETITIONS: 5,
+  MAX_COMPETITIONS: 4,
   MAX_RESULTS: 3,
-  MAX_ATHLETES: 2,
+  MAX_ATHLETES: 3,
 } as const;
 
 // Days until competition thresholds (for color coding)

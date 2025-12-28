@@ -117,7 +117,7 @@ export function MedalsTab({ medals, results, onMedalClick }: MedalsTabProps) {
                     onMedalClick(medal.disciplineId);
                   }
                 }}
-                className="rounded-xl bg-card border border-border-subtle hover:border-border-hover transition-colors duration-150 p-4 flex flex-col text-left cursor-pointer"
+                className="rounded-xl bg-card border border-border-subtle hover:border-border-hover transition-colors duration-150 p-4 flex flex-col text-left cursor-pointer card-interactive"
               >
                 {/* Top: Medal circle centered */}
                 <div className="flex justify-center mb-3">

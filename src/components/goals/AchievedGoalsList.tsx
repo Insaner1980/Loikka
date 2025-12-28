@@ -58,7 +58,7 @@ export function AchievedGoalsList({
             </h2>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-1">
             {goals.map((goalWithProgress) => (
               <GoalCard
                 key={goalWithProgress.id}

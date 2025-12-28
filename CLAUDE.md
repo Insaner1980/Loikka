@@ -394,6 +394,18 @@ export const useMyStore = create<MyStore>((set, get) => ({
 
 ### Tyylit (Tailwind v4)
 
+**TÄRKEÄÄ:** Tailwind v4:ssä värit pitää määritellä `@theme`-lohkossa `--color-*` -muodossa, jotta ne toimivat Tailwind-luokkina:
+
+```css
+/* index.css @theme-lohkossa */
+@theme {
+  --color-accent: var(--accent);        /* Mahdollistaa bg-accent, text-accent */
+  --color-accent-muted: var(--accent-muted);
+}
+```
+
+Jos CSS-muuttuja on määritelty vain `:root`:issa mutta EI @theme:ssa, `bg-accent` ei toimi!
+
 **TÄRKEÄÄ:** Älä käytä kovakoodattuja väri- tai fonttikoko-arvoja komponenteissa!
 
 ❌ Väärin:

@@ -252,3 +252,4 @@ export interface GoalWithProgress extends Goal {
   progress: number;
   remaining: number | null;
 }
+

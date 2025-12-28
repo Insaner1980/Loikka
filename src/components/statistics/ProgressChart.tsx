@@ -1,6 +1,6 @@
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -101,12 +101,18 @@ export function ProgressChart({ data, discipline }: ProgressChartProps) {
     <div className="bg-card rounded-xl border border-border p-4">
       <h3 className="text-body font-medium text-foreground mb-4">Kehitys</h3>
       <div className="h-96">
-          <LineChart
+          <AreaChart
             data={chartData}
             width={800}
             height={384}
             margin={{ top: 10, right: 30, left: 20, bottom: 25 }}
           >
+            <defs>
+              <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.3} />
+                <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
+              </linearGradient>
+            </defs>
             <CartesianGrid
               strokeDasharray="3 3"
               stroke="var(--color-border)"
@@ -136,11 +142,12 @@ export function ProgressChart({ data, discipline }: ProgressChartProps) {
               content={<CustomTooltip discipline={discipline} />}
               cursor={{ stroke: "var(--accent)", strokeWidth: 1 }}
             />
-            <Line
+            <Area
               type="linear"
               dataKey="value"
               stroke="var(--accent)"
               strokeWidth={2}
+              fill="url(#chartGradient)"
               dot={{
                 fill: "var(--accent)",
                 strokeWidth: 0,
@@ -151,17 +158,6 @@ export function ProgressChart({ data, discipline }: ProgressChartProps) {
                 strokeWidth: 0,
                 r: 6,
               }}
-              label={({ x, y, value }) => (
-                <text
-                  x={x}
-                  y={typeof y === "number" ? y - 10 : 0}
-                  fill="var(--foreground)"
-                  textAnchor="middle"
-                  fontSize={10}
-                >
-                  {typeof value === "number" ? value.toFixed(2) : ""}
-                </text>
-              )}
             />
             {/* Highlight personal best with larger accent-colored dot */}
             {pbPoint && (
@@ -174,7 +170,7 @@ export function ProgressChart({ data, discipline }: ProgressChartProps) {
                 strokeWidth={2}
               />
             )}
-          </LineChart>
+          </AreaChart>
       </div>
     </div>
   );

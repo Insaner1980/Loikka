@@ -134,8 +134,11 @@ export const GoalCard = memo(function GoalCard({
         </div>
         <div className="h-2 bg-muted rounded-full overflow-hidden">
           <div
-            className={`h-full rounded-full transition-all ${getProgressColor()}`}
-            style={{ width: `${Math.min(100, progress)}%` }}
+            className={`h-full rounded-full ${getProgressColor()}`}
+            style={{
+              width: `${Math.min(100, progress)}%`,
+              transition: "width 500ms ease-out"
+            }}
           />
         </div>
       </div>

@@ -57,7 +57,7 @@ export function Dialog({
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-[var(--overlay-bg)] backdrop-blur-sm"
+        className="absolute inset-0 bg-[var(--overlay-bg)] backdrop-blur-sm animate-backdrop-fade"
         onClick={onClose}
         aria-hidden="true"
       />

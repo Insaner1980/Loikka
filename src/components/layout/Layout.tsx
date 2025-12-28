@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { TitleBar } from "./TitleBar";
 import { useAthleteStore } from "../../stores/useAthleteStore";
@@ -9,6 +9,7 @@ import { useGoalStore } from "../../stores/useGoalStore";
 import { useNavigationShortcuts } from "../../hooks";
 
 export function Layout() {
+  const location = useLocation();
   const fetchAthletes = useAthleteStore((s) => s.fetchAthletes);
   const fetchResults = useResultStore((s) => s.fetchResults);
   const fetchCompetitions = useCompetitionStore((s) => s.fetchCompetitions);
@@ -31,7 +32,9 @@ export function Layout() {
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
         <main className="flex-1 overflow-auto">
-          <Outlet />
+          <div key={location.pathname} className="animate-page-enter">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

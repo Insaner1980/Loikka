@@ -69,21 +69,16 @@ export function FilterSelect({
           className="dropdown-menu"
         >
           {/* Options */}
-          {options.map((option) => {
-            const isSelected = option.value === value;
-            return (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => handleSelect(option.value)}
-                className={`w-full px-3 py-1.5 text-left text-body hover:bg-card-hover transition-colors cursor-pointer ${
-                  isSelected ? "bg-accent-muted text-accent" : ""
-                }`}
-              >
-                {option.label}
-              </button>
-            );
-          })}
+          {options.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => handleSelect(option.value)}
+              className="w-full px-3 py-1.5 text-left text-body hover:bg-card-hover transition-colors cursor-pointer"
+            >
+              {option.label}
+            </button>
+          ))}
         </div>,
         document.body
       )}

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Users } from "lucide-react";
 import { useAthleteStore } from "../../stores/useAthleteStore";
 import { useCompetitionStore } from "../../stores/useCompetitionStore";
-import { categoryOrder, getDisciplinesForAthlete } from "../../data/disciplines";
+import { categoryOrder, getDisciplinesForAthlete, getDisciplinesByCategory } from "../../data/disciplines";
 import { getTodayISO } from "../../lib/formatters";
 import { COMPETITION_LEVEL_OPTIONS } from "../../lib/constants";
 import { DatePicker } from "../ui/DatePicker";
@@ -62,6 +62,9 @@ export function CompetitionForm({
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
+
+  // Track which athletes have "show all disciplines" enabled
+  const [showAllDisciplines, setShowAllDisciplines] = useState<Set<number>>(new Set());
 
   // Fetch athletes and competitions if not loaded
   useEffect(() => {
@@ -334,18 +337,47 @@ export function CompetitionForm({
 
                   {/* Discipline selector - only shown when athlete is selected */}
                   {isSelected && (() => {
-                    const athleteDisciplines = getDisciplinesForAthlete(athlete.birthYear, date);
+                    const athleteAgeDisciplines = getDisciplinesForAthlete(athlete.birthYear, date);
+                    const athleteAgeDisciplineIds = new Set(athleteAgeDisciplines.map(d => d.id));
+                    const showAll = showAllDisciplines.has(athlete.id);
+                    const allDisciplines = getDisciplinesByCategory();
+
+                    // Get disciplines to display based on showAll toggle
+                    const displayDisciplines = showAll
+                      ? Array.from(allDisciplines.values()).flat()
+                      : athleteAgeDisciplines;
+
                     return (
-                      <div className="pl-6 mt-2">
+                      <div className="pl-6 mt-2 space-y-2">
+                        {/* Show all checkbox */}
+                        <label className="flex items-center gap-2 cursor-pointer text-caption text-muted-foreground">
+                          <input
+                            type="checkbox"
+                            checked={showAll}
+                            onChange={(e) => {
+                              const newSet = new Set(showAllDisciplines);
+                              if (e.target.checked) {
+                                newSet.add(athlete.id);
+                              } else {
+                                newSet.delete(athlete.id);
+                              }
+                              setShowAllDisciplines(newSet);
+                            }}
+                            className="w-3.5 h-3.5 rounded border-border-default bg-elevated accent-accent"
+                          />
+                          Näytä kaikki lajit
+                        </label>
+
                         <div className="flex flex-wrap gap-1">
                           {categoryOrder.map((category) => {
-                            const categoryDisciplines = athleteDisciplines.filter(
+                            const categoryDisciplines = displayDisciplines.filter(
                               (d) => d.category === category
                             );
                             return categoryDisciplines.map((discipline) => {
                               const isChecked = selectedDisciplines.includes(
                                 discipline.id
                               );
+                              const isAgeAppropriate = athleteAgeDisciplineIds.has(discipline.id);
                               return (
                                 <button
                                   key={discipline.id}
@@ -356,15 +388,24 @@ export function CompetitionForm({
                                   className={`px-2 py-1 text-xs rounded-full border transition-colors ${
                                     isChecked
                                       ? "bg-[var(--accent-muted)] text-foreground border-[var(--accent)]"
-                                      : "bg-card border-border hover:border-border-hover"
+                                      : showAll && !isAgeAppropriate
+                                        ? "bg-card border-border hover:border-border-hover text-muted-foreground"
+                                        : "bg-card border-border hover:border-border-hover"
                                   }`}
                                 >
                                   {discipline.name}
+                                  {showAll && !isAgeAppropriate && " *"}
                                 </button>
                               );
                             });
                           })}
                         </div>
+
+                        {showAll && (
+                          <p className="text-caption text-muted-foreground">
+                            * = ei virallinen ikäluokalle
+                          </p>
+                        )}
                       </div>
                     );
                   })()}

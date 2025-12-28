@@ -111,9 +111,7 @@ export function DisciplineFilterSelect({
             <button
               type="button"
               onClick={() => handleSelect(null)}
-              className={`w-full px-3 py-1.5 text-left text-body hover:bg-card-hover transition-colors cursor-pointer ${
-                value === null ? "bg-accent-muted text-accent" : ""
-              }`}
+              className="w-full px-3 py-1.5 text-left text-body hover:bg-card-hover transition-colors cursor-pointer"
             >
               {placeholder}
             </button>
@@ -125,21 +123,16 @@ export function DisciplineFilterSelect({
               <div className="px-3 py-1.5 text-caption font-semibold text-muted-foreground bg-muted sticky top-0">
                 {group.category}
               </div>
-              {group.disciplines.map((discipline) => {
-                const isSelected = discipline.id === value;
-                return (
-                  <button
-                    key={discipline.id}
-                    type="button"
-                    onClick={() => handleSelect(discipline.id)}
-                    className={`w-full px-3 py-1.5 text-left text-body hover:bg-card-hover transition-colors cursor-pointer ${
-                      isSelected ? "bg-accent-muted text-accent" : ""
-                    }`}
-                  >
-                    {discipline.name}
-                  </button>
-                );
-              })}
+              {group.disciplines.map((discipline) => (
+                <button
+                  key={discipline.id}
+                  type="button"
+                  onClick={() => handleSelect(discipline.id)}
+                  className="w-full px-3 py-1.5 text-left text-body hover:bg-card-hover transition-colors cursor-pointer"
+                >
+                  {discipline.name}
+                </button>
+              ))}
             </div>
           ))}
         </div>,

@@ -66,9 +66,6 @@ export function ConfirmDialog({
 
   if (!open) return null;
 
-  // Button styling - always use accent color (blue) per UI spec
-  const confirmButtonClass = "bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-[var(--btn-primary-text)]";
-
   return createPortal(
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
       {/* Backdrop */}
@@ -116,7 +113,7 @@ export function ConfirmDialog({
             <button
               onClick={handleConfirm}
               disabled={isLoading}
-              className={`flex items-center gap-2 px-3.5 py-2 text-body font-medium rounded-md transition-all duration-150 cursor-pointer btn-press disabled:opacity-50 disabled:cursor-not-allowed ${confirmButtonClass}`}
+              className="btn-primary btn-press"
             >
               {isLoading ? "Odota..." : confirmText}
             </button>

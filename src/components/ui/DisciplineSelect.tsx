@@ -158,15 +158,14 @@ export function DisciplineSelect({
               </div>
               {group.disciplines.map((discipline) => {
                 const isAvailable = availableIds.has(discipline.id);
-                const isSelected = discipline.id === value;
                 return (
                   <button
                     key={discipline.id}
                     type="button"
                     onClick={() => handleSelect(discipline.id)}
                     className={`w-full px-3 py-1.5 text-left text-body hover:bg-card-hover transition-colors cursor-pointer ${
-                      isSelected ? "bg-accent-muted text-accent" : ""
-                    } ${showAll && !isAvailable ? "text-muted-foreground" : ""}`}
+                      showAll && !isAvailable ? "text-muted-foreground" : ""
+                    }`}
                   >
                     {discipline.name}
                     {showAll && !isAvailable && " *"}

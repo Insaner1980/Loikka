@@ -471,28 +471,10 @@ async fn run_migration_v10(pool: &DbPool) -> Result<(), String> {
 }
 
 async fn run_migration_v11(pool: &DbPool) -> Result<(), String> {
-    // Seed test data for development/testing
-    let seed = include_str!("db/seed_test_data.sql");
-
-    for statement in seed.split(';') {
-        let stmt = statement.trim();
-        if !stmt.is_empty() && !stmt.starts_with("--") {
-            // Skip if empty or comment-only
-            let clean_stmt = stmt.lines()
-                .filter(|line| !line.trim().starts_with("--"))
-                .collect::<Vec<_>>()
-                .join("\n");
-
-            if !clean_stmt.trim().is_empty() {
-                sqlx::query(&clean_stmt)
-                    .execute(pool)
-                    .await
-                    .map_err(|e| format!("Migration v11 failed: {} - SQL: {}", e, clean_stmt))?;
-            }
-        }
-    }
-
-    sqlx::query("INSERT INTO _migrations (version, description) VALUES (11, 'seed_test_data')")
+    // Migration v11: Test data seed - DISABLED
+    // Test data seeding is now handled separately in development.
+    // This migration is kept as a no-op for version compatibility.
+    sqlx::query("INSERT INTO _migrations (version, description) VALUES (11, 'seed_test_data_disabled')")
         .execute(pool)
         .await
         .map_err(|e| format!("Failed to record migration v11: {}", e))?;
@@ -542,6 +524,29 @@ async fn run_migration_v12(pool: &DbPool) -> Result<(), String> {
 async fn run_migration_v13(pool: &DbPool) -> Result<(), String> {
     // Recreate results table with updated CHECK constraint that includes 'muu'
     // SQLite doesn't support ALTER TABLE to modify CHECK constraints
+    //
+    // IMPORTANT: If schema.sql was used (fresh install), the CHECK constraint
+    // already includes 'muu', so we skip this migration to avoid breaking it.
+
+    // Check if the results table schema already contains 'muu' in CHECK constraint
+    let table_sql: Option<String> = sqlx::query_scalar(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='results'"
+    )
+    .fetch_optional(pool)
+    .await
+    .map_err(|e| format!("Migration v13 failed getting results schema: {}", e))?;
+
+    if let Some(sql) = &table_sql {
+        if sql.contains("'muu'") {
+            // Schema already has 'muu' - this is a fresh install from updated schema.sql
+            // Skip migration entirely
+            sqlx::query("INSERT INTO _migrations (version, description) VALUES (13, 'fix_check_constraint_skipped_already_correct')")
+                .execute(pool)
+                .await
+                .map_err(|e| format!("Failed to record migration v13: {}", e))?;
+            return Ok(());
+        }
+    }
 
     // Check if results table exists (it might have been dropped in a partial migration)
     let results_exists: bool = sqlx::query_scalar(
@@ -659,6 +664,35 @@ async fn run_migration_v13(pool: &DbPool) -> Result<(), String> {
         .map_err(|e| format!("Migration v13 failed creating idx_results_personal_best: {}", e))?;
 
     // Now do the same for competitions table
+    // First check if competitions table already has correct CHECK constraint
+    let competitions_sql: Option<String> = sqlx::query_scalar(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='competitions'"
+    )
+    .fetch_optional(pool)
+    .await
+    .map_err(|e| format!("Migration v13 failed getting competitions schema: {}", e))?;
+
+    let competitions_needs_migration = if let Some(sql) = &competitions_sql {
+        !sql.contains("'muu'")  // Only migrate if 'muu' is NOT in the schema
+    } else {
+        false  // Table doesn't exist, nothing to migrate
+    };
+
+    if !competitions_needs_migration {
+        // Schema already correct or table doesn't exist, skip competitions migration
+        sqlx::query("CREATE INDEX IF NOT EXISTS idx_competitions_date ON competitions(date)")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v13 failed creating idx_competitions_date: {}", e))?;
+
+        sqlx::query("INSERT INTO _migrations (version, description) VALUES (13, 'fix_check_constraint_add_muu')")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Failed to record migration v13: {}", e))?;
+
+        return Ok(());
+    }
+
     let competitions_exists: bool = sqlx::query_scalar(
         "SELECT COUNT(*) > 0 FROM sqlite_master WHERE type='table' AND name='competitions'"
     )
@@ -785,6 +819,16 @@ async fn run_migration_v14(pool: &DbPool) -> Result<(), String> {
 
 pub async fn get_pool(app: &AppHandle) -> Result<DbPool, String> {
     let state = app.state::<AppDatabase>();
-    let guard = state.0.lock().await;
-    guard.clone().ok_or_else(|| "Database not initialized".to_string())
+
+    // Retry up to 50 times (5 seconds total) waiting for database initialization
+    for _ in 0..50 {
+        let guard = state.0.lock().await;
+        if let Some(pool) = guard.clone() {
+            return Ok(pool);
+        }
+        drop(guard); // Release lock before sleeping
+        tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+    }
+
+    Err("Database not initialized after timeout".to_string())
 }

@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/layout";
 import { ToastContainer, ErrorBoundary } from "./components/ui";
-import { BirthdayOverlay } from "./components/BirthdayOverlay";
 import { Dashboard } from "./pages/Dashboard";
 import { Athletes } from "./pages/Athletes";
 import { AthleteDetail } from "./pages/AthleteDetail";
@@ -30,7 +29,6 @@ function App() {
           </Route>
         </Routes>
         <ToastContainer />
-        <BirthdayOverlay />
       </BrowserRouter>
     </ErrorBoundary>
   );

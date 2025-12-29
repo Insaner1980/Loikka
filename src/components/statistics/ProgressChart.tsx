@@ -6,6 +6,7 @@ import {
   CartesianGrid,
   Tooltip,
   ReferenceDot,
+  ResponsiveContainer,
 } from "recharts";
 import { format } from "date-fns";
 import { fi } from "date-fns/locale";
@@ -101,10 +102,9 @@ export function ProgressChart({ data, discipline }: ProgressChartProps) {
     <div className="bg-card rounded-xl border border-border p-4">
       <h3 className="text-body font-medium text-foreground mb-4">Kehitys</h3>
       <div className="h-96">
+        <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={chartData}
-            width={800}
-            height={384}
             margin={{ top: 10, right: 30, left: 20, bottom: 25 }}
           >
             <defs>
@@ -171,6 +171,7 @@ export function ProgressChart({ data, discipline }: ProgressChartProps) {
               />
             )}
           </AreaChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );

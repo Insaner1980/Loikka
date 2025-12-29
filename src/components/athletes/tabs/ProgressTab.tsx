@@ -6,6 +6,7 @@ import {
   YAxis,
   Tooltip,
   ReferenceLine,
+  ResponsiveContainer,
 } from "recharts";
 import {
   TrendingUp,
@@ -260,7 +261,8 @@ export function ProgressTab({ results }: ProgressTabProps) {
               Tuloskehitys
             </h3>
             <div className="h-64">
-                <LineChart data={chartData} width={700} height={256}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData}>
                   <XAxis
                     dataKey="key"
                     tick={{ fill: "var(--text-muted)", fontSize: 11, dy: 10 }}
@@ -326,6 +328,7 @@ export function ProgressTab({ results }: ProgressTabProps) {
                     activeDot={{ r: 6, fill: "var(--accent)" }}
                   />
                 </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
 

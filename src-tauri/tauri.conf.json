@@ -36,7 +36,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["nsis", "msi"],
+    "targets": ["nsis"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -46,8 +46,18 @@
     "resources": [
       "../google-credentials.json"
     ],
-    "shortDescription": "Nuorten yleisurheilutulosten seuranta",
-    "longDescription": "Loikka on työpöytäsovellus nuorten yleisurheilutulosten seurantaan. Sovellus on suunnattu valmentajille ja vanhemmille, jotka haluavat seurata nuorten urheilijoiden kehitystä."
+    "shortDescription": "Yleisurheilusovellus",
+    "publisher": "Loikka",
+    "copyright": "© 2025 Loikka",
+    "category": "Sports",
+    "windows": {
+      "nsis": {
+        "installerIcon": "icons/icon.ico",
+        "installMode": "currentUser",
+        "languages": ["Finnish", "English"],
+        "displayLanguageSelector": false
+      }
+    }
   },
   "plugins": {
     "sql": {

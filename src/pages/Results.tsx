@@ -99,6 +99,19 @@ export function Results() {
   );
   const athleteList = useMemo(() => athletes.map((a) => a.athlete), [athletes]);
 
+  // Create a lookup for combined event names (result id -> discipline name)
+  // This is used to show "3-ottelu" under sub-results
+  const combinedEventNameMap = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const result of results) {
+      const discipline = getDisciplineById(result.disciplineId);
+      if (discipline?.category === "combined") {
+        map.set(result.id, discipline.name);
+      }
+    }
+    return map;
+  }, [results]);
+
   const resultsByDate = useMemo(
     () => getResultsByDate(filters as ResultFilters, athleteList),
     [results, filters, athleteList] // eslint-disable-line react-hooks/exhaustive-deps
@@ -196,6 +209,7 @@ export function Results() {
                       selectionMode={selectionMode}
                       isSelected={selectedIds.has(result.id)}
                       onCheckboxClick={() => handleCheckboxClick(result.id)}
+                      combinedEventName={result.combinedEventId ? combinedEventNameMap.get(result.combinedEventId) : undefined}
                     />
                   ))}
                 </div>

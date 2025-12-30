@@ -31,6 +31,18 @@ export function ResultsTab({
     results.map((r) => [r.disciplineId, r.discipline])
   ).values()];
 
+  // Create a lookup for combined event names (result id -> discipline name)
+  // This is used to show "3-ottelu" under sub-results
+  const combinedEventNameMap = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const result of results) {
+      if (result.discipline?.category === "combined") {
+        map.set(result.id, result.discipline.name);
+      }
+    }
+    return map;
+  }, [results]);
+
   // Filter results by discipline first (for year options)
   const resultsForYearFilter = disciplineFilter
     ? results.filter((r) => r.disciplineId === disciplineFilter)
@@ -96,6 +108,7 @@ export function ResultsTab({
               discipline={result.discipline}
               showAthleteName={false}
               onEdit={() => onEditResult(result)}
+              combinedEventName={result.combinedEventId ? combinedEventNameMap.get(result.combinedEventId) : undefined}
             />
           ))}
         </div>

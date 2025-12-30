@@ -112,8 +112,16 @@ export function Statistics() {
   // Note: Store functions are NOT in dependencies - they change every render
   const chartData = useMemo(() => {
     if (selectedAthleteId === null || selectedDisciplineId === null) return [];
-    return getResultsForChart(selectedAthleteId, selectedDisciplineId);
-  }, [selectedAthleteId, selectedDisciplineId, results]); // eslint-disable-line react-hooks/exhaustive-deps
+    const allData = getResultsForChart(selectedAthleteId, selectedDisciplineId);
+
+    // Filter by selected year
+    if (selectedYear !== null) {
+      return allData.filter(
+        (d) => new Date(d.date).getFullYear() === selectedYear
+      );
+    }
+    return allData;
+  }, [selectedAthleteId, selectedDisciplineId, selectedYear, results]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const seasonStats = useMemo(() => {
     if (selectedAthleteId === null || selectedDisciplineId === null || selectedYear === null) {

@@ -76,19 +76,6 @@ export function ProgressChart({ data, discipline }: ProgressChartProps) {
     formattedDate: format(new Date(d.date), "d.M.yy"),
   }));
 
-  // Calculate Y axis domain with padding
-  const values = data.map((d) => d.value);
-  const minValue = Math.min(...values);
-  const maxValue = Math.max(...values);
-  const range = maxValue - minValue;
-  const padding = range * 0.1 || maxValue * 0.1;
-
-  // For time events (lower is better), we want to invert the axis
-  // so that better results appear higher on the chart
-  const yDomain: [number, number] = discipline.lowerIsBetter
-    ? [maxValue + padding, minValue - padding]
-    : [minValue - padding, maxValue + padding];
-
   // Format value for Y axis ticks
   const formatYAxis = (value: number) => {
     if (discipline.unit === "time") {
@@ -105,7 +92,7 @@ export function ProgressChart({ data, discipline }: ProgressChartProps) {
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart
             data={chartData}
-            margin={{ top: 10, right: 30, left: 20, bottom: 25 }}
+            margin={{ top: 10, right: 10, left: 20, bottom: 25 }}
           >
             <defs>
               <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
@@ -124,13 +111,13 @@ export function ProgressChart({ data, discipline }: ProgressChartProps) {
               fontSize={12}
               tickLine={false}
               axisLine={false}
-              padding={{ left: 20, right: 20 }}
+              padding={{ left: 10, right: 10 }}
               dy={10}
               tickFormatter={(index) => chartData[index]?.formattedDate || ""}
             />
             <YAxis
-              domain={yDomain}
-              tickCount={5}
+              domain={["auto", "auto"]}
+              reversed={discipline.lowerIsBetter}
               tickFormatter={formatYAxis}
               stroke="var(--color-muted-foreground)"
               fontSize={12}

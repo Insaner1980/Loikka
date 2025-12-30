@@ -29,7 +29,7 @@ pub async fn export_data(app: AppHandle) -> Result<String, String> {
 
     // Fetch all results
     let result_rows = sqlx::query(
-        "SELECT id, athlete_id, discipline_id, date, value, type, competition_name, competition_level, custom_level_name, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing, created_at FROM results"
+        "SELECT id, athlete_id, discipline_id, date, value, type, competition_name, competition_level, custom_level_name, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing, sub_results, combined_event_id, created_at FROM results"
     )
     .fetch_all(&pool)
     .await
@@ -56,6 +56,8 @@ pub async fn export_data(app: AppHandle) -> Result<String, String> {
         equipment_weight: row.get("equipment_weight"),
         hurdle_height: row.get("hurdle_height"),
         hurdle_spacing: row.get("hurdle_spacing"),
+        sub_results: row.get("sub_results"),
+        combined_event_id: row.get("combined_event_id"),
         created_at: row.get("created_at"),
     }).collect();
 
@@ -164,7 +166,7 @@ pub async fn import_data(app: AppHandle, json: String) -> Result<bool, String> {
     // Import results
     for result in data.results {
         sqlx::query(
-            "INSERT OR REPLACE INTO results (id, athlete_id, discipline_id, date, value, type, competition_name, competition_level, custom_level_name, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            "INSERT OR REPLACE INTO results (id, athlete_id, discipline_id, date, value, type, competition_name, competition_level, custom_level_name, location, placement, notes, is_personal_best, is_season_best, is_national_record, wind, status, equipment_weight, hurdle_height, hurdle_spacing, sub_results, combined_event_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
         )
         .bind(result.id)
         .bind(result.athlete_id)
@@ -186,6 +188,8 @@ pub async fn import_data(app: AppHandle, json: String) -> Result<bool, String> {
         .bind(result.equipment_weight)
         .bind(result.hurdle_height)
         .bind(result.hurdle_spacing)
+        .bind(&result.sub_results)
+        .bind(result.combined_event_id)
         .bind(&result.created_at)
         .execute(&pool)
         .await

@@ -1,6 +1,6 @@
-import { memo, useCallback } from "react";
+import { memo, useCallback, useMemo } from "react";
 import { Trophy, Calendar, MapPin } from "lucide-react";
-import type { Athlete, Discipline, ResultStatus } from "../../types";
+import type { Athlete, Discipline, ResultStatus, SubResult } from "../../types";
 import {
   formatTime,
   formatDistance,
@@ -8,6 +8,7 @@ import {
   formatWind,
   getStatusLabel,
 } from "../../lib/formatters";
+import { getDisciplineById } from "../../data/disciplines";
 import { ResultBadge } from "./ResultBadge";
 import { HoverCheckbox } from "../ui";
 
@@ -31,6 +32,8 @@ interface ResultCardProps {
     equipmentWeight?: number;
     hurdleHeight?: number;
     hurdleSpacing?: number;
+    subResults?: string; // JSON string of SubResult[] (legacy)
+    combinedEventId?: number; // ID of parent combined event (for sub-results)
   };
   athlete?: Athlete;
   discipline?: Discipline;
@@ -39,6 +42,7 @@ interface ResultCardProps {
   selectionMode?: boolean;
   isSelected?: boolean;
   onCheckboxClick?: () => void;
+  combinedEventName?: string; // Name of parent combined event (e.g., "3-ottelu") for sub-results
 }
 
 const medalColors = {
@@ -56,9 +60,35 @@ export const ResultCard = memo(function ResultCard({
   selectionMode = false,
   isSelected = false,
   onCheckboxClick,
+  combinedEventName,
 }: ResultCardProps) {
   // Get result year for wind check
   const resultYear = new Date(result.date).getFullYear();
+
+  // Parse sub-results for combined events
+  const parsedSubResults = useMemo(() => {
+    if (!result.subResults) return null;
+    try {
+      const parsed = JSON.parse(result.subResults) as SubResult[];
+      return parsed.map(sr => {
+        const subDiscipline = getDisciplineById(sr.disciplineId);
+        const formattedValue = subDiscipline
+          ? subDiscipline.unit === "time"
+            ? formatTime(sr.value)
+            : formatDistance(sr.value)
+          : sr.value.toString();
+        return {
+          ...sr,
+          discipline: subDiscipline,
+          formattedValue,
+        };
+      });
+    } catch {
+      return null;
+    }
+  }, [result.subResults]);
+
+  const isCombinedEvent = discipline?.category === "combined";
 
   const handleCheckboxClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -164,6 +194,12 @@ export const ResultCard = memo(function ResultCard({
           <div className={`truncate ${showAthleteName ? "text-body text-muted-foreground" : "text-body font-medium text-foreground"}`}>
             {disciplineName}
           </div>
+          {/* Show combined event name for sub-results */}
+          {combinedEventName && (
+            <div className="text-caption text-muted-foreground truncate">
+              {combinedEventName}
+            </div>
+          )}
           {metadataLine && (
             <div className="text-caption text-muted-foreground truncate">{metadataLine}</div>
           )}
@@ -177,7 +213,9 @@ export const ResultCard = memo(function ResultCard({
             </span>
           ) : (
             <>
-              <span className="text-stat font-bold tabular-nums text-foreground">{formattedValue}</span>
+              <span className="text-stat font-bold tabular-nums text-foreground">
+                {isCombinedEvent ? `${result.value} p` : formattedValue}
+              </span>
               {/* Badges */}
               <div className="flex items-center gap-1.5 mt-1.5">
                 {result.isPersonalBest && <ResultBadge type="pb" />}
@@ -187,6 +225,23 @@ export const ResultCard = memo(function ResultCard({
             </>
           )}
         </div>
+
+        {/* Sub-results for combined events */}
+        {isCombinedEvent && parsedSubResults && parsedSubResults.length > 0 && (
+          <div className="mt-2 space-y-1 text-caption">
+            {parsedSubResults.map((sr, idx) => (
+              <div key={idx} className="flex justify-between items-center text-muted-foreground gap-2">
+                <span className="truncate">{sr.discipline?.name || `Laji ${sr.disciplineId}`}</span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="tabular-nums">{sr.formattedValue}</span>
+                  {sr.points !== undefined && (
+                    <span className="font-medium tabular-nums text-foreground">{sr.points} p</span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Divider */}
         <div className="h-px w-full bg-border my-3" />

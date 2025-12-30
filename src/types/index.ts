@@ -80,13 +80,21 @@ export interface Discipline {
   iconName?: string;
 }
 
+// Sub-result for combined events (moniottelu)
+export interface SubResult {
+  disciplineId: number;
+  value: number;
+  points: number;
+  wind?: number;
+}
+
 // Result
 export interface Result {
   id: number;
   athleteId: number;
   disciplineId: number;
   date: string;
-  value: number; // Time in seconds or distance in meters
+  value: number; // Time in seconds or distance in meters, or total points for combined events
   type: ResultType;
   competitionName?: string;
   competitionLevel?: CompetitionLevel;
@@ -102,6 +110,8 @@ export interface Result {
   equipmentWeight?: number; // Equipment weight in kg (for throws)
   hurdleHeight?: number; // Hurdle height in cm (for hurdles)
   hurdleSpacing?: number; // Hurdle spacing in m (for hurdles)
+  subResults?: string; // JSON string of SubResult[] for combined events (moniottelu) - legacy
+  combinedEventId?: number; // ID of parent combined event result (for sub-results)
   createdAt: string;
 }
 

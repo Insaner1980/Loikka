@@ -3,16 +3,16 @@ import { useAthleteStore } from "../../stores/useAthleteStore";
 import { useResultStore } from "../../stores/useResultStore";
 import { useCompetitionStore } from "../../stores/useCompetitionStore";
 import { useDisciplineFields } from "../../hooks";
-import { disciplineNeedsMinutes } from "../../data/disciplines";
+import { disciplineNeedsMinutes, getDisciplineById, disciplines as allDisciplines } from "../../data/disciplines";
 import { getTodayISO } from "../../lib/formatters";
 import {
   HURDLE_HEIGHTS,
   RESULT_STATUSES,
   COMPETITION_LEVEL_OPTIONS,
 } from "../../lib/constants";
-import { TimeInput, DistanceInput, DatePicker, DisciplineSelect, FilterSelect, type FilterOption } from "../ui";
+import { TimeInput, DistanceInput, DatePicker, DisciplineSelect, DisciplineFilterSelect, FilterSelect, type FilterOption } from "../ui";
 import { AutocompleteInput } from "../shared";
-import type { NewResult, MedalType, ResultType, CompetitionLevel, ResultStatus } from "../../types";
+import type { NewResult, MedalType, ResultType, CompetitionLevel, ResultStatus, SubResult } from "../../types";
 
 interface ResultFormProps {
   athleteId?: number;
@@ -59,7 +59,11 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
   // State for potential PB/SB checks
   const [potentialBests, setPotentialBests] = useState({ isPB: false, isSB: false });
 
-  
+  // State for combined event (moniottelu) sub-results
+  const [subDisciplineIds, setSubDisciplineIds] = useState<(number | null)[]>([]);
+  const [subDisciplineValues, setSubDisciplineValues] = useState<(number | null)[]>([]);
+  const [subDisciplinePoints, setSubDisciplinePoints] = useState<(number | null)[]>([]);
+
   // Clear errors when fields change
   useEffect(() => {
     if (errors.value && resultValue !== null && resultValue > 0) {
@@ -115,6 +119,20 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
     availableWeights,
   } = useDisciplineFields(disciplineId);
 
+  // Check if discipline is a combined event (moniottelu)
+  const isCombinedEvent = selectedDiscipline?.category === "combined";
+  const combinedEventCount = useMemo(() => {
+    if (!selectedDiscipline || !isCombinedEvent) return 0;
+    // Extract number from name: "3-ottelu" -> 3, "7-ottelu" -> 7
+    const match = selectedDiscipline.name.match(/^(\d+)-ottelu/);
+    return match ? parseInt(match[1]) : 0;
+  }, [selectedDiscipline, isCombinedEvent]);
+
+  // Get available disciplines for sub-discipline selection (exclude combined events)
+  const availableSubDisciplines = useMemo(() => {
+    return allDisciplines.filter(d => d.category !== "combined");
+  }, []);
+
   // Filter options for FilterSelect components
   const athleteOptions: FilterOption[] = useMemo(() => [
     { value: "", label: "Valitse urheilija" },
@@ -163,7 +181,33 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
     setWind("");
     setResultValue(null);
     setPotentialBests({ isPB: false, isSB: false });
-  }, [disciplineId]);
+
+    // Initialize sub-discipline arrays for combined events
+    if (combinedEventCount > 0) {
+      setSubDisciplineIds(new Array(combinedEventCount).fill(null));
+      setSubDisciplineValues(new Array(combinedEventCount).fill(null));
+      setSubDisciplinePoints(new Array(combinedEventCount).fill(null));
+    } else {
+      setSubDisciplineIds([]);
+      setSubDisciplineValues([]);
+      setSubDisciplinePoints([]);
+    }
+  }, [disciplineId, combinedEventCount]);
+
+  // Calculate total points automatically from sub-discipline points
+  const calculatedTotalPoints = useMemo(() => {
+    if (!isCombinedEvent || subDisciplinePoints.length === 0) return null;
+    const validPoints = subDisciplinePoints.filter((p): p is number => p !== null && p > 0);
+    if (validPoints.length === 0) return null;
+    return validPoints.reduce((sum, p) => sum + p, 0);
+  }, [isCombinedEvent, subDisciplinePoints]);
+
+  // Update resultValue when calculated points change (for combined events)
+  useEffect(() => {
+    if (isCombinedEvent && calculatedTotalPoints !== null) {
+      setResultValue(calculatedTotalPoints);
+    }
+  }, [isCombinedEvent, calculatedTotalPoints]);
 
   // Clear result value and placement when status is not valid (DNF, DNS, NM, DQ)
   useEffect(() => {
@@ -251,8 +295,32 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
     // Convert from input format to database format:
     // Time: hundredths to seconds (e.g., 184240 -> 1842.40)
     // Distance: centimeters to meters (e.g., 550 -> 5.50)
+    // Combined events: points are stored as-is (e.g., 2500 -> 2500)
     // For non-valid statuses (DNF, DNS, etc.), use 0
-    const dbValue = resultValue !== null ? resultValue / 100 : 0;
+    const dbValue = resultValue !== null
+      ? isCombinedEvent
+        ? resultValue  // Points are stored as-is
+        : resultValue / 100
+      : 0;
+
+    // Build sub-results JSON for combined events
+    let subResultsJson: string | undefined;
+    if (isCombinedEvent && combinedEventCount > 0) {
+      const subResults: SubResult[] = subDisciplineIds
+        .map((id, index) => {
+          if (id === null || subDisciplineValues[index] === null || subDisciplinePoints[index] === null) return null;
+          return {
+            disciplineId: id,
+            value: (subDisciplineValues[index] as number) / 100, // Convert to db format
+            points: subDisciplinePoints[index] as number,
+          };
+        })
+        .filter((sr): sr is SubResult => sr !== null);
+
+      if (subResults.length > 0) {
+        subResultsJson = JSON.stringify(subResults);
+      }
+    }
 
     const resultData: NewResult = {
       athleteId: selectedAthleteId as number,
@@ -275,6 +343,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
       equipmentWeight: isThrowDiscipline && equipmentWeight ? (equipmentWeight as number) : undefined,
       hurdleHeight: isHurdleDiscipline && hurdleHeight ? (hurdleHeight as number) : undefined,
       hurdleSpacing: isHurdleDiscipline && hurdleSpacing ? parseFloat(hurdleSpacing) : undefined,
+      subResults: subResultsJson,
     };
 
     // Automatically create medal for placements 1-3 in competitions
@@ -297,6 +366,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
   // Get label for value input
   const getValueLabel = () => {
     if (!selectedDiscipline) return "Tulos";
+    if (isCombinedEvent) return "Yhteispisteet";
     return selectedDiscipline.unit === "time" ? "Aika" : "Tulos (m)";
   };
 
@@ -378,6 +448,15 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
               <p className="text-sm text-muted-foreground py-2">
                 Ei tulosta ({resultStatus === "dnf" ? "keskeytetty" : resultStatus === "dns" ? "ei startannut" : resultStatus === "nm" ? "ei tulosta" : "hylätty"})
               </p>
+            ) : isCombinedEvent ? (
+              <input
+                type="number"
+                id="value"
+                value={calculatedTotalPoints !== null ? calculatedTotalPoints : ""}
+                readOnly
+                placeholder="Lasketaan osalajeista"
+                className="w-full px-3 py-2 bg-muted border border-border rounded-lg text-muted-foreground cursor-not-allowed"
+              />
             ) : selectedDiscipline.unit === "time" ? (
               <TimeInput
                 id="value"
@@ -470,6 +549,114 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
           )}
         </div>
       </div>
+
+      {/* Combined event (moniottelu) sub-disciplines */}
+      {isCombinedEvent && combinedEventCount > 0 && (
+        <div className="space-y-3 p-4 bg-card-hover rounded-lg border border-border">
+          <h4 className="text-sm font-medium text-secondary">
+            Osalajit ({combinedEventCount} lajia)
+          </h4>
+          <div className="space-y-3">
+            {subDisciplineIds.map((subId, index) => {
+              const subDiscipline = subId !== null ? getDisciplineById(subId) : null;
+              return (
+                <div key={index} className="grid grid-cols-[1fr_1fr_100px] gap-3 items-end">
+                  {/* Sub-discipline selector */}
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">
+                      {index + 1}. laji
+                    </label>
+                    <DisciplineFilterSelect
+                      value={subId}
+                      onChange={(newId) => {
+                        const newIds = [...subDisciplineIds];
+                        newIds[index] = newId;
+                        setSubDisciplineIds(newIds);
+                        // Reset value and points when discipline changes
+                        const newValues = [...subDisciplineValues];
+                        newValues[index] = null;
+                        setSubDisciplineValues(newValues);
+                        const newPoints = [...subDisciplinePoints];
+                        newPoints[index] = null;
+                        setSubDisciplinePoints(newPoints);
+                      }}
+                      disciplines={availableSubDisciplines}
+                      placeholder="Valitse laji"
+                    />
+                  </div>
+
+                  {/* Sub-discipline result value */}
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">
+                      Tulos
+                    </label>
+                    {subDiscipline ? (
+                      subDiscipline.unit === "time" ? (
+                        <TimeInput
+                          value={subDisciplineValues[index]}
+                          onChange={(value) => {
+                            const newValues = [...subDisciplineValues];
+                            newValues[index] = value;
+                            setSubDisciplineValues(newValues);
+                          }}
+                          showMinutes={disciplineNeedsMinutes(subDiscipline.id)}
+                        />
+                      ) : (
+                        <DistanceInput
+                          value={subDisciplineValues[index]}
+                          onChange={(value) => {
+                            const newValues = [...subDisciplineValues];
+                            newValues[index] = value;
+                            setSubDisciplineValues(newValues);
+                          }}
+                        />
+                      )
+                    ) : (
+                      <input
+                        type="text"
+                        disabled
+                        placeholder="Valitse ensin laji"
+                        className="w-full px-3 py-2 bg-card border border-border rounded-lg opacity-50"
+                      />
+                    )}
+                  </div>
+
+                  {/* Sub-discipline points */}
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">
+                      Pisteet
+                    </label>
+                    <input
+                      type="number"
+                      value={subDisciplinePoints[index] ?? ""}
+                      onChange={(e) => {
+                        const newPoints = [...subDisciplinePoints];
+                        newPoints[index] = e.target.value ? parseInt(e.target.value) : null;
+                        setSubDisciplinePoints(newPoints);
+                      }}
+                      min={0}
+                      placeholder="0"
+                      disabled={!subDiscipline}
+                      autoComplete="one-time-code"
+                      className={`w-full px-3 py-2 bg-card border border-border rounded-lg input-focus ${
+                        !subDiscipline ? "opacity-50" : ""
+                      }`}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Total points display */}
+          <div className="flex justify-end items-center gap-2 pt-2 border-t border-border">
+            <span className="text-sm text-muted-foreground">Yhteensä:</span>
+            <span className="text-lg font-bold tabular-nums">
+              {calculatedTotalPoints !== null ? `${calculatedTotalPoints} p` : "- p"}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Row 3: Hurdle spacing (if hurdle discipline) */}
       {isHurdleDiscipline && (

@@ -114,6 +114,14 @@ async fn run_migrations(pool: &DbPool) -> Result<(), String> {
         run_migration_v14(pool).await?;
     }
 
+    if current_version < 15 {
+        run_migration_v15(pool).await?;
+    }
+
+    if current_version < 16 {
+        run_migration_v16(pool).await?;
+    }
+
     Ok(())
 }
 
@@ -813,6 +821,61 @@ async fn run_migration_v14(pool: &DbPool) -> Result<(), String> {
         .execute(pool)
         .await
         .map_err(|e| format!("Failed to record migration v14: {}", e))?;
+
+    Ok(())
+}
+
+async fn run_migration_v15(pool: &DbPool) -> Result<(), String> {
+    // Add sub_results column to results table for combined events (3-, 4-, 5-, 7-ottelu)
+    let has_sub_results: bool = sqlx::query_scalar(
+        "SELECT COUNT(*) > 0 FROM pragma_table_info('results') WHERE name = 'sub_results'"
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(|e| format!("Migration v15 failed checking sub_results column: {}", e))?;
+
+    if !has_sub_results {
+        sqlx::query("ALTER TABLE results ADD COLUMN sub_results TEXT")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v15 failed adding sub_results column: {}", e))?;
+    }
+
+    sqlx::query("INSERT INTO _migrations (version, description) VALUES (15, 'add_sub_results_for_combined_events')")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Failed to record migration v15: {}", e))?;
+
+    Ok(())
+}
+
+async fn run_migration_v16(pool: &DbPool) -> Result<(), String> {
+    // Add combined_event_id column to results table
+    // This links sub-results (e.g., 40m from 3-ottelu) to their parent combined event result
+    let has_combined_event_id: bool = sqlx::query_scalar(
+        "SELECT COUNT(*) > 0 FROM pragma_table_info('results') WHERE name = 'combined_event_id'"
+    )
+    .fetch_one(pool)
+    .await
+    .map_err(|e| format!("Migration v16 failed checking combined_event_id column: {}", e))?;
+
+    if !has_combined_event_id {
+        sqlx::query("ALTER TABLE results ADD COLUMN combined_event_id INTEGER REFERENCES results(id) ON DELETE CASCADE")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v16 failed adding combined_event_id column: {}", e))?;
+    }
+
+    // Create index for efficient lookup of sub-results by parent
+    sqlx::query("CREATE INDEX IF NOT EXISTS idx_results_combined_event ON results(combined_event_id)")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Migration v16 failed creating idx_results_combined_event: {}", e))?;
+
+    sqlx::query("INSERT INTO _migrations (version, description) VALUES (16, 'add_combined_event_id_for_moniottelu')")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Failed to record migration v16: {}", e))?;
 
     Ok(())
 }

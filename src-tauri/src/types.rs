@@ -81,6 +81,8 @@ pub struct Result {
     pub equipment_weight: Option<f64>,
     pub hurdle_height: Option<i32>,
     pub hurdle_spacing: Option<f64>,
+    pub sub_results: Option<String>, // JSON string for combined events (moniottelu) - legacy, will be removed
+    pub combined_event_id: Option<i64>, // ID of parent combined event result (for sub-results)
     pub created_at: String,
 }
 
@@ -106,6 +108,8 @@ pub struct CreateResult {
     pub hurdle_height: Option<i32>,
     pub hurdle_spacing: Option<f64>,
     pub is_national_record: Option<bool>,
+    pub sub_results: Option<String>, // JSON string for combined events (moniottelu) - legacy
+    pub combined_event_id: Option<i64>, // ID of parent combined event result (for sub-results)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
@@ -130,6 +134,8 @@ pub struct UpdateResult {
     pub hurdle_height: Option<i32>,
     pub hurdle_spacing: Option<f64>,
     pub is_national_record: Option<bool>,
+    pub sub_results: Option<String>, // JSON string for combined events (moniottelu) - legacy
+    pub combined_event_id: Option<i64>, // ID of parent combined event result (for sub-results)
 }
 
 // Competition types

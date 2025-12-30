@@ -193,6 +193,8 @@ export const useResultStore = create<ResultStore>((set, get) => ({
           equipmentWeight: resultData.equipmentWeight ?? null,
           hurdleHeight: resultData.hurdleHeight ?? null,
           hurdleSpacing: resultData.hurdleSpacing ?? null,
+          subResults: resultData.subResults || null,
+          combinedEventId: resultData.combinedEventId ?? null,
         },
       });
 
@@ -205,6 +207,47 @@ export const useResultStore = create<ResultStore>((set, get) => ({
           competitionName: medal.competitionName,
           date: resultData.date,
         });
+      }
+
+      // For combined events (moniottelu), create separate results for each sub-discipline
+      if (resultData.subResults) {
+        try {
+          const subResults = JSON.parse(resultData.subResults) as Array<{
+            disciplineId: number;
+            value: number;
+            wind?: number;
+          }>;
+
+          for (const sub of subResults) {
+            await invoke<Result>("create_result", {
+              result: {
+                athleteId: resultData.athleteId,
+                disciplineId: sub.disciplineId,
+                date: resultData.date,
+                value: sub.value,
+                type: resultData.type,
+                competitionName: resultData.competitionName || null,
+                competitionLevel: resultData.competitionLevel || null,
+                customLevelName: resultData.customLevelName || null,
+                location: resultData.location || null,
+                placement: null, // Sub-results don't have placement
+                notes: null,
+                isPersonalBest: false, // Will be calculated by backend
+                isSeasonBest: false,
+                isNationalRecord: false,
+                wind: sub.wind ?? null,
+                status: "valid",
+                equipmentWeight: null,
+                hurdleHeight: null,
+                hurdleSpacing: null,
+                subResults: null,
+                combinedEventId: newResult.id, // Link to parent combined event
+              },
+            });
+          }
+        } catch (e) {
+          console.error("Failed to parse or create sub-results:", e);
+        }
       }
 
       // Refetch all results
@@ -244,6 +287,8 @@ export const useResultStore = create<ResultStore>((set, get) => ({
           hurdleHeight: resultData.hurdleHeight ?? null,
           hurdleSpacing: resultData.hurdleSpacing ?? null,
           isNationalRecord: resultData.isNationalRecord,
+          subResults: resultData.subResults || null,
+          combinedEventId: resultData.combinedEventId ?? null,
         },
       });
 

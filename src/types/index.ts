@@ -3,11 +3,14 @@ export type DisciplineCategory =
   | "sprints"
   | "middleDistance"
   | "longDistance"
+  | "crossCountry"
+  | "relays"
   | "hurdles"
   | "jumps"
   | "throws"
   | "combined"
-  | "walking";
+  | "walking"
+  | "other";
 
 // Age categories for Finnish youth athletics
 export type AgeCategory =

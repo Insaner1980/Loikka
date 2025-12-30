@@ -122,6 +122,22 @@ async fn run_migrations(pool: &DbPool) -> Result<(), String> {
         run_migration_v16(pool).await?;
     }
 
+    if current_version < 17 {
+        run_migration_v17(pool).await?;
+    }
+
+    if current_version < 18 {
+        run_migration_v18(pool).await?;
+    }
+
+    if current_version < 19 {
+        run_migration_v19(pool).await?;
+    }
+
+    if current_version < 20 {
+        run_migration_v20(pool).await?;
+    }
+
     Ok(())
 }
 
@@ -876,6 +892,362 @@ async fn run_migration_v16(pool: &DbPool) -> Result<(), String> {
         .execute(pool)
         .await
         .map_err(|e| format!("Failed to record migration v16: {}", e))?;
+
+    Ok(())
+}
+
+async fn run_migration_v17(pool: &DbPool) -> Result<(), String> {
+    // Re-seed all disciplines to sync frontend and database
+    // We use INSERT OR IGNORE for new disciplines, then UPDATE for existing ones
+    // This avoids FK constraint violations from results table
+
+    // Discipline data: (id, name, full_name, category, unit, lower_is_better, icon_name)
+    let disciplines = [
+        // Sprints (IDs 1-7)
+        (1, "40 m", "40 metriä", "sprints", "time", 1, "timer"),
+        (2, "60 m", "60 metriä", "sprints", "time", 1, "timer"),
+        (3, "100 m", "100 metriä", "sprints", "time", 1, "timer"),
+        (4, "150 m", "150 metriä", "sprints", "time", 1, "timer"),
+        (5, "200 m", "200 metriä", "sprints", "time", 1, "timer"),
+        (6, "300 m", "300 metriä", "sprints", "time", 1, "timer"),
+        (7, "400 m", "400 metriä", "sprints", "time", 1, "timer"),
+        // Middle distance (IDs 8-12)
+        (8, "600 m", "600 metriä", "middleDistance", "time", 1, "timer"),
+        (9, "800 m", "800 metriä", "middleDistance", "time", 1, "timer"),
+        (10, "1000 m", "1000 metriä", "middleDistance", "time", 1, "timer"),
+        (11, "1500 m", "1500 metriä", "middleDistance", "time", 1, "timer"),
+        (12, "2000 m", "2000 metriä", "middleDistance", "time", 1, "timer"),
+        // Long distance (IDs 13-15)
+        (13, "3000 m", "3000 metriä", "longDistance", "time", 1, "timer"),
+        (14, "5000 m", "5000 metriä", "longDistance", "time", 1, "timer"),
+        (15, "10000 m", "10000 metriä", "longDistance", "time", 1, "timer"),
+        // Hurdles (IDs 16-21)
+        (16, "60 m aidat", "60 metriä aidat", "hurdles", "time", 1, "fence"),
+        (17, "80 m aidat", "80 metriä aidat", "hurdles", "time", 1, "fence"),
+        (18, "100 m aidat", "100 metriä aidat", "hurdles", "time", 1, "fence"),
+        (19, "200 m aidat", "200 metriä aidat", "hurdles", "time", 1, "fence"),
+        (20, "300 m aidat", "300 metriä aidat", "hurdles", "time", 1, "fence"),
+        (21, "400 m aidat", "400 metriä aidat", "hurdles", "time", 1, "fence"),
+        // Jumps (IDs 22-25)
+        (22, "Pituus", "Pituushyppy", "jumps", "distance", 0, "move-diagonal"),
+        (23, "Korkeus", "Korkeushyppy", "jumps", "distance", 0, "arrow-up"),
+        (24, "Kolmiloikka", "Kolmiloikka", "jumps", "distance", 0, "footprints"),
+        (25, "Seiväs", "Seiväshyppy", "jumps", "distance", 0, "git-branch"),
+        // Throws (IDs 26-30)
+        (26, "Kuula", "Kuulantyöntö", "throws", "distance", 0, "circle"),
+        (27, "Kiekko", "Kiekonheitto", "throws", "distance", 0, "disc"),
+        (28, "Keihäs", "Keihäänheitto", "throws", "distance", 0, "spline"),
+        (29, "Moukari", "Moukarinheitto", "throws", "distance", 0, "hammer"),
+        (30, "Pallo", "Pallonheitto", "throws", "distance", 0, "circle-dot"),
+        // Combined events (IDs 31-34)
+        (31, "3-ottelu", "3-ottelu", "combined", "distance", 0, "trophy"),
+        (32, "4-ottelu", "4-ottelu", "combined", "distance", 0, "trophy"),
+        (33, "5-ottelu", "5-ottelu", "combined", "distance", 0, "trophy"),
+        (34, "7-ottelu", "7-ottelu", "combined", "distance", 0, "trophy"),
+        // Walking (IDs 35-41)
+        (35, "600 m kävely", "600 metriä kävely", "walking", "time", 1, "footprints"),
+        (36, "800 m kävely", "800 metriä kävely", "walking", "time", 1, "footprints"),
+        (37, "2000 m kävely", "2000 metriä kävely", "walking", "time", 1, "footprints"),
+        (38, "3000 m kävely", "3000 metriä kävely", "walking", "time", 1, "footprints"),
+        (39, "5000 m kävely", "5000 metriä kävely", "walking", "time", 1, "footprints"),
+        (40, "10 km kävely", "10 kilometriä kävely", "walking", "time", 1, "footprints"),
+        (41, "1000 m kävely", "1000 metriä kävely", "walking", "time", 1, "footprints"),
+    ];
+
+    for (id, name, full_name, category, unit, lower_is_better, icon_name) in disciplines {
+        // First try to insert (will be ignored if ID already exists)
+        sqlx::query(
+            "INSERT OR IGNORE INTO disciplines (id, name, full_name, category, unit, lower_is_better, icon_name) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )
+        .bind(id)
+        .bind(name)
+        .bind(full_name)
+        .bind(category)
+        .bind(unit)
+        .bind(lower_is_better)
+        .bind(icon_name)
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Migration v17 insert failed for {}: {}", name, e))?;
+
+        // Then update to ensure correct values (handles mismatched data)
+        sqlx::query(
+            "UPDATE disciplines SET name = ?, full_name = ?, category = ?, unit = ?, lower_is_better = ?, icon_name = ? WHERE id = ?"
+        )
+        .bind(name)
+        .bind(full_name)
+        .bind(category)
+        .bind(unit)
+        .bind(lower_is_better)
+        .bind(icon_name)
+        .bind(id)
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Migration v17 update failed for {}: {}", name, e))?;
+    }
+
+    sqlx::query("INSERT INTO _migrations (version, description) VALUES (17, 'reseed_disciplines_sync_frontend')")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Failed to record migration v17: {}", e))?;
+
+    Ok(())
+}
+
+async fn run_migration_v18(pool: &DbPool) -> Result<(), String> {
+    // Add cross-country (maastojuoksu) disciplines
+    let cross_country_disciplines = [
+        (42, "500 m maasto", "500 metriä maastojuoksu", "crossCountry", "time", 1, "trees"),
+        (43, "1 km maasto", "1 kilometri maastojuoksu", "crossCountry", "time", 1, "trees"),
+        (44, "2 km maasto", "2 kilometriä maastojuoksu", "crossCountry", "time", 1, "trees"),
+        (45, "4 km maasto", "4 kilometriä maastojuoksu", "crossCountry", "time", 1, "trees"),
+        (46, "10 km maasto", "10 kilometriä maastojuoksu", "crossCountry", "time", 1, "trees"),
+    ];
+
+    for (id, name, full_name, category, unit, lower_is_better, icon_name) in cross_country_disciplines {
+        sqlx::query(
+            "INSERT OR IGNORE INTO disciplines (id, name, full_name, category, unit, lower_is_better, icon_name) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )
+        .bind(id)
+        .bind(name)
+        .bind(full_name)
+        .bind(category)
+        .bind(unit)
+        .bind(lower_is_better)
+        .bind(icon_name)
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Migration v18 insert failed for {}: {}", name, e))?;
+    }
+
+    sqlx::query("INSERT INTO _migrations (version, description) VALUES (18, 'add_cross_country_disciplines')")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Failed to record migration v18: {}", e))?;
+
+    Ok(())
+}
+
+async fn run_migration_v19(pool: &DbPool) -> Result<(), String> {
+    // Add relay and other disciplines
+    let new_disciplines = [
+        // Relays (IDs 47-53)
+        (47, "8x40 m sukkulaviesti", "8x40 metriä sukkulaviesti", "relays", "time", 1, "repeat"),
+        (48, "4x50 m viesti", "4x50 metriä viesti", "relays", "time", 1, "repeat"),
+        (49, "4x100 m viesti", "4x100 metriä viesti", "relays", "time", 1, "repeat"),
+        (50, "4x200 m viesti", "4x200 metriä viesti", "relays", "time", 1, "repeat"),
+        (51, "4x300 m viesti", "4x300 metriä viesti", "relays", "time", 1, "repeat"),
+        (52, "4x400 m viesti", "4x400 metriä viesti", "relays", "time", 1, "repeat"),
+        (53, "4x800 m viesti", "4x800 metriä viesti", "relays", "time", 1, "repeat"),
+        // Other (ID 54)
+        (54, "Cooper", "Cooper-testi (12 min)", "other", "distance", 0, "heart-pulse"),
+    ];
+
+    for (id, name, full_name, category, unit, lower_is_better, icon_name) in new_disciplines {
+        sqlx::query(
+            "INSERT OR IGNORE INTO disciplines (id, name, full_name, category, unit, lower_is_better, icon_name) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )
+        .bind(id)
+        .bind(name)
+        .bind(full_name)
+        .bind(category)
+        .bind(unit)
+        .bind(lower_is_better)
+        .bind(icon_name)
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Migration v19 insert failed for {}: {}", name, e))?;
+    }
+
+    sqlx::query("INSERT INTO _migrations (version, description) VALUES (19, 'add_relay_and_cooper_disciplines')")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Failed to record migration v19: {}", e))?;
+
+    Ok(())
+}
+
+async fn run_migration_v20(pool: &DbPool) -> Result<(), String> {
+    // Migration v20: Fix disciplines table CHECK constraint
+    // The original CHECK constraint only allowed 7 categories, but we now have 11:
+    // Original: 'sprints', 'middleDistance', 'longDistance', 'hurdles', 'jumps', 'throws', 'combined'
+    // Added: 'walking', 'crossCountry', 'relays', 'other'
+    //
+    // This caused migrations v18/v19 to silently fail (INSERT OR IGNORE)
+
+    // Check if disciplines table already has correct CHECK constraint
+    let table_sql: Option<String> = sqlx::query_scalar(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='disciplines'"
+    )
+    .fetch_optional(pool)
+    .await
+    .map_err(|e| format!("Migration v20 failed getting disciplines schema: {}", e))?;
+
+    let needs_migration = if let Some(sql) = &table_sql {
+        // Check if all new categories are present
+        !sql.contains("'crossCountry'") || !sql.contains("'relays'") || !sql.contains("'other'")
+    } else {
+        false // Table doesn't exist, nothing to migrate
+    };
+
+    if !needs_migration {
+        // Schema already correct - this is a fresh install from updated schema.sql
+        // Just ensure all disciplines are inserted
+        let all_new_disciplines = [
+            // Walking (IDs 35-41)
+            (35, "600 m kävely", "600 metriä kävely", "walking", "time", 1, "footprints"),
+            (36, "800 m kävely", "800 metriä kävely", "walking", "time", 1, "footprints"),
+            (37, "2000 m kävely", "2000 metriä kävely", "walking", "time", 1, "footprints"),
+            (38, "3000 m kävely", "3000 metriä kävely", "walking", "time", 1, "footprints"),
+            (39, "5000 m kävely", "5000 metriä kävely", "walking", "time", 1, "footprints"),
+            (40, "10 km kävely", "10 kilometriä kävely", "walking", "time", 1, "footprints"),
+            (41, "1000 m kävely", "1000 metriä kävely", "walking", "time", 1, "footprints"),
+            // Cross-country (IDs 42-46)
+            (42, "500 m maasto", "500 metriä maastojuoksu", "crossCountry", "time", 1, "trees"),
+            (43, "1 km maasto", "1 kilometri maastojuoksu", "crossCountry", "time", 1, "trees"),
+            (44, "2 km maasto", "2 kilometriä maastojuoksu", "crossCountry", "time", 1, "trees"),
+            (45, "4 km maasto", "4 kilometriä maastojuoksu", "crossCountry", "time", 1, "trees"),
+            (46, "10 km maasto", "10 kilometriä maastojuoksu", "crossCountry", "time", 1, "trees"),
+            // Relays (IDs 47-53)
+            (47, "8x40 m sukkulaviesti", "8x40 metriä sukkulaviesti", "relays", "time", 1, "repeat"),
+            (48, "4x50 m viesti", "4x50 metriä viesti", "relays", "time", 1, "repeat"),
+            (49, "4x100 m viesti", "4x100 metriä viesti", "relays", "time", 1, "repeat"),
+            (50, "4x200 m viesti", "4x200 metriä viesti", "relays", "time", 1, "repeat"),
+            (51, "4x300 m viesti", "4x300 metriä viesti", "relays", "time", 1, "repeat"),
+            (52, "4x400 m viesti", "4x400 metriä viesti", "relays", "time", 1, "repeat"),
+            (53, "4x800 m viesti", "4x800 metriä viesti", "relays", "time", 1, "repeat"),
+            // Other (ID 54)
+            (54, "Cooper", "Cooper-testi (12 min)", "other", "distance", 0, "heart-pulse"),
+        ];
+
+        for (id, name, full_name, category, unit, lower_is_better, icon_name) in all_new_disciplines {
+            sqlx::query(
+                "INSERT OR IGNORE INTO disciplines (id, name, full_name, category, unit, lower_is_better, icon_name) VALUES (?, ?, ?, ?, ?, ?, ?)"
+            )
+            .bind(id)
+            .bind(name)
+            .bind(full_name)
+            .bind(category)
+            .bind(unit)
+            .bind(lower_is_better)
+            .bind(icon_name)
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Migration v20 insert (schema correct) failed for {}: {}", name, e))?;
+        }
+
+        sqlx::query("INSERT INTO _migrations (version, description) VALUES (20, 'fix_disciplines_check_constraint_skipped_already_correct')")
+            .execute(pool)
+            .await
+            .map_err(|e| format!("Failed to record migration v20: {}", e))?;
+        return Ok(());
+    }
+
+    // Clean up any leftover temporary table from partial migrations
+    sqlx::query("DROP TABLE IF EXISTS disciplines_new")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Migration v20 failed dropping disciplines_new: {}", e))?;
+
+    // Execute each statement separately but acquire a dedicated connection
+    // SQLite requires all operations to be on the same connection for PRAGMA foreign_keys
+    let mut conn = pool.acquire().await.map_err(|e| format!("Migration v20 failed acquiring connection: {}", e))?;
+
+    sqlx::query("PRAGMA foreign_keys = OFF")
+        .execute(&mut *conn)
+        .await
+        .map_err(|e| format!("Migration v20 failed disabling FK: {}", e))?;
+
+    sqlx::query(r#"
+        CREATE TABLE disciplines_new (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL UNIQUE,
+            full_name TEXT NOT NULL,
+            category TEXT NOT NULL CHECK (category IN ('sprints', 'middleDistance', 'longDistance', 'hurdles', 'jumps', 'throws', 'combined', 'walking', 'crossCountry', 'relays', 'other')),
+            unit TEXT NOT NULL CHECK (unit IN ('time', 'distance')),
+            lower_is_better INTEGER NOT NULL DEFAULT 1,
+            icon_name TEXT
+        )
+    "#)
+    .execute(&mut *conn)
+    .await
+    .map_err(|e| format!("Migration v20 failed creating disciplines_new: {}", e))?;
+
+    sqlx::query(r#"
+        INSERT INTO disciplines_new (id, name, full_name, category, unit, lower_is_better, icon_name)
+        SELECT id, name, full_name, category, unit, lower_is_better, icon_name
+        FROM disciplines
+    "#)
+    .execute(&mut *conn)
+    .await
+    .map_err(|e| format!("Migration v20 failed copying disciplines data: {}", e))?;
+
+    sqlx::query("DROP TABLE disciplines")
+        .execute(&mut *conn)
+        .await
+        .map_err(|e| format!("Migration v20 failed dropping old disciplines: {}", e))?;
+
+    sqlx::query("ALTER TABLE disciplines_new RENAME TO disciplines")
+        .execute(&mut *conn)
+        .await
+        .map_err(|e| format!("Migration v20 failed renaming disciplines_new: {}", e))?;
+
+    sqlx::query("PRAGMA foreign_keys = ON")
+        .execute(&mut *conn)
+        .await
+        .map_err(|e| format!("Migration v20 failed re-enabling FK: {}", e))?;
+
+    // Drop the dedicated connection before inserting new disciplines
+    drop(conn);
+
+    // Step 5: Now insert all missing disciplines (walking 35-41, crossCountry 42-46, relays 47-53, other 54)
+    let all_new_disciplines = [
+        // Walking (IDs 35-41)
+        (35, "600 m kävely", "600 metriä kävely", "walking", "time", 1, "footprints"),
+        (36, "800 m kävely", "800 metriä kävely", "walking", "time", 1, "footprints"),
+        (37, "2000 m kävely", "2000 metriä kävely", "walking", "time", 1, "footprints"),
+        (38, "3000 m kävely", "3000 metriä kävely", "walking", "time", 1, "footprints"),
+        (39, "5000 m kävely", "5000 metriä kävely", "walking", "time", 1, "footprints"),
+        (40, "10 km kävely", "10 kilometriä kävely", "walking", "time", 1, "footprints"),
+        (41, "1000 m kävely", "1000 metriä kävely", "walking", "time", 1, "footprints"),
+        // Cross-country (IDs 42-46)
+        (42, "500 m maasto", "500 metriä maastojuoksu", "crossCountry", "time", 1, "trees"),
+        (43, "1 km maasto", "1 kilometri maastojuoksu", "crossCountry", "time", 1, "trees"),
+        (44, "2 km maasto", "2 kilometriä maastojuoksu", "crossCountry", "time", 1, "trees"),
+        (45, "4 km maasto", "4 kilometriä maastojuoksu", "crossCountry", "time", 1, "trees"),
+        (46, "10 km maasto", "10 kilometriä maastojuoksu", "crossCountry", "time", 1, "trees"),
+        // Relays (IDs 47-53)
+        (47, "8x40 m sukkulaviesti", "8x40 metriä sukkulaviesti", "relays", "time", 1, "repeat"),
+        (48, "4x50 m viesti", "4x50 metriä viesti", "relays", "time", 1, "repeat"),
+        (49, "4x100 m viesti", "4x100 metriä viesti", "relays", "time", 1, "repeat"),
+        (50, "4x200 m viesti", "4x200 metriä viesti", "relays", "time", 1, "repeat"),
+        (51, "4x300 m viesti", "4x300 metriä viesti", "relays", "time", 1, "repeat"),
+        (52, "4x400 m viesti", "4x400 metriä viesti", "relays", "time", 1, "repeat"),
+        (53, "4x800 m viesti", "4x800 metriä viesti", "relays", "time", 1, "repeat"),
+        // Other (ID 54)
+        (54, "Cooper", "Cooper-testi (12 min)", "other", "distance", 0, "heart-pulse"),
+    ];
+
+    for (id, name, full_name, category, unit, lower_is_better, icon_name) in all_new_disciplines {
+        sqlx::query(
+            "INSERT OR IGNORE INTO disciplines (id, name, full_name, category, unit, lower_is_better, icon_name) VALUES (?, ?, ?, ?, ?, ?, ?)"
+        )
+        .bind(id)
+        .bind(name)
+        .bind(full_name)
+        .bind(category)
+        .bind(unit)
+        .bind(lower_is_better)
+        .bind(icon_name)
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Migration v20 insert failed for {}: {}", name, e))?;
+    }
+
+    sqlx::query("INSERT INTO _migrations (version, description) VALUES (20, 'fix_disciplines_check_constraint_add_new_categories')")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Failed to record migration v20: {}", e))?;
 
     Ok(())
 }

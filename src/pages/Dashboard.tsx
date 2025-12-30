@@ -86,6 +86,7 @@ export function Dashboard() {
             : "Tuntematon",
           disciplineName: discipline?.fullName || "Tuntematon",
           disciplineUnit: discipline?.unit || "time",
+          disciplineCategory: discipline?.category,
           status: result.status,
         };
       }),
@@ -270,9 +271,11 @@ export function Dashboard() {
                       ) : (
                         <>
                           <span className="text-stat font-bold tabular-nums text-foreground">
-                            {result.disciplineUnit === "time"
-                              ? formatTime(result.value)
-                              : formatDistance(result.value)}
+                            {result.disciplineCategory === "combined"
+                              ? `${Math.round(result.value)} p`
+                              : result.disciplineUnit === "time"
+                                ? formatTime(result.value)
+                                : formatDistance(result.value)}
                           </span>
                           {/* Badges */}
                           <div className="flex items-center gap-1.5 mt-1.5">

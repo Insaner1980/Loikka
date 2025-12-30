@@ -30,11 +30,14 @@ function CustomTooltip({ active, payload, discipline }: CustomTooltipProps) {
   }
 
   const dataPoint = payload[0].payload;
+  const isCombinedEvent = discipline.category === "combined";
   const formattedValue =
     dataPoint.bestResult !== null
-      ? discipline.unit === "time"
-        ? formatTime(dataPoint.bestResult)
-        : formatDistance(dataPoint.bestResult)
+      ? isCombinedEvent
+        ? `${Math.round(dataPoint.bestResult)} p`
+        : discipline.unit === "time"
+          ? formatTime(dataPoint.bestResult)
+          : formatDistance(dataPoint.bestResult)
       : "-";
 
   return (
@@ -54,14 +57,18 @@ export function ComparisonChart({ data, discipline }: ComparisonChartProps) {
     );
   }
 
+  const isCombinedEvent = discipline.category === "combined";
+
   // Prepare chart data with formatted values
   const chartData = data.map((d) => ({
     ...d,
     formattedValue:
       d.bestResult !== null
-        ? discipline.unit === "time"
-          ? formatTime(d.bestResult)
-          : formatDistance(d.bestResult)
+        ? isCombinedEvent
+          ? `${Math.round(d.bestResult)} p`
+          : discipline.unit === "time"
+            ? formatTime(d.bestResult)
+            : formatDistance(d.bestResult)
         : "-",
     displayValue: d.bestResult ?? 0,
   }));
@@ -89,6 +96,9 @@ export function ComparisonChart({ data, discipline }: ComparisonChartProps) {
     if (value === 0) return "0";
     if (discipline.unit === "time") {
       return formatTime(value);
+    }
+    if (isCombinedEvent) {
+      return Math.round(value).toString();
     }
     return `${value.toFixed(1)}`;
   };

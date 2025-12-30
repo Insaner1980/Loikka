@@ -57,8 +57,8 @@ export function DistanceInput({
     const newValue = combineValues(val, cmEditing ? cmEditValue : parsed.centimeters);
     onChange(newValue);
 
-    // Auto-advance to centimeters when a digit is entered
-    if (val.length >= 1 && parseInt(val, 10) > 0) {
+    // Auto-advance to centimeters only when 2 digits are entered (max 99m)
+    if (val.length >= 2) {
       setTimeout(() => {
         centimetersRef.current?.focus();
         // Pre-set editing state for smooth transition

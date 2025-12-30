@@ -65,6 +65,9 @@ export function ProgressTab({ results }: ProgressTabProps) {
   // Determine if lower is better (time events)
   const isLowerBetter = selectedDiscipline?.unit === "time";
 
+  // Check if combined event (moniottelu)
+  const isCombinedEvent = selectedDiscipline?.category === "combined";
+
   // Filter by season
   const seasonResults = useMemo(() =>
     seasonFilter
@@ -113,14 +116,16 @@ export function ProgressTab({ results }: ProgressTabProps) {
   );
 
   const seasonFirst = validSeasonResults.length > 0 ? validSeasonResults[0] : null;
+  const seasonLast = validSeasonResults.length > 0 ? validSeasonResults[validSeasonResults.length - 1] : null;
 
+  // Improvement = Last - First (shows actual progress/regression over time)
   const improvement = useMemo(() =>
-    seasonFirst && seasonBest
+    seasonFirst && seasonLast
       ? isLowerBetter
-        ? seasonFirst.value - seasonBest.value
-        : seasonBest.value - seasonFirst.value
+        ? seasonFirst.value - seasonLast.value  // For time: positive = faster (improved)
+        : seasonLast.value - seasonFirst.value  // For distance/points: positive = better
       : 0,
-    [seasonFirst, seasonBest, isLowerBetter]
+    [seasonFirst, seasonLast, isLowerBetter]
   );
 
   const average = useMemo(() =>
@@ -174,9 +179,11 @@ export function ProgressTab({ results }: ProgressTabProps) {
         <div className="bg-card border border-border-subtle rounded-lg px-3 py-2 shadow-lg">
           <p className="text-body text-muted-foreground">{data.fullDate}</p>
           <p className="text-title font-bold text-foreground">
-            {selectedDiscipline?.unit === "time"
-              ? formatTime(data.value)
-              : formatDistance(data.value)}
+            {isCombinedEvent
+              ? `${Math.round(data.value)} p`
+              : selectedDiscipline?.unit === "time"
+                ? formatTime(data.value)
+                : formatDistance(data.value)}
           </p>
           {hasBadges && (
             <div className="flex gap-1 mt-1">
@@ -196,6 +203,9 @@ export function ProgressTab({ results }: ProgressTabProps) {
     if (selectedDiscipline?.unit === "time") {
       const prefix = value > 0 ? "-" : "+";
       return `${prefix}${Math.abs(value).toFixed(2)} s`;
+    } else if (isCombinedEvent) {
+      const prefix = value > 0 ? "+" : "";
+      return `${prefix}${Math.round(value)} p`;
     } else {
       const prefix = value > 0 ? "+" : "";
       return `${prefix}${(value * 100).toFixed(0)} cm`;
@@ -280,9 +290,11 @@ export function ProgressTab({ results }: ProgressTabProps) {
                     domain={["auto", "auto"]}
                     reversed={isLowerBetter}
                     tickFormatter={(value) =>
-                      selectedDiscipline?.unit === "time"
-                        ? formatTime(value)
-                        : `${value.toFixed(2)}`
+                      isCombinedEvent
+                        ? Math.round(value).toString()
+                        : selectedDiscipline?.unit === "time"
+                          ? formatTime(value)
+                          : `${value.toFixed(2)}`
                     }
                   />
                   <Tooltip
@@ -342,9 +354,11 @@ export function ProgressTab({ results }: ProgressTabProps) {
                   <div className="flex items-center gap-2 mt-1">
                     <p className="text-stat font-bold tabular-nums">
                       {seasonBest
-                        ? selectedDiscipline?.unit === "time"
-                          ? formatTime(seasonBest.value)
-                          : formatDistance(seasonBest.value)
+                        ? isCombinedEvent
+                          ? `${Math.round(seasonBest.value)} p`
+                          : selectedDiscipline?.unit === "time"
+                            ? formatTime(seasonBest.value)
+                            : formatDistance(seasonBest.value)
                         : "-"}
                     </p>
                   </div>
@@ -401,9 +415,11 @@ export function ProgressTab({ results }: ProgressTabProps) {
                   <p className="text-body text-muted-foreground">Keskiarvo</p>
                   <p className="text-stat font-bold tabular-nums mt-1">
                     {average > 0
-                      ? selectedDiscipline?.unit === "time"
-                        ? formatTime(average)
-                        : formatDistance(average)
+                      ? isCombinedEvent
+                        ? `${Math.round(average)} p`
+                        : selectedDiscipline?.unit === "time"
+                          ? formatTime(average)
+                          : formatDistance(average)
                       : "-"}
                   </p>
                 </div>
@@ -452,9 +468,11 @@ export function ProgressTab({ results }: ProgressTabProps) {
                       <span className={`text-body font-medium tabular-nums w-20 text-right ${
                         isBest ? "text-[var(--accent)]" : "text-foreground"
                       }`}>
-                        {selectedDiscipline?.unit === "time"
-                          ? formatTime(season.value)
-                          : formatDistance(season.value)}
+                        {isCombinedEvent
+                          ? `${Math.round(season.value)} p`
+                          : selectedDiscipline?.unit === "time"
+                            ? formatTime(season.value)
+                            : formatDistance(season.value)}
                       </span>
                     </div>
                   );

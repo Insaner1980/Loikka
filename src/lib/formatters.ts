@@ -32,12 +32,18 @@ export function formatTime(seconds: number): string {
 
 /**
  * Format meters to a distance string.
- * e.g., "4.56 m"
+ * e.g., "4.56 m" or "1500 m" (for Cooper)
+ * @param meters - Distance in meters
+ * @param wholeMeters - If true, show whole meters without decimals (for Cooper test)
  */
-export function formatDistance(meters: number): string {
+export function formatDistance(meters: number, wholeMeters: boolean = false): string {
   // Handle edge cases
   if (!Number.isFinite(meters) || meters < 0) {
-    return "0.00 m";
+    return wholeMeters ? "0 m" : "0.00 m";
+  }
+  // For Cooper test and similar, show whole meters
+  if (wholeMeters) {
+    return `${Math.round(meters)} m`;
   }
   return `${meters.toFixed(2)} m`;
 }
@@ -225,4 +231,33 @@ export function getDaysUntil(dateStr: string): number {
     // Fallback for invalid date strings
     return 0;
   }
+}
+
+// Cooper test discipline ID (matches disciplines.ts)
+const COOPER_DISCIPLINE_ID = 54;
+
+/**
+ * Format a result value based on discipline type.
+ * Handles time, distance (field events), Cooper (whole meters), and combined events (points).
+ */
+export function formatResultValue(
+  value: number,
+  unit: "time" | "distance",
+  disciplineId?: number,
+  isCombinedEvent?: boolean
+): string {
+  // Combined events show points
+  if (isCombinedEvent) {
+    return `${Math.round(value)} p`;
+  }
+  // Time disciplines
+  if (unit === "time") {
+    return formatTime(value);
+  }
+  // Cooper shows whole meters
+  if (disciplineId === COOPER_DISCIPLINE_ID) {
+    return formatDistance(value, true);
+  }
+  // Other distance disciplines (field events)
+  return formatDistance(value);
 }

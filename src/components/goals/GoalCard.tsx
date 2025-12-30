@@ -57,6 +57,7 @@ export const GoalCard = memo(function GoalCard({
   const formatValue = (value: number | null) => {
     if (value === null) return "-";
     if (!discipline) return value.toString();
+    if (discipline.category === "combined") return `${Math.round(value)} p`;
     return discipline.unit === "time" ? formatTime(value) : formatDistance(value);
   };
 

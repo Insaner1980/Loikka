@@ -146,11 +146,17 @@ Tulokset-sivulla näet kaikki tulokset taulukkona. Voit:
 
 | Lajityyppi | Esimerkki | Miten kirjoitetaan |
 |------------|-----------|-------------------|
-| Pikajuoksut | 8.54 s | `8.54` |
+| Pikajuoksut (alle 200m) | 8.54 s | `8.54` (sekunnit ja sadasosat) |
+| Pikajuoksut (200m+) | 25.34 s | `0:25.34` (minuutit, sekunnit, sadasosat) |
 | Keskimatkat | 2:34.56 | `2:34.56` |
 | Kestävyys | 11:23.45 | `11:23.45` |
-| Hypyt | 4.25 m | `4.25` |
-| Heitot | 28.50 m | `28.50` |
+| Maastojuoksu | 4:32.10 | `4:32.10` |
+| Viestit | 52.34 s | `0:52.34` (minuutit, sekunnit, sadasosat) |
+| Kävely | 3:45.20 | `3:45.20` |
+| Hypyt | 4.25 m | `4.25` (metrit ja senttimetrit) |
+| Heitot | 28.50 m | `28.50` (metrit ja senttimetrit) |
+| Cooper | 2025 m | `2025` (kokonaiset metrit) |
+| Moniottelu | 2500 p | `2500` (pisteet, lasketaan osalajeista) |
 
 ### Lisätiedot lajeittain
 
@@ -423,13 +429,17 @@ Kansiossa on:
 
 | Kategoria | Lajit |
 |-----------|-------|
-| Pikajuoksut | 60m, 100m, 200m, 400m |
-| Keskimatkat | 800m, 1000m, 1500m |
+| Pikajuoksut | 40m, 60m, 100m, 150m, 200m, 300m, 400m |
+| Keskimatkat | 600m, 800m, 1000m, 1500m, 2000m |
 | Kestävyys | 3000m, 5000m, 10000m |
-| Aitajuoksut | 60m aj, 80m aj, 100m aj, 300m aj, 400m aj |
+| Aitajuoksut | 60m aj, 80m aj, 100m aj, 200m aj, 300m aj, 400m aj |
 | Hypyt | Pituus, kolmiloikka, korkeus, seiväs |
-| Heitot | Kuula, kiekko, keihäs, moukari |
-| Yhdistetyt | 5-ottelu, 7-ottelu |
+| Heitot | Kuula, kiekko, keihäs, moukari, pallo |
+| Moniottelu | 3-ottelu, 4-ottelu, 5-ottelu, 7-ottelu |
+| Kävely | 600m, 800m, 1000m, 2000m, 3000m, 5000m, 10km kävely |
+| Maastojuoksu | 500m, 1km, 2km, 4km, 10km maasto |
+| Viestit | 8x40m sukkulaviesti, 4x50m, 4x100m, 4x200m, 4x300m, 4x400m, 4x800m viesti |
+| Muut | Cooper-testi (12 min juoksu, tulos metreissä) |
 
 ---
 
@@ -458,6 +468,6 @@ Jos tietokone hajoaa etkä ole varmuuskopioinut, tiedot ovat valitettavasti mene
 
 ---
 
-*Tämä ohje päivitetty: 25.12.2024*
+*Tämä ohje päivitetty: 30.12.2025*
 
 *Loikka - Seuraa kehitystä, juhli ennätyksiä!*

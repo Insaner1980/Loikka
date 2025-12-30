@@ -5,11 +5,14 @@ export const categoryLabels: Record<DisciplineCategory, string> = {
   sprints: "Pikajuoksu",
   middleDistance: "Keskimatka",
   longDistance: "Kestävyys",
+  crossCountry: "Maastojuoksu",
+  relays: "Viestit",
   hurdles: "Aidat",
   jumps: "Hypyt",
   throws: "Heitot",
   combined: "Yhdistetyt",
   walking: "Kävely",
+  other: "Muut",
 };
 
 // All disciplines with Finnish names
@@ -357,6 +360,116 @@ export const disciplines: Discipline[] = [
     unit: "time",
     lowerIsBetter: true,
   },
+
+  // Cross Country (Maastojuoksu)
+  {
+    id: 42,
+    name: "500 m maasto",
+    fullName: "500 metriä maastojuoksu",
+    category: "crossCountry",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+  {
+    id: 43,
+    name: "1 km maasto",
+    fullName: "1 kilometri maastojuoksu",
+    category: "crossCountry",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+  {
+    id: 44,
+    name: "2 km maasto",
+    fullName: "2 kilometriä maastojuoksu",
+    category: "crossCountry",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+  {
+    id: 45,
+    name: "4 km maasto",
+    fullName: "4 kilometriä maastojuoksu",
+    category: "crossCountry",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+  {
+    id: 46,
+    name: "10 km maasto",
+    fullName: "10 kilometriä maastojuoksu",
+    category: "crossCountry",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+
+  // Relays (Viestit)
+  {
+    id: 47,
+    name: "8x40 m sukkulaviesti",
+    fullName: "8x40 metriä sukkulaviesti",
+    category: "relays",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+  {
+    id: 48,
+    name: "4x50 m viesti",
+    fullName: "4x50 metriä viesti",
+    category: "relays",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+  {
+    id: 49,
+    name: "4x100 m viesti",
+    fullName: "4x100 metriä viesti",
+    category: "relays",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+  {
+    id: 50,
+    name: "4x200 m viesti",
+    fullName: "4x200 metriä viesti",
+    category: "relays",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+  {
+    id: 51,
+    name: "4x300 m viesti",
+    fullName: "4x300 metriä viesti",
+    category: "relays",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+  {
+    id: 52,
+    name: "4x400 m viesti",
+    fullName: "4x400 metriä viesti",
+    category: "relays",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+  {
+    id: 53,
+    name: "4x800 m viesti",
+    fullName: "4x800 metriä viesti",
+    category: "relays",
+    unit: "time",
+    lowerIsBetter: true,
+  },
+
+  // Other (Muut)
+  {
+    id: 54,
+    name: "Cooper",
+    fullName: "Cooper-testi (12 min)",
+    category: "other",
+    unit: "distance",
+    lowerIsBetter: false,
+  },
 ];
 
 // Disciplines available for each age category
@@ -366,10 +479,10 @@ const disciplineIdsByAgeCategory: Record<AgeCategory, number[]> = {
   // HIPPO-kisat, seurakilpailut (not in official statistics)
   T3: [1, 22, 30], // 40m, pituus, pallo
   T4: [1, 22, 30], // 40m, pituus, pallo
-  T5: [1, 22, 23, 28, 30], // 40m, pituus, korkeus, keihäs, pallo
+  T5: [1, 22, 23, 28, 30, 42], // 40m, pituus, korkeus, keihäs, pallo, 500m maasto
   T6: [1, 22, 23, 28, 30], // 40m, pituus, korkeus, keihäs, pallo
-  T7: [1, 2, 8, 22, 23, 28, 30], // 40m, 60m, 600m, pituus, korkeus, keihäs, pallo
-  T8: [1, 2, 8, 9, 22, 23, 26, 28, 30], // 40m, 60m, 600m, 800m, pituus, korkeus, kuula, keihäs, pallo
+  T7: [1, 2, 8, 22, 23, 28, 30, 42, 47, 48], // 40m, 60m, 600m, pituus, korkeus, keihäs, pallo, 500m maasto, sukkulaviesti, 4x50m
+  T8: [1, 2, 8, 9, 22, 23, 26, 28, 30, 47, 48], // 40m, 60m, 600m, 800m, pituus, korkeus, kuula, keihäs, pallo, sukkulaviesti, 4x50m
 
   // Official SUL statistics (T9+)
   T9: [
@@ -380,6 +493,9 @@ const disciplineIdsByAgeCategory: Record<AgeCategory, number[]> = {
     26, 27, 28, 29, 30, // kuula, kiekko, keihäs, moukari, pallo
     31, 32, // 3-ottelu, 4-ottelu
     35, 36, // 600m kävely, 800m kävely
+    43, // 1km maasto
+    47, 48, // sukkulaviesti, 4x50m
+    54, // Cooper
   ],
   T10: [
     2, 4, // 60m, 150m
@@ -389,6 +505,9 @@ const disciplineIdsByAgeCategory: Record<AgeCategory, number[]> = {
     26, 27, 28, 29, 30, // kuula, kiekko, keihäs, moukari, pallo
     31, 32, // 3-ottelu, 4-ottelu
     41, // 1000m kävely
+    43, // 1km maasto
+    48, 49, // 4x50m, 4x100m
+    54, // Cooper
   ],
   T11: [
     2, 4, // 60m, 150m
@@ -398,6 +517,9 @@ const disciplineIdsByAgeCategory: Record<AgeCategory, number[]> = {
     26, 27, 28, 29, 30, // kuula, kiekko, keihäs, moukari, pallo
     31, 32, // 3-ottelu, 4-ottelu
     41, // 1000m kävely
+    44, // 2km maasto
+    49, // 4x100m
+    54, // Cooper
   ],
   T12: [
     2, 3, 5, // 60m, 100m, 200m
@@ -407,6 +529,9 @@ const disciplineIdsByAgeCategory: Record<AgeCategory, number[]> = {
     26, 27, 28, 29, // kuula, kiekko, keihäs, moukari
     32, 33, // 4-ottelu, 5-ottelu
     37, // 2000m kävely
+    44, // 2km maasto
+    49, // 4x100m
+    54, // Cooper
   ],
   T13: [
     2, 3, 5, 6, // 60m, 100m, 200m, 300m
@@ -416,6 +541,9 @@ const disciplineIdsByAgeCategory: Record<AgeCategory, number[]> = {
     26, 27, 28, 29, // kuula, kiekko, keihäs, moukari
     32, 33, // 4-ottelu, 5-ottelu
     37, // 2000m kävely
+    44, // 2km maasto
+    49, // 4x100m
+    54, // Cooper
   ],
   T14: [
     3, 5, 6, 7, // 100m, 200m, 300m, 400m
@@ -425,6 +553,9 @@ const disciplineIdsByAgeCategory: Record<AgeCategory, number[]> = {
     26, 27, 28, 29, // kuula, kiekko, keihäs, moukari
     33, // 5-ottelu
     38, // 3000m kävely
+    45, // 4km maasto
+    49, 53, // 4x100m, 4x800m
+    54, // Cooper
   ],
   T15: [
     3, 5, 6, 7, // 100m, 200m, 300m, 400m
@@ -434,6 +565,9 @@ const disciplineIdsByAgeCategory: Record<AgeCategory, number[]> = {
     26, 27, 28, 29, // kuula, kiekko, keihäs, moukari
     33, // 5-ottelu
     38, // 3000m kävely
+    45, // 4km maasto
+    49, 53, // 4x100m, 4x800m
+    54, // Cooper
   ],
 
   // Nuoret naiset (N17, N19, N22)
@@ -445,6 +579,9 @@ const disciplineIdsByAgeCategory: Record<AgeCategory, number[]> = {
     26, 27, 28, 29, // kuula, kiekko, keihäs, moukari
     33, 34, // 5-ottelu, 7-ottelu
     38, // 3000m kävely
+    45, // 4km maasto
+    49, 51, 53, // 4x100m, 4x300m, 4x800m
+    54, // Cooper
   ],
   N19: [
     3, 5, 7, // 100m, 200m, 400m
@@ -454,6 +591,9 @@ const disciplineIdsByAgeCategory: Record<AgeCategory, number[]> = {
     26, 27, 28, 29, // kuula, kiekko, keihäs, moukari
     34, // 7-ottelu
     38, 39, // 3000m kävely, 5000m kävely
+    45, // 4km maasto
+    49, 52, 53, // 4x100m, 4x400m, 4x800m
+    54, // Cooper
   ],
   N22: [
     3, 5, 7, // 100m, 200m, 400m
@@ -463,6 +603,9 @@ const disciplineIdsByAgeCategory: Record<AgeCategory, number[]> = {
     26, 27, 28, 29, // kuula, kiekko, keihäs, moukari
     34, // 7-ottelu
     38, 39, 40, // kävely
+    45, 46, // 4km maasto, 10km maasto
+    49, 52, 53, // 4x100m, 4x400m, 4x800m
+    54, // Cooper
   ],
 
   // Aikuiset naiset
@@ -474,6 +617,9 @@ const disciplineIdsByAgeCategory: Record<AgeCategory, number[]> = {
     26, 27, 28, 29, // kuula, kiekko, keihäs, moukari
     34, // 7-ottelu
     38, 39, 40, // kävely
+    45, 46, // 4km maasto, 10km maasto
+    49, 52, 53, // 4x100m, 4x400m, 4x800m
+    54, // Cooper
   ],
 };
 
@@ -500,25 +646,37 @@ export const categoryOrder: DisciplineCategory[] = [
   "sprints",
   "middleDistance",
   "longDistance",
+  "crossCountry",
+  "relays",
   "hurdles",
   "jumps",
   "throws",
   "combined",
   "walking",
+  "other",
 ];
 
-// Disciplines that typically take over 1 minute (need minutes field in input)
+// Disciplines 200m+ that need minutes field in time input
 const DISCIPLINES_WITH_MINUTES = new Set([
+  // Sprints 200m+
+  5,  // 200m
+  6,  // 300m
   7,  // 400m
+  // Middle distance
   8,  // 600m
   9,  // 800m
   10, // 1000m
   11, // 1500m
   12, // 2000m
+  // Long distance
   13, // 3000m
   14, // 5000m
   15, // 10000m
+  // Hurdles 200m+
+  19, // 200m aj
+  20, // 300m aj
   21, // 400m aj
+  // Walking
   35, // 600m kävely
   36, // 800m kävely
   37, // 2000m kävely
@@ -526,11 +684,33 @@ const DISCIPLINES_WITH_MINUTES = new Set([
   39, // 5000m kävely
   40, // 10km kävely
   41, // 1000m kävely
+  // Cross-country (all)
+  42, // 500m maasto
+  43, // 1km maasto
+  44, // 2km maasto
+  45, // 4km maasto
+  46, // 10km maasto
+  // Relays (all)
+  47, // 8x40m sukkulaviesti (320m)
+  48, // 4x50m viesti (200m)
+  49, // 4x100m viesti (400m)
+  50, // 4x200m viesti (800m)
+  51, // 4x300m viesti (1200m)
+  52, // 4x400m viesti (1600m)
+  53, // 4x800m viesti (3200m)
 ]);
 
 // Check if a discipline needs minutes field in time input
 export function disciplineNeedsMinutes(disciplineId: number): boolean {
   return DISCIPLINES_WITH_MINUTES.has(disciplineId);
+}
+
+// Cooper test discipline ID
+const COOPER_DISCIPLINE_ID = 54;
+
+// Check if a discipline is Cooper (uses meters only, not m.cm format)
+export function isCooperDiscipline(disciplineId: number): boolean {
+  return disciplineId === COOPER_DISCIPLINE_ID;
 }
 
 // Get age category from birth year and optional date

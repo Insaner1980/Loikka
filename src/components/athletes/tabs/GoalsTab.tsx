@@ -28,9 +28,11 @@ export function GoalsTab({ goals, getDisciplineForGoal }: GoalsTabProps) {
 
         // Format target value based on discipline unit
         const formattedTarget = discipline
-          ? discipline.unit === "time"
-            ? formatTime(goal.targetValue)
-            : formatDistance(goal.targetValue)
+          ? discipline.category === "combined"
+            ? `${Math.round(goal.targetValue)} p`
+            : discipline.unit === "time"
+              ? formatTime(goal.targetValue)
+              : formatDistance(goal.targetValue)
           : goal.targetValue.toString();
 
         return (

@@ -1,11 +1,10 @@
 import {
-  AreaChart,
-  Area,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
-  CartesianGrid,
   Tooltip,
-  ReferenceDot,
+  ReferenceLine,
   ResponsiveContainer,
 } from "recharts";
 import { format } from "date-fns";
@@ -33,9 +32,11 @@ function CustomTooltip({ active, payload, discipline }: CustomTooltipProps) {
   }
 
   const dataPoint = payload[0].payload;
+  const isCombinedEvent = discipline.category === "combined";
 
-  const formattedValue =
-    discipline.unit === "time"
+  const formattedValue = isCombinedEvent
+    ? `${Math.round(dataPoint.value)} p`
+    : discipline.unit === "time"
       ? formatTime(dataPoint.value)
       : formatDistance(dataPoint.value);
   const formattedDate = format(new Date(dataPoint.date), "d. MMMM yyyy", {
@@ -76,88 +77,86 @@ export function ProgressChart({ data, discipline }: ProgressChartProps) {
     formattedDate: format(new Date(d.date), "d.M.yy"),
   }));
 
+  // Check if this is a combined event (moniottelu)
+  const isCombinedEvent = discipline.category === "combined";
+
   // Format value for Y axis ticks
   const formatYAxis = (value: number) => {
     if (discipline.unit === "time") {
       return formatTime(value);
+    }
+    if (isCombinedEvent) {
+      // Combined events: show points without decimals
+      return Math.round(value).toString();
     }
     // Show meters without "m" suffix for cleaner axis
     return value.toFixed(2);
   };
 
   return (
-    <div className="bg-card rounded-xl border border-border p-4">
-      <h3 className="text-body font-medium text-foreground mb-4">Kehitys</h3>
-      <div className="h-96">
+    <div className="bg-card rounded-xl border border-border-subtle p-4">
+      <h3 className="text-body font-medium text-foreground mb-4">Tuloskehitys</h3>
+      <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart
-            data={chartData}
-            margin={{ top: 10, right: 10, left: 20, bottom: 25 }}
-          >
-            <defs>
-              <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.3} />
-                <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="var(--color-border)"
-              opacity={0.5}
-            />
+          <LineChart data={chartData}>
             <XAxis
               dataKey="index"
-              stroke="var(--color-muted-foreground)"
-              fontSize={12}
+              tick={{ fill: "var(--text-muted)", fontSize: 11, dy: 10 }}
               tickLine={false}
-              axisLine={false}
-              padding={{ left: 10, right: 10 }}
-              dy={10}
+              axisLine={{ stroke: "var(--border-subtle)" }}
               tickFormatter={(index) => chartData[index]?.formattedDate || ""}
             />
             <YAxis
+              tick={{ fill: "var(--text-muted)", fontSize: 11 }}
+              tickLine={false}
+              axisLine={{ stroke: "var(--border-subtle)" }}
               domain={["auto", "auto"]}
               reversed={discipline.lowerIsBetter}
               tickFormatter={formatYAxis}
-              stroke="var(--color-muted-foreground)"
-              fontSize={12}
-              tickLine={false}
-              axisLine={false}
-              width={60}
             />
             <Tooltip
               content={<CustomTooltip discipline={discipline} />}
               cursor={{ stroke: "var(--accent)", strokeWidth: 1 }}
             />
-            <Area
-              type="linear"
+            {pbPoint && (
+              <ReferenceLine
+                y={pbPoint.value}
+                stroke="var(--accent)"
+                strokeDasharray="3 3"
+                strokeOpacity={0.5}
+              />
+            )}
+            <Line
+              type="monotone"
               dataKey="value"
               stroke="var(--accent)"
               strokeWidth={2}
-              fill="url(#chartGradient)"
-              dot={{
-                fill: "var(--accent)",
-                strokeWidth: 0,
-                r: 4,
+              dot={(props) => {
+                const { cx, cy, payload } = props;
+                if (payload.isPersonalBest) {
+                  return (
+                    <circle
+                      cx={cx}
+                      cy={cy}
+                      r={6}
+                      fill="var(--accent)"
+                      stroke="var(--bg-card)"
+                      strokeWidth={2}
+                    />
+                  );
+                }
+                return (
+                  <circle
+                    cx={cx}
+                    cy={cy}
+                    r={4}
+                    fill="var(--accent)"
+                  />
+                );
               }}
-              activeDot={{
-                fill: "var(--accent)",
-                strokeWidth: 0,
-                r: 6,
-              }}
+              activeDot={{ r: 6, fill: "var(--accent)" }}
             />
-            {/* Highlight personal best with larger accent-colored dot */}
-            {pbPoint && (
-              <ReferenceDot
-                x={chartData.findIndex((d) => d.isPersonalBest)}
-                y={pbPoint.value}
-                r={8}
-                fill="var(--accent)"
-                stroke="var(--bg-card)"
-                strokeWidth={2}
-              />
-            )}
-          </AreaChart>
+          </LineChart>
         </ResponsiveContainer>
       </div>
     </div>

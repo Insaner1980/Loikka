@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS disciplines (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
     full_name TEXT NOT NULL,
-    category TEXT NOT NULL CHECK (category IN ('sprints', 'middleDistance', 'longDistance', 'hurdles', 'jumps', 'throws', 'combined')),
+    category TEXT NOT NULL CHECK (category IN ('sprints', 'middleDistance', 'longDistance', 'hurdles', 'jumps', 'throws', 'combined', 'walking', 'crossCountry', 'relays', 'other')),
     unit TEXT NOT NULL CHECK (unit IN ('time', 'distance')),
     lower_is_better INTEGER NOT NULL DEFAULT 1,
     icon_name TEXT

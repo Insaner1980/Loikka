@@ -135,9 +135,11 @@ export function MedalsTab({ medals, results, onMedalClick }: MedalsTabProps) {
                   </span>
                   {linkedResult && (
                     <span className="text-title font-bold tabular-nums text-foreground mt-1">
-                      {linkedResult.discipline.unit === "time"
-                        ? formatTime(linkedResult.value)
-                        : formatDistance(linkedResult.value)}
+                      {linkedResult.discipline.category === "combined"
+                        ? `${Math.round(linkedResult.value)} p`
+                        : linkedResult.discipline.unit === "time"
+                          ? formatTime(linkedResult.value)
+                          : formatDistance(linkedResult.value)}
                     </span>
                   )}
                 </div>

@@ -3,7 +3,7 @@ import { useAthleteStore } from "../../stores/useAthleteStore";
 import { useResultStore } from "../../stores/useResultStore";
 import { useCompetitionStore } from "../../stores/useCompetitionStore";
 import { useDisciplineFields } from "../../hooks";
-import { disciplineNeedsMinutes, getDisciplineById, disciplines as allDisciplines } from "../../data/disciplines";
+import { disciplineNeedsMinutes, getDisciplineById, disciplines as allDisciplines, isCooperDiscipline } from "../../data/disciplines";
 import { getTodayISO } from "../../lib/formatters";
 import {
   HURDLE_HEIGHTS,
@@ -25,7 +25,6 @@ interface FormErrors {
   disciplineId?: string;
   value?: string;
   date?: string;
-  competitionName?: string;
 }
 
 export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
@@ -71,11 +70,6 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
     }
   }, [resultValue, errors.value]);
 
-  useEffect(() => {
-    if (errors.competitionName && competitionName.trim()) {
-      setErrors((prev) => ({ ...prev, competitionName: undefined }));
-    }
-  }, [competitionName, errors.competitionName]);
 
   useEffect(() => {
     if (errors.disciplineId && disciplineId) {
@@ -271,9 +265,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
       newErrors.date = "Valitse päivämäärä";
     }
 
-    if (resultType === "competition" && !competitionName.trim()) {
-      newErrors.competitionName = "Syötä kilpailun nimi";
-    }
+    // Competition name is optional - removed validation
 
     setErrors(newErrors);
 
@@ -307,6 +299,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
     // Convert from input format to database format:
     // Time: hundredths to seconds (e.g., 184240 -> 1842.40)
     // Distance: centimeters to meters (e.g., 550 -> 5.50)
+    // Cooper: meters stored as-is (e.g., 1500 -> 1500)
     // Combined events: points are stored as-is (e.g., 2500 -> 2500)
     // For non-valid statuses (DNF, DNS, etc.), use 0
     let dbValue: number;
@@ -314,6 +307,9 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
       dbValue = 0;
     } else if (isCombinedEvent) {
       dbValue = calculatedTotalPoints ?? 0;
+    } else if (selectedDiscipline && isCooperDiscipline(selectedDiscipline.id)) {
+      // Cooper is stored in meters directly
+      dbValue = resultValue ?? 0;
     } else {
       dbValue = resultValue !== null ? resultValue / 100 : 0;
     }
@@ -480,6 +476,24 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
                 showMinutes={disciplineNeedsMinutes(selectedDiscipline.id)}
                 error={!!errors.value}
               />
+            ) : isCooperDiscipline(selectedDiscipline.id) ? (
+              // Cooper uses whole meters (e.g., 1500, 2000, 2500)
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  id="value"
+                  value={resultValue !== null ? resultValue : ""}
+                  onChange={(e) => setResultValue(e.target.value ? parseInt(e.target.value) : null)}
+                  placeholder="esim. 1500"
+                  min={0}
+                  max={5000}
+                  autoComplete="one-time-code"
+                  className={`w-24 px-3 py-2 bg-card border rounded-lg input-focus ${
+                    errors.value ? "border-error" : "border-border"
+                  }`}
+                />
+                <span className="text-muted-foreground">m</span>
+              </div>
             ) : (
               <DistanceInput
                 id="value"
@@ -779,9 +793,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
                 onChange={setCompetitionName}
                 suggestions={uniqueCompetitionNames}
                 label="Kilpailun nimi"
-                required
                 placeholder="esim. Tampereen aluemestaruus"
-                error={errors.competitionName}
               />
             </div>
 

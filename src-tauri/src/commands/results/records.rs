@@ -41,9 +41,17 @@ pub async fn check_personal_best_extended(
     )
     .bind(discipline_id)
     .bind(athlete_id)
-    .fetch_one(pool)
+    .fetch_optional(pool)
     .await
     .map_err(|e| e.to_string())?;
+
+    let row = match row {
+        Some(r) => r,
+        None => {
+            // Discipline or athlete doesn't exist - treat as first result (PB)
+            return Ok(true);
+        }
+    };
 
     let discipline_name: String = row.get("name");
     let lower_is_better: i32 = row.get("lower_is_better");
@@ -167,9 +175,17 @@ pub async fn check_season_best_extended(
     )
     .bind(discipline_id)
     .bind(athlete_id)
-    .fetch_one(pool)
+    .fetch_optional(pool)
     .await
     .map_err(|e| e.to_string())?;
+
+    let row = match row {
+        Some(r) => r,
+        None => {
+            // Discipline or athlete doesn't exist - treat as first result (SB)
+            return Ok(true);
+        }
+    };
 
     let discipline_name: String = row.get("name");
     let lower_is_better: i32 = row.get("lower_is_better");
@@ -292,9 +308,17 @@ pub async fn recalculate_records(
     )
     .bind(discipline_id)
     .bind(athlete_id)
-    .fetch_one(pool)
+    .fetch_optional(pool)
     .await
     .map_err(|e| e.to_string())?;
+
+    let row = match row {
+        Some(r) => r,
+        None => {
+            // Discipline or athlete doesn't exist - nothing to recalculate
+            return Ok(());
+        }
+    };
 
     let discipline_name: String = row.get("name");
     let lower_is_better: i32 = row.get("lower_is_better");

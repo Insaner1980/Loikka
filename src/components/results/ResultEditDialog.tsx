@@ -13,7 +13,7 @@ import { useAthleteStore } from "../../stores/useAthleteStore";
 import { useResultStore } from "../../stores/useResultStore";
 import { useCompetitionStore } from "../../stores/useCompetitionStore";
 import { useDisciplineFields } from "../../hooks";
-import { disciplineNeedsMinutes } from "../../data/disciplines";
+import { disciplineNeedsMinutes, getDisciplineById, isCooperDiscipline } from "../../data/disciplines";
 import {
   formatTime,
   formatDistance,
@@ -35,7 +35,6 @@ interface ResultEditDialogProps {
 
 interface FormErrors {
   value?: string;
-  competitionName?: string;
 }
 
 export function ResultEditDialog({
@@ -113,9 +112,20 @@ export function ResultEditDialog({
       setHurdleSpacing(result.hurdleSpacing !== undefined && result.hurdleSpacing !== null ? result.hurdleSpacing.toString() : "");
       setIsNationalRecord(result.isNationalRecord || false);
 
-      // Convert from database format (seconds/meters) to input format (hundredths/centimeters)
-      // TimeInput and DistanceInput expect values in hundredths/centimeters
-      setResultValue(result.value ? Math.round(result.value * 100) : null);
+      // Check if this is a combined event (moniottelu)
+      const discipline = getDisciplineById(result.disciplineId);
+      const isCombined = discipline?.category === "combined";
+      const isCooper = isCooperDiscipline(result.disciplineId);
+
+      // Convert from database format to input format
+      // Combined events: points are stored as-is (no conversion)
+      // Cooper: meters are stored as-is (no conversion)
+      // Time/Distance: stored in seconds/meters, input expects hundredths/centimeters
+      if (isCombined || isCooper) {
+        setResultValue(result.value ? Math.round(result.value) : null);
+      } else {
+        setResultValue(result.value ? Math.round(result.value * 100) : null);
+      }
     }
   }, [result]);
 
@@ -128,6 +138,9 @@ export function ResultEditDialog({
     equipmentType,
     availableWeights,
   } = useDisciplineFields(disciplineId);
+
+  // Check if discipline is a combined event (moniottelu)
+  const isCombinedEvent = selectedDiscipline?.category === "combined";
 
   // Filter options for FilterSelect components
   const statusOptions: FilterOption[] = useMemo(() =>
@@ -216,9 +229,7 @@ export function ResultEditDialog({
       }
     }
 
-    if (resultType === "competition" && !competitionName.trim()) {
-      newErrors.competitionName = "Syötä kilpailun nimi";
-    }
+    // Competition name is optional - removed validation
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -233,9 +244,20 @@ export function ResultEditDialog({
 
     setSaving(true);
     try {
-      // Convert from input format (hundredths/centimeters) to database format (seconds/meters)
-      // TimeInput and DistanceInput store values in hundredths/centimeters
-      const value = statusRequiresValue ? (resultValue !== null ? resultValue / 100 : 0) : 0;
+      // Convert from input format to database format
+      // Combined events: points are stored as-is (no conversion)
+      // Cooper: meters are stored as-is (no conversion)
+      // Time/Distance: hundredths/centimeters -> seconds/meters
+      let value: number;
+      if (!statusRequiresValue) {
+        value = 0;
+      } else if (isCombinedEvent) {
+        value = resultValue ?? 0;
+      } else if (selectedDiscipline && isCooperDiscipline(selectedDiscipline.id)) {
+        value = resultValue ?? 0;
+      } else {
+        value = resultValue !== null ? resultValue / 100 : 0;
+      }
 
       await updateResult(result.id, {
         athleteId: result.athleteId,
@@ -284,6 +306,7 @@ export function ResultEditDialog({
 
   const getValueLabel = () => {
     if (!selectedDiscipline) return "Tulos";
+    if (isCombinedEvent) return "Yhteispisteet";
     return selectedDiscipline.unit === "time" ? "Aika" : "Tulos (m)";
   };
 
@@ -344,7 +367,20 @@ export function ResultEditDialog({
                 <label htmlFor="value" className="block text-sm font-medium mb-1.5">
                   {getValueLabel()} <span className="text-error">*</span>
                 </label>
-                {selectedDiscipline?.unit === "time" ? (
+                {isCombinedEvent ? (
+                  <input
+                    type="number"
+                    id="value"
+                    value={resultValue !== null ? resultValue : ""}
+                    onChange={(e) => setResultValue(e.target.value ? parseInt(e.target.value) : null)}
+                    min={0}
+                    placeholder="esim. 2500"
+                    autoComplete="one-time-code"
+                    className={`w-full px-3 py-2 bg-card border rounded-lg input-focus ${
+                      errors.value ? "border-error" : "border-border"
+                    }`}
+                  />
+                ) : selectedDiscipline?.unit === "time" ? (
                   <TimeInput
                     id="value"
                     value={resultValue}
@@ -352,6 +388,24 @@ export function ResultEditDialog({
                     showMinutes={disciplineNeedsMinutes(selectedDiscipline.id)}
                     error={!!errors.value}
                   />
+                ) : selectedDiscipline && isCooperDiscipline(selectedDiscipline.id) ? (
+                  // Cooper uses whole meters (e.g., 1500, 2000, 2500)
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      id="value"
+                      value={resultValue !== null ? resultValue : ""}
+                      onChange={(e) => setResultValue(e.target.value ? parseInt(e.target.value) : null)}
+                      placeholder="esim. 1500"
+                      min={0}
+                      max={5000}
+                      autoComplete="one-time-code"
+                      className={`w-24 px-3 py-2 bg-card border rounded-lg input-focus ${
+                        errors.value ? "border-error" : "border-border"
+                      }`}
+                    />
+                    <span className="text-muted-foreground">m</span>
+                  </div>
                 ) : (
                   <DistanceInput
                     id="value"
@@ -552,9 +606,7 @@ export function ResultEditDialog({
                     onChange={setCompetitionName}
                     suggestions={uniqueCompetitionNames}
                     label="Kilpailun nimi"
-                    required
                     placeholder="esim. Kalevan kisat"
-                    error={errors.competitionName}
                   />
                 </div>
 
@@ -674,7 +726,7 @@ export function ResultEditDialog({
         onConfirm={confirmStatusChange}
         onCancel={cancelStatusChange}
         title="Muuta tuloksen tilaa?"
-        message={`Tuloksen arvo (${selectedDiscipline?.unit === "time" ? formatTime(resultValue || 0) : formatDistance(resultValue || 0)}) poistetaan kun tila muutetaan arvoon "${RESULT_STATUSES.find(s => s.value === pendingStatus)?.label || ""}".`}
+        message={`Tuloksen arvo (${isCombinedEvent ? `${resultValue || 0} p` : selectedDiscipline?.unit === "time" ? formatTime(resultValue || 0) : formatDistance(resultValue || 0)}) poistetaan kun tila muutetaan arvoon "${RESULT_STATUSES.find(s => s.value === pendingStatus)?.label || ""}".`}
         confirmText="Muuta"
         cancelText="Peruuta"
       />

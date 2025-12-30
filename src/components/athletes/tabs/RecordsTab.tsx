@@ -91,9 +91,11 @@ export function RecordsTab({ personalBests }: RecordsTabProps) {
                 ) : (
                   <>
                     <span className="text-stat font-bold tabular-nums text-foreground">
-                      {result.discipline.unit === "time"
-                        ? formatTime(result.value)
-                        : formatDistance(result.value)}
+                      {result.discipline.category === "combined"
+                        ? `${Math.round(result.value)} p`
+                        : result.discipline.unit === "time"
+                          ? formatTime(result.value)
+                          : formatDistance(result.value)}
                     </span>
                     {/* Badges */}
                     <div className="flex items-center gap-1.5 mt-1.5">

@@ -8,7 +8,7 @@ import {
   formatWind,
   getStatusLabel,
 } from "../../lib/formatters";
-import { getDisciplineById } from "../../data/disciplines";
+import { getDisciplineById, isCooperDiscipline } from "../../data/disciplines";
 import { ResultBadge } from "./ResultBadge";
 import { HoverCheckbox } from "../ui";
 
@@ -115,7 +115,7 @@ export const ResultCard = memo(function ResultCard({
   const formattedValue = discipline
     ? discipline.unit === "time"
       ? formatTime(result.value)
-      : formatDistance(result.value)
+      : formatDistance(result.value, isCooperDiscipline(discipline.id))
     : result.value.toString();
 
   // Format wind with potential "w" suffix for wind-assisted

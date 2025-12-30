@@ -256,8 +256,15 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
     }
 
     // Only require value for valid results
-    if (statusRequiresValue && (resultValue === null || resultValue <= 0)) {
-      newErrors.value = "Syötä tulos";
+    if (statusRequiresValue) {
+      if (isCombinedEvent) {
+        // For combined events, check if we have calculated points
+        if (calculatedTotalPoints === null || calculatedTotalPoints <= 0) {
+          newErrors.value = "Syötä osalajien pisteet";
+        }
+      } else if (resultValue === null || resultValue <= 0) {
+        newErrors.value = "Syötä tulos";
+      }
     }
 
     if (!date) {
@@ -288,8 +295,13 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
       return;
     }
 
-    if (statusRequiresValue && resultValue === null) {
-      return;
+    // For combined events, use calculatedTotalPoints; for others, check resultValue
+    if (statusRequiresValue) {
+      if (isCombinedEvent && calculatedTotalPoints === null) {
+        return;
+      } else if (!isCombinedEvent && resultValue === null) {
+        return;
+      }
     }
 
     // Convert from input format to database format:
@@ -297,11 +309,14 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
     // Distance: centimeters to meters (e.g., 550 -> 5.50)
     // Combined events: points are stored as-is (e.g., 2500 -> 2500)
     // For non-valid statuses (DNF, DNS, etc.), use 0
-    const dbValue = resultValue !== null
-      ? isCombinedEvent
-        ? resultValue  // Points are stored as-is
-        : resultValue / 100
-      : 0;
+    let dbValue: number;
+    if (!statusRequiresValue) {
+      dbValue = 0;
+    } else if (isCombinedEvent) {
+      dbValue = calculatedTotalPoints ?? 0;
+    } else {
+      dbValue = resultValue !== null ? resultValue / 100 : 0;
+    }
 
     // Build sub-results JSON for combined events
     let subResultsJson: string | undefined;

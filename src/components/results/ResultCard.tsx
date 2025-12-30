@@ -8,7 +8,8 @@ import {
   formatWind,
   getStatusLabel,
 } from "../../lib/formatters";
-import { getDisciplineById, isCooperDiscipline } from "../../data/disciplines";
+import { getDisciplineById, isCooperDiscipline, isVerticalJump } from "../../data/disciplines";
+import { calculateSkillMark } from "../../data/skillLimits";
 import { ResultBadge } from "./ResultBadge";
 import { HoverCheckbox } from "../ui";
 
@@ -75,7 +76,7 @@ export const ResultCard = memo(function ResultCard({
         const formattedValue = subDiscipline
           ? subDiscipline.unit === "time"
             ? formatTime(sr.value)
-            : formatDistance(sr.value)
+            : formatDistance(sr.value, false, isVerticalJump(sr.disciplineId))
           : sr.value.toString();
         return {
           ...sr,
@@ -115,7 +116,11 @@ export const ResultCard = memo(function ResultCard({
   const formattedValue = discipline
     ? discipline.unit === "time"
       ? formatTime(result.value)
-      : formatDistance(result.value, isCooperDiscipline(discipline.id))
+      : formatDistance(
+          result.value,
+          isCooperDiscipline(discipline.id),
+          isVerticalJump(discipline.id)
+        )
     : result.value.toString();
 
   // Format wind with potential "w" suffix for wind-assisted
@@ -148,6 +153,20 @@ export const ResultCard = memo(function ResultCard({
 
   // Check if result is not valid (NM, DNS, DNF, DQ) or has zero value
   const isInvalidStatus = (result.status && result.status !== "valid") || result.value === 0;
+
+  // Calculate skill mark (taitoraja) based on athlete's age and result
+  const skillMark = useMemo(() => {
+    if (!athlete?.birthYear || !discipline || isInvalidStatus) {
+      return null;
+    }
+    return calculateSkillMark(
+      result.value,
+      result.disciplineId,
+      athlete.birthYear,
+      result.date,
+      discipline.lowerIsBetter
+    );
+  }, [athlete?.birthYear, discipline, result.value, result.disciplineId, result.date, isInvalidStatus]);
 
   const athleteName = athlete?.firstName ?? "Tuntematon";
   const disciplineName = discipline?.fullName ?? "Tuntematon laji";
@@ -221,6 +240,9 @@ export const ResultCard = memo(function ResultCard({
                 {result.isPersonalBest && <ResultBadge type="pb" />}
                 {result.isSeasonBest && <ResultBadge type="sb" />}
                 {result.isNationalRecord && <ResultBadge type="nr" />}
+                {skillMark === "A" && <ResultBadge type="skill-a" />}
+                {skillMark === "B" && <ResultBadge type="skill-b" />}
+                {skillMark === "C" && <ResultBadge type="skill-c" />}
               </div>
             </>
           )}

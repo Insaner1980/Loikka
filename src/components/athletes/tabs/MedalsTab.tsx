@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { formatTime, formatDistance, formatDate } from "../../../lib/formatters";
-import { getDisciplineById } from "../../../data/disciplines";
+import { getDisciplineById, isVerticalJump } from "../../../data/disciplines";
 import { DisciplineFilterSelect, FilterSelect, type FilterOption } from "../../ui";
 import type { Medal } from "../../../types";
 import type { ResultWithDiscipline } from "./types";
@@ -139,7 +139,7 @@ export function MedalsTab({ medals, results, onMedalClick }: MedalsTabProps) {
                         ? `${Math.round(linkedResult.value)} p`
                         : linkedResult.discipline.unit === "time"
                           ? formatTime(linkedResult.value)
-                          : formatDistance(linkedResult.value)}
+                          : formatDistance(linkedResult.value, false, isVerticalJump(linkedResult.disciplineId))}
                     </span>
                   )}
                 </div>

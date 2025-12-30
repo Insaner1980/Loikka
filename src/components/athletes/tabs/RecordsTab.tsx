@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { ResultBadge } from "../../results/ResultBadge";
 import { formatTime, formatDistance, formatDate, getStatusLabel } from "../../../lib/formatters";
+import { isVerticalJump } from "../../../data/disciplines";
 import { DisciplineFilterSelect, FilterSelect, type FilterOption } from "../../ui";
 import type { ResultWithDiscipline } from "./types";
 
@@ -95,7 +96,7 @@ export function RecordsTab({ personalBests }: RecordsTabProps) {
                         ? `${Math.round(result.value)} p`
                         : result.discipline.unit === "time"
                           ? formatTime(result.value)
-                          : formatDistance(result.value)}
+                          : formatDistance(result.value, false, isVerticalJump(result.disciplineId))}
                     </span>
                     {/* Badges */}
                     <div className="flex items-center gap-1.5 mt-1.5">

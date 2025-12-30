@@ -12,6 +12,7 @@ import { fi } from "date-fns/locale";
 import type { Discipline } from "../../types";
 import type { ChartDataPoint } from "../../stores/useResultStore";
 import { formatTime, formatDistance } from "../../lib/formatters";
+import { isVerticalJump } from "../../data/disciplines";
 
 interface ProgressChartProps {
   data: ChartDataPoint[];
@@ -38,7 +39,7 @@ function CustomTooltip({ active, payload, discipline }: CustomTooltipProps) {
     ? `${Math.round(dataPoint.value)} p`
     : discipline.unit === "time"
       ? formatTime(dataPoint.value)
-      : formatDistance(dataPoint.value);
+      : formatDistance(dataPoint.value, false, isVerticalJump(discipline.id));
   const formattedDate = format(new Date(dataPoint.date), "d. MMMM yyyy", {
     locale: fi,
   });

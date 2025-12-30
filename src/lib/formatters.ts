@@ -32,14 +32,25 @@ export function formatTime(seconds: number): string {
 
 /**
  * Format meters to a distance string.
- * e.g., "4.56 m" or "1500 m" (for Cooper)
+ * e.g., "4.56 m" or "1500 m" (for Cooper) or "106 cm" (for vertical jumps)
  * @param meters - Distance in meters
  * @param wholeMeters - If true, show whole meters without decimals (for Cooper test)
+ * @param useCentimeters - If true, show centimeters instead of meters (for vertical jumps)
  */
-export function formatDistance(meters: number, wholeMeters: boolean = false): string {
+export function formatDistance(
+  meters: number,
+  wholeMeters: boolean = false,
+  useCentimeters: boolean = false
+): string {
   // Handle edge cases
   if (!Number.isFinite(meters) || meters < 0) {
+    if (useCentimeters) return "0 cm";
     return wholeMeters ? "0 m" : "0.00 m";
+  }
+  // For vertical jumps (high jump, pole vault), show centimeters
+  if (useCentimeters) {
+    const cm = Math.round(meters * 100);
+    return `${cm} cm`;
   }
   // For Cooper test and similar, show whole meters
   if (wholeMeters) {

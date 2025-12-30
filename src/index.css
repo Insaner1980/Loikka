@@ -528,6 +528,16 @@ body {
     animation: badge-pop 0.3s ease-out;
   }
 
+  /* Skill mark badge (A/B/C) - same style as OE/KE/SE */
+  .badge-skill {
+    @apply px-1.5 py-0.5 font-medium rounded;
+    font-size: 11px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-secondary);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    animation: badge-pop 0.3s ease-out;
+  }
+
   /* Status badge - for days until, competition level, goal status etc. */
   .badge-status {
     @apply px-1.5 py-0.5 font-medium rounded;

@@ -13,7 +13,8 @@ import { useAthleteStore } from "../../stores/useAthleteStore";
 import { useResultStore } from "../../stores/useResultStore";
 import { useCompetitionStore } from "../../stores/useCompetitionStore";
 import { useDisciplineFields } from "../../hooks";
-import { disciplineNeedsMinutes, getDisciplineById, isCooperDiscipline } from "../../data/disciplines";
+import { disciplineNeedsMinutes, getDisciplineById, isCooperDiscipline, isVerticalJump } from "../../data/disciplines";
+import { calculateSkillMark } from "../../data/skillLimits";
 import {
   formatTime,
   formatDistance,
@@ -182,6 +183,34 @@ export function ResultEditDialog({
       ? `${athleteData.athlete.firstName} ${athleteData.athlete.lastName}`
       : "Tuntematon";
   }, [result, athletes]);
+
+  // Get athlete birth year for skill mark calculation
+  const athleteBirthYear = useMemo(() => {
+    if (!result) return undefined;
+    const athleteData = athletes.find((a) => a.athlete.id === result.athleteId);
+    return athleteData?.athlete.birthYear;
+  }, [result, athletes]);
+
+  // Calculate skill mark for preview
+  const skillMark = useMemo(() => {
+    if (!athleteBirthYear || !selectedDiscipline || !resultValue || resultValue <= 0) {
+      return null;
+    }
+    // Convert from input format to database format
+    const dbValue = isCombinedEvent
+      ? resultValue
+      : isCooperDiscipline(selectedDiscipline.id)
+        ? resultValue
+        : resultValue / 100;
+
+    return calculateSkillMark(
+      dbValue,
+      selectedDiscipline.id,
+      athleteBirthYear,
+      date,
+      selectedDiscipline.lowerIsBetter
+    );
+  }, [athleteBirthYear, selectedDiscipline, resultValue, isCombinedEvent, date]);
 
   // Check if status requires a value (only "valid" requires a numeric result)
   const statusRequiresValue = resultStatus === "valid";
@@ -412,14 +441,16 @@ export function ResultEditDialog({
                     value={resultValue}
                     onChange={setResultValue}
                     error={!!errors.value}
+                    centimetersOnly={isVerticalJump(disciplineId)}
                   />
                 )}
-                {/* OE/KE/SE indicators */}
-                {(result?.isPersonalBest || result?.isSeasonBest || isNationalRecord) && (
+                {/* OE/KE/SE/Skill indicators */}
+                {(result?.isPersonalBest || result?.isSeasonBest || isNationalRecord || skillMark) && (
                   <div className="flex gap-1 mt-1">
                     {result?.isPersonalBest && <span className="badge-pb">OE</span>}
                     {result?.isSeasonBest && <span className="badge-sb">KE</span>}
                     {isNationalRecord && <span className="badge-nr">SE</span>}
+                    {skillMark && <span className="badge-skill">{skillMark}</span>}
                   </div>
                 )}
                 {errors.value && (
@@ -726,7 +757,7 @@ export function ResultEditDialog({
         onConfirm={confirmStatusChange}
         onCancel={cancelStatusChange}
         title="Muuta tuloksen tilaa?"
-        message={`Tuloksen arvo (${isCombinedEvent ? `${resultValue || 0} p` : selectedDiscipline?.unit === "time" ? formatTime(resultValue || 0) : formatDistance(resultValue || 0)}) poistetaan kun tila muutetaan arvoon "${RESULT_STATUSES.find(s => s.value === pendingStatus)?.label || ""}".`}
+        message={`Tuloksen arvo (${isCombinedEvent ? `${resultValue || 0} p` : selectedDiscipline?.unit === "time" ? formatTime(resultValue || 0) : formatDistance(resultValue || 0, false, isVerticalJump(disciplineId))}) poistetaan kun tila muutetaan arvoon "${RESULT_STATUSES.find(s => s.value === pendingStatus)?.label || ""}".`}
         confirmText="Muuta"
         cancelText="Peruuta"
       />

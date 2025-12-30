@@ -12,7 +12,7 @@ import {
 import { useAthleteStore } from "../stores/useAthleteStore";
 import { useResultStore } from "../stores/useResultStore";
 import { useCompetitionStore } from "../stores/useCompetitionStore";
-import { getDisciplineById } from "../data/disciplines";
+import { getDisciplineById, isVerticalJump } from "../data/disciplines";
 import { formatTime, formatDistance, formatDate, toAssetUrl, getStatusLabel, getInitials, getDaysUntil } from "../lib/formatters";
 import { DASHBOARD } from "../lib/constants";
 import { Dialog } from "../components/ui/Dialog";
@@ -275,7 +275,7 @@ export function Dashboard() {
                               ? `${Math.round(result.value)} p`
                               : result.disciplineUnit === "time"
                                 ? formatTime(result.value)
-                                : formatDistance(result.value)}
+                                : formatDistance(result.value, false, isVerticalJump(result.disciplineId))}
                           </span>
                           {/* Badges */}
                           <div className="flex items-center gap-1.5 mt-1.5">

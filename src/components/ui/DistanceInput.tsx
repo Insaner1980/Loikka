@@ -6,6 +6,7 @@ interface DistanceInputProps {
   error?: boolean;
   disabled?: boolean;
   id?: string;
+  centimetersOnly?: boolean; // For jump disciplines - show only cm input
 }
 
 export function DistanceInput({
@@ -14,6 +15,7 @@ export function DistanceInput({
   error = false,
   disabled = false,
   id,
+  centimetersOnly = false,
 }: DistanceInputProps) {
   const metersRef = useRef<HTMLInputElement>(null);
   const centimetersRef = useRef<HTMLInputElement>(null);
@@ -114,6 +116,36 @@ export function DistanceInput({
   const inputClassName = `w-full text-center bg-card border rounded-lg input-focus ${
     error ? "border-error" : "border-border"
   } ${disabled ? "opacity-60 cursor-not-allowed" : ""}`;
+
+  // Handle centimeters-only mode for jump disciplines
+  const handleCentimetersOnlyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, "").slice(0, 4); // Max 9999 cm
+    if (val === "") {
+      onChange(null);
+    } else {
+      onChange(parseInt(val, 10));
+    }
+  };
+
+  // Centimeters-only mode for jump disciplines
+  if (centimetersOnly) {
+    return (
+      <div className="flex items-center gap-2" id={id}>
+        <input
+          type="text"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          value={value !== null ? value.toString() : ""}
+          onChange={handleCentimetersOnlyChange}
+          placeholder="0"
+          disabled={disabled}
+          className={`${inputClassName} w-20 px-3 py-2`}
+          aria-label="Senttimetrit"
+        />
+        <span className="text-body text-muted-foreground">cm</span>
+      </div>
+    );
+  }
 
   return (
     <div className="flex items-center gap-1" id={id}>

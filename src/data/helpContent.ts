@@ -188,7 +188,7 @@ export const helpSections: HelpSection[] = [
           { cols: ["Maastojuoksu", "15:45.00"] },
           { cols: ["Viestit", "52.34"] },
           { cols: ["Kävely", "5:23.45"] },
-          { cols: ["Hypyt", "4.25"] },
+          { cols: ["Hypyt", "425 cm"] },
           { cols: ["Heitot", "28.50"] },
           { cols: ["Cooper", "2150 m (kokonaiset metrit)"] },
           { cols: ["Moniottelu", "2345 p (pisteet)"] },

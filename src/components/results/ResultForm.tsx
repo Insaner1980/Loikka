@@ -3,7 +3,8 @@ import { useAthleteStore } from "../../stores/useAthleteStore";
 import { useResultStore } from "../../stores/useResultStore";
 import { useCompetitionStore } from "../../stores/useCompetitionStore";
 import { useDisciplineFields } from "../../hooks";
-import { disciplineNeedsMinutes, getDisciplineById, disciplines as allDisciplines, isCooperDiscipline } from "../../data/disciplines";
+import { disciplineNeedsMinutes, getDisciplineById, disciplines as allDisciplines, isCooperDiscipline, isVerticalJump } from "../../data/disciplines";
+import { calculateSkillMark } from "../../data/skillLimits";
 import { getTodayISO } from "../../lib/formatters";
 import {
   HURDLE_HEIGHTS,
@@ -237,6 +238,29 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
 
   // Check if result status requires a value (only "valid" needs a result)
   const statusRequiresValue = resultStatus === "valid";
+
+  // Calculate potential skill mark for preview
+  const potentialSkillMark = useMemo(() => {
+    if (!selectedAthleteId || !disciplineId || !selectedAthleteBirthYear || !selectedDiscipline) {
+      return null;
+    }
+    // For combined events, use calculatedTotalPoints; for others, convert resultValue
+    const dbValue = isCombinedEvent
+      ? (calculatedTotalPoints ?? 0)
+      : isCooperDiscipline(disciplineId as number)
+        ? (resultValue ?? 0)
+        : (resultValue !== null ? resultValue / 100 : 0);
+
+    if (dbValue <= 0) return null;
+
+    return calculateSkillMark(
+      dbValue,
+      disciplineId as number,
+      selectedAthleteBirthYear,
+      date,
+      selectedDiscipline.lowerIsBetter
+    );
+  }, [selectedAthleteId, disciplineId, selectedAthleteBirthYear, selectedDiscipline, resultValue, calculatedTotalPoints, isCombinedEvent, date]);
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
@@ -500,14 +524,16 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
                 value={resultValue}
                 onChange={setResultValue}
                 error={!!errors.value}
+                centimetersOnly={isVerticalJump(selectedDiscipline.id)}
               />
             )}
-            {/* OE/KE/SE indicators */}
-            {selectedDiscipline && statusRequiresValue && resultValue !== null && resultValue > 0 && (potentialBests.isPB || potentialBests.isSB || isNationalRecord) && (
+            {/* OE/KE/SE/Skill indicators */}
+            {selectedDiscipline && statusRequiresValue && resultValue !== null && resultValue > 0 && (potentialBests.isPB || potentialBests.isSB || isNationalRecord || potentialSkillMark) && (
               <div className="flex gap-1 mt-1">
                 {potentialBests.isPB && <span className="badge-pb">OE!</span>}
                 {potentialBests.isSB && <span className="badge-sb">KE!</span>}
                 {isNationalRecord && <span className="badge-nr">SE</span>}
+                {potentialSkillMark && <span className="badge-skill">{potentialSkillMark}</span>}
               </div>
             )}
           </div>
@@ -638,6 +664,7 @@ export function ResultForm({ athleteId, onSave, onCancel }: ResultFormProps) {
                             newValues[index] = value;
                             setSubDisciplineValues(newValues);
                           }}
+                          centimetersOnly={isVerticalJump(subDiscipline.id)}
                         />
                       )
                     ) : (

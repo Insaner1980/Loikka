@@ -10,6 +10,7 @@ import {
 import type { Discipline } from "../../types";
 import type { SeasonComparisonData } from "../../stores/useResultStore";
 import { formatTime, formatDistance } from "../../lib/formatters";
+import { isVerticalJump } from "../../data/disciplines";
 
 interface ComparisonChartProps {
   data: SeasonComparisonData[];
@@ -37,7 +38,7 @@ function CustomTooltip({ active, payload, discipline }: CustomTooltipProps) {
         ? `${Math.round(dataPoint.bestResult)} p`
         : discipline.unit === "time"
           ? formatTime(dataPoint.bestResult)
-          : formatDistance(dataPoint.bestResult)
+          : formatDistance(dataPoint.bestResult, false, isVerticalJump(discipline.id))
       : "-";
 
   return (
@@ -68,7 +69,7 @@ export function ComparisonChart({ data, discipline }: ComparisonChartProps) {
           ? `${Math.round(d.bestResult)} p`
           : discipline.unit === "time"
             ? formatTime(d.bestResult)
-            : formatDistance(d.bestResult)
+            : formatDistance(d.bestResult, false, isVerticalJump(discipline.id))
         : "-",
     displayValue: d.bestResult ?? 0,
   }));
@@ -87,9 +88,11 @@ export function ComparisonChart({ data, discipline }: ComparisonChartProps) {
   const maxValue = Math.max(...values);
   const padding = (maxValue - minValue) * 0.1 || maxValue * 0.1;
 
-  // For time events, we don't invert for bar charts - just show the bars normally
-  // but we calculate domain to show bars properly
-  const yDomain: [number, number] = [0, maxValue + padding];
+  // For time events, invert Y-axis so faster times (lower values) show as taller bars
+  // This makes visual "up = better" intuitive for all discipline types
+  const yDomain: [number, number] = discipline.lowerIsBetter
+    ? [maxValue + padding, Math.max(0, minValue - padding)]
+    : [0, maxValue + padding];
 
   // Format value for Y axis ticks
   const formatYAxis = (value: number) => {

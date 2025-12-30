@@ -2,6 +2,7 @@ import { Trophy, TrendingUp, TrendingDown, Hash, Calculator } from "lucide-react
 import type { Discipline } from "../../types";
 import type { SeasonStatsData } from "../../stores/useResultStore";
 import { formatTime, formatDistance } from "../../lib/formatters";
+import { isVerticalJump } from "../../data/disciplines";
 
 interface SeasonStatsProps {
   stats: SeasonStatsData;
@@ -19,7 +20,7 @@ export function SeasonStats({ stats, discipline, year }: SeasonStatsProps) {
     }
     return discipline.unit === "time"
       ? formatTime(value)
-      : formatDistance(value);
+      : formatDistance(value, false, isVerticalJump(discipline.id));
   };
 
   // Format improvement value (time shows as seconds, distance as cm, points as points)

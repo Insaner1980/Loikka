@@ -713,6 +713,17 @@ export function isCooperDiscipline(disciplineId: number): boolean {
   return disciplineId === COOPER_DISCIPLINE_ID;
 }
 
+// All jump disciplines should display in centimeters
+const JUMP_DISCIPLINE_IDS = [22, 23, 24, 25]; // Pituus (22), Korkeus (23), Kolmiloikka (24), Seiväs (25)
+
+/**
+ * Check if a discipline is a jump event that should display in centimeters.
+ * All jumps are displayed in cm (e.g., 350 cm, 106 cm, 770 cm, 130 cm)
+ */
+export function isVerticalJump(disciplineId: number): boolean {
+  return JUMP_DISCIPLINE_IDS.includes(disciplineId);
+}
+
 // Get age category from birth year and optional date
 // If date is provided, calculates the age at that date
 export function getAgeCategoryFromBirthYear(

@@ -16,6 +16,7 @@ import {
   Calculator,
 } from "lucide-react";
 import { formatTime, formatDistance, formatDate, formatShortDate } from "../../../lib/formatters";
+import { isVerticalJump } from "../../../data/disciplines";
 import { DisciplineFilterSelect, FilterSelect, type FilterOption } from "../../ui";
 import type { ResultWithDiscipline } from "./types";
 
@@ -183,7 +184,7 @@ export function ProgressTab({ results }: ProgressTabProps) {
               ? `${Math.round(data.value)} p`
               : selectedDiscipline?.unit === "time"
                 ? formatTime(data.value)
-                : formatDistance(data.value)}
+                : formatDistance(data.value, false, selectedDiscipline ? isVerticalJump(selectedDiscipline.id) : false)}
           </p>
           {hasBadges && (
             <div className="flex gap-1 mt-1">
@@ -358,7 +359,7 @@ export function ProgressTab({ results }: ProgressTabProps) {
                           ? `${Math.round(seasonBest.value)} p`
                           : selectedDiscipline?.unit === "time"
                             ? formatTime(seasonBest.value)
-                            : formatDistance(seasonBest.value)
+                            : formatDistance(seasonBest.value, false, selectedDiscipline ? isVerticalJump(selectedDiscipline.id) : false)
                         : "-"}
                     </p>
                   </div>
@@ -419,7 +420,7 @@ export function ProgressTab({ results }: ProgressTabProps) {
                         ? `${Math.round(average)} p`
                         : selectedDiscipline?.unit === "time"
                           ? formatTime(average)
-                          : formatDistance(average)
+                          : formatDistance(average, false, selectedDiscipline ? isVerticalJump(selectedDiscipline.id) : false)
                       : "-"}
                   </p>
                 </div>
@@ -472,7 +473,7 @@ export function ProgressTab({ results }: ProgressTabProps) {
                           ? `${Math.round(season.value)} p`
                           : selectedDiscipline?.unit === "time"
                             ? formatTime(season.value)
-                            : formatDistance(season.value)}
+                            : formatDistance(season.value, false, selectedDiscipline ? isVerticalJump(selectedDiscipline.id) : false)}
                       </span>
                     </div>
                   );

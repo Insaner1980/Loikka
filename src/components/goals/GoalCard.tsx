@@ -2,6 +2,7 @@ import { memo, useCallback } from "react";
 import { Check, Calendar } from "lucide-react";
 import type { Athlete, Discipline, Goal } from "../../types";
 import { formatTime, formatDistance, formatDate } from "../../lib/formatters";
+import { isVerticalJump } from "../../data/disciplines";
 import { HoverCheckbox } from "../ui";
 
 interface GoalCardProps {
@@ -58,7 +59,9 @@ export const GoalCard = memo(function GoalCard({
     if (value === null) return "-";
     if (!discipline) return value.toString();
     if (discipline.category === "combined") return `${Math.round(value)} p`;
-    return discipline.unit === "time" ? formatTime(value) : formatDistance(value);
+    return discipline.unit === "time"
+      ? formatTime(value)
+      : formatDistance(value, false, isVerticalJump(goal.disciplineId));
   };
 
   const athleteName = athlete

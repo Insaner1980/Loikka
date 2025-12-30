@@ -3,6 +3,7 @@ import { useAthleteStore } from "../../stores/useAthleteStore";
 import {
   getDisciplineById,
   disciplineNeedsMinutes,
+  isVerticalJump,
 } from "../../data/disciplines";
 import { TimeInput, DistanceInput, DatePicker, DisciplineSelect, FilterSelect, type FilterOption } from "../ui";
 import type { Goal, NewGoal } from "../../types";
@@ -188,6 +189,7 @@ export function GoalForm({ goal, athleteId, onSave, onCancel }: GoalFormProps) {
             value={targetValue}
             onChange={setTargetValue}
             error={!!errors.targetValue}
+            centimetersOnly={isVerticalJump(selectedDiscipline.id)}
           />
         )}
         {errors.targetValue && (

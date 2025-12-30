@@ -1,5 +1,6 @@
 import { Target } from "lucide-react";
 import { formatTime, formatDistance, formatDate } from "../../../lib/formatters";
+import { isVerticalJump } from "../../../data/disciplines";
 import type { Goal, Discipline } from "../../../types";
 
 interface GoalsTabProps {
@@ -32,7 +33,7 @@ export function GoalsTab({ goals, getDisciplineForGoal }: GoalsTabProps) {
             ? `${Math.round(goal.targetValue)} p`
             : discipline.unit === "time"
               ? formatTime(goal.targetValue)
-              : formatDistance(goal.targetValue)
+              : formatDistance(goal.targetValue, false, isVerticalJump(goal.disciplineId))
           : goal.targetValue.toString();
 
         return (

@@ -153,7 +153,7 @@ Tulokset-sivulla näet kaikki tulokset taulukkona. Voit:
 | Maastojuoksu | 4:32.10 | `4:32.10` |
 | Viestit | 52.34 s | `0:52.34` (minuutit, sekunnit, sadasosat) |
 | Kävely | 3:45.20 | `3:45.20` |
-| Hypyt | 4.25 m | `4.25` (metrit ja senttimetrit) |
+| Hypyt | 425 cm | `425` (senttimetrit) |
 | Heitot | 28.50 m | `28.50` (metrit ja senttimetrit) |
 | Cooper | 2025 m | `2025` (kokonaiset metrit) |
 | Moniottelu | 2500 p | `2500` (pisteet, lasketaan osalajeista) |

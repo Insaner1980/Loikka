@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+ <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+ <resheader name="version"><value>2.0</value></resheader>
+ <data name="NavDashboard.Content" xml:space="preserve"><value>Lähtöviiva</value></data>
+ <data name="NavAthletes.Content" xml:space="preserve"><value>Urheilijat</value></data>
+ <data name="NavResults.Content" xml:space="preserve"><value>Tulokset</value></data>
+ <data name="NavCalendar.Content" xml:space="preserve"><value>Kalenteri</value></data>
+ <data name="NavStatistics.Content" xml:space="preserve"><value>Tilastot</value></data>
+ <data name="NavGoals.Content" xml:space="preserve"><value>Tavoitteet</value></data>
+ <data name="NavPhotos.Content" xml:space="preserve"><value>Kuvat</value></data>
+ <data name="NavSettings.Content" xml:space="preserve"><value>Asetukset</value></data>
+</root>

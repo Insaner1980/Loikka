@@ -1,0 +1,14 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+  </Configurations>
+  <Folder Name="/native/">
+    <Project Path="native/Loikka.App/Loikka.App.csproj">
+      <Platform Project="x64" />
+    </Project>
+    <Project Path="native/Loikka.Core/Loikka.Core.csproj" />
+    <Project Path="native/Loikka.Infrastructure/Loikka.Infrastructure.csproj" />
+    <Project Path="native/Loikka.Tests/Loikka.Tests.csproj" />
+    <Project Path="native/Loikka.UiTests/Loikka.UiTests.csproj" />
+  </Folder>
+</Solution>

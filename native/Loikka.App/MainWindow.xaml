@@ -1,0 +1,26 @@
+<Window x:Class="Loikka_App.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Loikka">
+ <Window.SystemBackdrop><MicaBackdrop /></Window.SystemBackdrop>
+ <Grid x:Name="WindowRoot" RequestedTheme="Dark" Language="fi-FI" Loaded="WindowLoaded">
+  <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+  <TitleBar x:Name="AppTitleBar" Title="Loikka"><TitleBar.IconSource><ImageIconSource ImageSource="Assets/AppIcon.ico"/></TitleBar.IconSource></TitleBar>
+  <Grid Grid.Row="1">
+   <NavigationView x:Name="Navigation" IsSettingsVisible="False" IsBackButtonVisible="Collapsed" SelectionChanged="NavigationChanged" ItemInvoked="NavigationInvoked" PaneDisplayMode="Auto" IsEnabled="False">
+    <NavigationView.MenuItems>
+     <NavigationViewItem x:Uid="NavDashboard" Tag="Dashboard" Icon="Home" AutomationProperties.AutomationId="NavDashboard"/>
+     <NavigationViewItem x:Uid="NavAthletes" Tag="Athletes" Icon="People" AutomationProperties.AutomationId="NavAthletes"/>
+     <NavigationViewItem x:Uid="NavResults" Tag="Results" Icon="Flag" AutomationProperties.AutomationId="NavResults"/>
+     <NavigationViewItem x:Uid="NavCalendar" Tag="Calendar" Icon="Calendar" AutomationProperties.AutomationId="NavCalendar"/>
+     <NavigationViewItem x:Uid="NavStatistics" Tag="Statistics" Icon="ShowResults" AutomationProperties.AutomationId="NavStatistics"/>
+     <NavigationViewItem x:Uid="NavGoals" Tag="Goals" Icon="Target" AutomationProperties.AutomationId="NavGoals"/>
+     <NavigationViewItem x:Uid="NavPhotos" Tag="Photos" Icon="Pictures" AutomationProperties.AutomationId="NavPhotos"/>
+     <NavigationViewItem x:Uid="NavSettings" Tag="Settings" Icon="Setting" AutomationProperties.AutomationId="NavSettings"/>
+    </NavigationView.MenuItems>
+    <Frame x:Name="RootFrame"/>
+   </NavigationView>
+   <StackPanel x:Name="StartupPanel" Margin="32" Spacing="16" VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="620">
+    <ProgressRing x:Name="StartupProgress" IsActive="True"/>
+    <TextBlock x:Name="StartupMessage" Text="Avataan Loikkaa…" TextWrapping="Wrap"/>
+   </StackPanel>
+  </Grid>
+ </Grid>
+</Window>

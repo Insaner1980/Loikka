@@ -1,0 +1,579 @@
+{
+  "baselineCommit": "b4361ae55612efea6ce835b59b0ec7a9c64eb903",
+  "sourceSha256": {
+    "schema": "5104c628052c7a4be9441461762c7095ee79415d11d5aa9b4f7f448d83069ccb",
+    "database": "ab902ac6231a7023f3eab9130202ff58f0dd8eb7135c079d3a42a488781bcf2e",
+    "disciplines": "797bfcee2df4fb245223d0d0ae18db68acab2c2f6b1f096b8123f9a5ac0a7ef9"
+  },
+  "seedSha256": "dc8924c5951b5de21ecf812a00392baf0a4f0d44d4f965c875ded6e111c382ef",
+  "migrations": [
+    {
+      "version": 1,
+      "description": "create_initial_schema"
+    },
+    {
+      "version": 2,
+      "description": "seed_disciplines"
+    },
+    {
+      "version": 3,
+      "description": "recreate_photos_table"
+    },
+    {
+      "version": 4,
+      "description": "add_competition_level"
+    },
+    {
+      "version": 5,
+      "description": "add_result_competition_level"
+    },
+    {
+      "version": 6,
+      "description": "add_result_details_wind_status_equipment"
+    },
+    {
+      "version": 7,
+      "description": "add_athlete_gender"
+    },
+    {
+      "version": 8,
+      "description": "add_photo_event_name"
+    },
+    {
+      "version": 9,
+      "description": "add_result_national_record"
+    },
+    {
+      "version": 10,
+      "description": "checkpoint_consolidated_schema"
+    },
+    {
+      "version": 11,
+      "description": "seed_test_data_disabled"
+    },
+    {
+      "version": 12,
+      "description": "add_custom_level_name"
+    },
+    {
+      "version": 13,
+      "description": "fix_check_constraint_skipped_already_correct"
+    },
+    {
+      "version": 14,
+      "description": "add_notes_table"
+    },
+    {
+      "version": 15,
+      "description": "add_sub_results_for_combined_events"
+    },
+    {
+      "version": 16,
+      "description": "add_combined_event_id_for_moniottelu"
+    },
+    {
+      "version": 17,
+      "description": "reseed_disciplines_sync_frontend"
+    },
+    {
+      "version": 18,
+      "description": "add_cross_country_disciplines"
+    },
+    {
+      "version": 19,
+      "description": "add_relay_and_cooper_disciplines"
+    },
+    {
+      "version": 20,
+      "description": "fix_disciplines_check_constraint_skipped_already_correct"
+    }
+  ],
+  "disciplines": [
+    {
+      "id": 1,
+      "name": "40 m",
+      "full_name": "40 metriä",
+      "category": "sprints",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 2,
+      "name": "60 m",
+      "full_name": "60 metriä",
+      "category": "sprints",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 3,
+      "name": "100 m",
+      "full_name": "100 metriä",
+      "category": "sprints",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 4,
+      "name": "150 m",
+      "full_name": "150 metriä",
+      "category": "sprints",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 5,
+      "name": "200 m",
+      "full_name": "200 metriä",
+      "category": "sprints",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 6,
+      "name": "300 m",
+      "full_name": "300 metriä",
+      "category": "sprints",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 7,
+      "name": "400 m",
+      "full_name": "400 metriä",
+      "category": "sprints",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 8,
+      "name": "600 m",
+      "full_name": "600 metriä",
+      "category": "middleDistance",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 9,
+      "name": "800 m",
+      "full_name": "800 metriä",
+      "category": "middleDistance",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 10,
+      "name": "1000 m",
+      "full_name": "1000 metriä",
+      "category": "middleDistance",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 11,
+      "name": "1500 m",
+      "full_name": "1500 metriä",
+      "category": "middleDistance",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 12,
+      "name": "2000 m",
+      "full_name": "2000 metriä",
+      "category": "middleDistance",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 13,
+      "name": "3000 m",
+      "full_name": "3000 metriä",
+      "category": "longDistance",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 14,
+      "name": "5000 m",
+      "full_name": "5000 metriä",
+      "category": "longDistance",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 15,
+      "name": "10000 m",
+      "full_name": "10000 metriä",
+      "category": "longDistance",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 16,
+      "name": "60 m aidat",
+      "full_name": "60 metriä aidat",
+      "category": "hurdles",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 17,
+      "name": "80 m aidat",
+      "full_name": "80 metriä aidat",
+      "category": "hurdles",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 18,
+      "name": "100 m aidat",
+      "full_name": "100 metriä aidat",
+      "category": "hurdles",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 19,
+      "name": "200 m aidat",
+      "full_name": "200 metriä aidat",
+      "category": "hurdles",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 20,
+      "name": "300 m aidat",
+      "full_name": "300 metriä aidat",
+      "category": "hurdles",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 21,
+      "name": "400 m aidat",
+      "full_name": "400 metriä aidat",
+      "category": "hurdles",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 22,
+      "name": "Pituus",
+      "full_name": "Pituushyppy",
+      "category": "jumps",
+      "unit": "distance",
+      "lower_is_better": 0,
+      "icon_name": null
+    },
+    {
+      "id": 23,
+      "name": "Korkeus",
+      "full_name": "Korkeushyppy",
+      "category": "jumps",
+      "unit": "distance",
+      "lower_is_better": 0,
+      "icon_name": null
+    },
+    {
+      "id": 24,
+      "name": "Kolmiloikka",
+      "full_name": "Kolmiloikka",
+      "category": "jumps",
+      "unit": "distance",
+      "lower_is_better": 0,
+      "icon_name": null
+    },
+    {
+      "id": 25,
+      "name": "Seiväs",
+      "full_name": "Seiväshyppy",
+      "category": "jumps",
+      "unit": "distance",
+      "lower_is_better": 0,
+      "icon_name": null
+    },
+    {
+      "id": 26,
+      "name": "Kuula",
+      "full_name": "Kuulantyöntö",
+      "category": "throws",
+      "unit": "distance",
+      "lower_is_better": 0,
+      "icon_name": null
+    },
+    {
+      "id": 27,
+      "name": "Kiekko",
+      "full_name": "Kiekonheitto",
+      "category": "throws",
+      "unit": "distance",
+      "lower_is_better": 0,
+      "icon_name": null
+    },
+    {
+      "id": 28,
+      "name": "Keihäs",
+      "full_name": "Keihäänheitto",
+      "category": "throws",
+      "unit": "distance",
+      "lower_is_better": 0,
+      "icon_name": null
+    },
+    {
+      "id": 29,
+      "name": "Moukari",
+      "full_name": "Moukarinheitto",
+      "category": "throws",
+      "unit": "distance",
+      "lower_is_better": 0,
+      "icon_name": null
+    },
+    {
+      "id": 30,
+      "name": "Pallo",
+      "full_name": "Pallonheitto",
+      "category": "throws",
+      "unit": "distance",
+      "lower_is_better": 0,
+      "icon_name": null
+    },
+    {
+      "id": 31,
+      "name": "3-ottelu",
+      "full_name": "3-ottelu",
+      "category": "combined",
+      "unit": "distance",
+      "lower_is_better": 0,
+      "icon_name": null
+    },
+    {
+      "id": 32,
+      "name": "4-ottelu",
+      "full_name": "4-ottelu",
+      "category": "combined",
+      "unit": "distance",
+      "lower_is_better": 0,
+      "icon_name": null
+    },
+    {
+      "id": 33,
+      "name": "5-ottelu",
+      "full_name": "5-ottelu",
+      "category": "combined",
+      "unit": "distance",
+      "lower_is_better": 0,
+      "icon_name": null
+    },
+    {
+      "id": 34,
+      "name": "7-ottelu",
+      "full_name": "7-ottelu",
+      "category": "combined",
+      "unit": "distance",
+      "lower_is_better": 0,
+      "icon_name": null
+    },
+    {
+      "id": 35,
+      "name": "600 m kävely",
+      "full_name": "600 metriä kävely",
+      "category": "walking",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 36,
+      "name": "800 m kävely",
+      "full_name": "800 metriä kävely",
+      "category": "walking",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 41,
+      "name": "1000 m kävely",
+      "full_name": "1000 metriä kävely",
+      "category": "walking",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 37,
+      "name": "2000 m kävely",
+      "full_name": "2000 metriä kävely",
+      "category": "walking",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 38,
+      "name": "3000 m kävely",
+      "full_name": "3000 metriä kävely",
+      "category": "walking",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 39,
+      "name": "5000 m kävely",
+      "full_name": "5000 metriä kävely",
+      "category": "walking",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 40,
+      "name": "10 km kävely",
+      "full_name": "10 kilometriä kävely",
+      "category": "walking",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 42,
+      "name": "500 m maasto",
+      "full_name": "500 metriä maastojuoksu",
+      "category": "crossCountry",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 43,
+      "name": "1 km maasto",
+      "full_name": "1 kilometri maastojuoksu",
+      "category": "crossCountry",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 44,
+      "name": "2 km maasto",
+      "full_name": "2 kilometriä maastojuoksu",
+      "category": "crossCountry",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 45,
+      "name": "4 km maasto",
+      "full_name": "4 kilometriä maastojuoksu",
+      "category": "crossCountry",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 46,
+      "name": "10 km maasto",
+      "full_name": "10 kilometriä maastojuoksu",
+      "category": "crossCountry",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 47,
+      "name": "8x40 m sukkulaviesti",
+      "full_name": "8x40 metriä sukkulaviesti",
+      "category": "relays",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 48,
+      "name": "4x50 m viesti",
+      "full_name": "4x50 metriä viesti",
+      "category": "relays",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 49,
+      "name": "4x100 m viesti",
+      "full_name": "4x100 metriä viesti",
+      "category": "relays",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 50,
+      "name": "4x200 m viesti",
+      "full_name": "4x200 metriä viesti",
+      "category": "relays",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 51,
+      "name": "4x300 m viesti",
+      "full_name": "4x300 metriä viesti",
+      "category": "relays",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 52,
+      "name": "4x400 m viesti",
+      "full_name": "4x400 metriä viesti",
+      "category": "relays",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 53,
+      "name": "4x800 m viesti",
+      "full_name": "4x800 metriä viesti",
+      "category": "relays",
+      "unit": "time",
+      "lower_is_better": 1,
+      "icon_name": null
+    },
+    {
+      "id": 54,
+      "name": "Cooper",
+      "full_name": "Cooper-testi (12 min)",
+      "category": "other",
+      "unit": "distance",
+      "lower_is_better": 0,
+      "icon_name": null
+    }
+  ]
+}

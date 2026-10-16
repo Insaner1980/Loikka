@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Loikka.App (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Loikka.App (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
